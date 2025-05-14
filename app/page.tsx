@@ -36,27 +36,27 @@ const VARIANTS_SECTION = {
 
 const TRANSITION_SECTION = { duration: 0.3 }
 
-type ProjectVideoProps = { src: string }
+type ProjectProps = { src: string }
 
-function ProjectVideo({ src }: ProjectVideoProps) {
+function Project({ src }: ProjectProps) {
   return (
-    <MorphingDialog transition={{ type: 'spring', bounce: 0, duration: 0.3 }}>
+    <MorphingDialog
+      transition={{
+        type: 'spring',
+        bounce: 0,
+        duration: 0.3,
+      }}
+    >
       <MorphingDialogTrigger>
-        <video
+        <img
           src={src}
-          autoPlay
-          loop
-          muted
           className="aspect-video w-full cursor-zoom-in rounded-xl"
         />
       </MorphingDialogTrigger>
       <MorphingDialogContainer>
         <MorphingDialogContent className="relative aspect-video rounded-2xl bg-zinc-50 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950 dark:ring-zinc-800/50">
-          <video
+          <img
             src={src}
-            autoPlay
-            loop
-            muted
             className="aspect-video h-[50vh] w-full rounded-xl md:h-[70vh]"
           />
         </MorphingDialogContent>
@@ -64,7 +64,10 @@ function ProjectVideo({ src }: ProjectVideoProps) {
           className="fixed top-6 right-6 h-fit w-fit rounded-full bg-white p-1"
           variants={{
             initial: { opacity: 0 },
-            animate: { opacity: 1, transition: { delay: 0.3, duration: 0.1 } },
+            animate: {
+              opacity: 1,
+              transition: { delay: 0.3, duration: 0.1 },
+            },
             exit: { opacity: 0, transition: { duration: 0 } },
           }}
         >
@@ -109,14 +112,16 @@ function MagneticSocialLink({
   )
 }
 
-export default function Personal() {
+export default function Home() {
+  const data = RESUME_DATA
+
   return (
     <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-inter-tight)]">
       <div className="relative mx-auto w-full max-w-screen-sm flex-1 px-4 pt-20">
         <Header />
         <Hero />
         <motion.main
-          className="space-y-24"
+          className="space-y-14"
           variants={VARIANTS_CONTAINER}
           initial="hidden"
           animate="visible"
@@ -126,10 +131,7 @@ export default function Personal() {
             transition={TRANSITION_SECTION}
           >
             <div className="flex-1">
-              <p className="text-zinc-600 dark:text-zinc-400">
-                Focused on creating intuitive and performant web experiences.
-                Bridging the gap between design and development.
-              </p>
+              <p className="text-zinc-600 dark:text-zinc-400">{data.about}</p>
             </div>
           </motion.section>
 
@@ -139,26 +141,32 @@ export default function Personal() {
           >
             <h3 className="mb-5 text-lg font-medium">Selected Projects</h3>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {PROJECTS.map((project) => (
-                <div key={project.name} className="space-y-2">
-                  <div className="relative rounded-2xl bg-zinc-50/40 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950/40 dark:ring-zinc-800/50">
-                    <ProjectVideo src={project.video} />
-                  </div>
-                  <div className="px-1">
-                    <a
-                      className="font-base group relative inline-block font-[450] text-zinc-900 dark:text-zinc-50"
-                      href={project.link}
-                      target="_blank"
-                    >
-                      {project.name}
-                      <span className="absolute bottom-0.5 left-0 block h-[1px] w-full max-w-0 bg-zinc-900 transition-all duration-200 group-hover:max-w-full"></span>
-                    </a>
-                    <p className="text-base text-zinc-600 dark:text-zinc-400">
-                      {project.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              {data.projects.map((project) => {
+                if (project.isFeatured) {
+                  return (
+                    <div key={project.title} className="space-y-2">
+                      <div className="relative rounded-2xl bg-zinc-50/40 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950/40 dark:ring-zinc-800/50">
+                        <Project src={project.img} />
+                      </div>
+                      <div className="px-1">
+                        <a
+                          className="font-base group relative inline-block font-[450] text-zinc-900 dark:text-zinc-50"
+                          href={
+                            'link' in project ? project.link.href : undefined
+                          }
+                          target="_blank"
+                        >
+                          {project.title}
+                          <span className="absolute bottom-0.5 left-0 block h-[1px] w-full max-w-0 bg-zinc-900 transition-all duration-200 group-hover:max-w-full"></span>
+                        </a>
+                        <p className="text-zinc-600 dark:text-zinc-400">
+                          {project.description}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                }
+              })}
             </div>
           </motion.section>
 
@@ -167,36 +175,23 @@ export default function Personal() {
             transition={TRANSITION_SECTION}
           >
             <h3 className="mb-5 text-lg font-medium">Work Experience</h3>
-            <div className="flex flex-col space-y-2">
-              {WORK_EXPERIENCE.map((job) => (
-                <a
-                  className="relative overflow-hidden rounded-2xl bg-zinc-300/30 p-[1px] dark:bg-zinc-600/30"
-                  href={job.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  key={job.id}
-                >
-                  <Spotlight
-                    className="from-zinc-900 via-zinc-800 to-zinc-700 blur-2xl dark:from-zinc-100 dark:via-zinc-200 dark:to-zinc-50"
-                    size={64}
-                  />
-                  <div className="relative h-full w-full rounded-[15px] bg-white p-4 dark:bg-zinc-950">
-                    <div className="relative flex w-full flex-row justify-between">
-                      <div>
-                        <h4 className="font-normal dark:text-zinc-100">
-                          {job.title}
-                        </h4>
-                        <p className="text-zinc-500 dark:text-zinc-400">
-                          {job.company}
-                        </p>
-                      </div>
-                      <p className="text-zinc-600 dark:text-zinc-400">
-                        {job.start} - {job.end}
+            <div className="flex flex-col gap-y-6">
+              {data.work.map((work) => {
+                return (
+                  <div className="flex w-full flex-col" key={work.company}>
+                    <div className="flex flex-row items-end gap-x-2">
+                      <h4>{work.company}</h4>
+                      <p className="text-sm opacity-50">
+                        {work.start} - {work.end}
                       </p>
                     </div>
+
+                    <p className="text-zinc-600 dark:text-zinc-400">
+                      {work.description}
+                    </p>
                   </div>
-                </a>
-              ))}
+                )
+              })}
             </div>
           </motion.section>
 
