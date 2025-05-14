@@ -8,7 +8,7 @@ export const RESUME_DATA = {
   currentJob: "Web Software Developer",
   description: "I am a web software developer specializing in designing and building applications with a focus on simplicity and usability.",
   about:
-    "Specializing in designing and building web applications with focus on simplicity and usability.🖖",
+    "Specializing in crafting seamless, high-performance web experiences emphasizing simplicity and usability.🖖",
   summary:
     "I am a web software developer specializing in designing and building applications with a focus on simplicity and usability. Currently, I work at PLN Icon Plus as a Web Software Developer. Have a keen interest in tech, RPG games, and good stories.🤖",
   avatarUrl:

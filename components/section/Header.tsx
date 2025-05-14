@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/button'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 
-// Types
 interface NavLinkProps {
   href: string
   label: string
 }
 
-// Subcomponents
 function NavLink({ href, label }: NavLinkProps) {
   return (
     <Link href={href} className="text-sm hover:underline">
@@ -20,7 +18,6 @@ function NavLink({ href, label }: NavLinkProps) {
   )
 }
 
-// Exported Component
 export default function Header() {
   const { theme, setTheme } = useTheme()
   const menuItems = [
