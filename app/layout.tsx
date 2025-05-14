@@ -17,10 +17,7 @@ export const metadata: Metadata = {
     'Nim is a free and open-source personal website template built with Next.js 15, React 19 and Motion-Primitives.',
 }
 
-const geist = Geist({
-  variable: '--font-geist',
-  subsets: ['latin'],
-})
+const geist = Geist({ variable: '--font-geist', subsets: ['latin'] })
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -29,9 +26,7 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -43,13 +38,7 @@ export default function RootLayout({
           storageKey="theme"
           defaultTheme="system"
         >
-          <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-inter-tight)]">
-            <div className="relative mx-auto w-full max-w-screen-sm flex-1 px-4 pt-20">
-              <Header />
-              {children}
-              <Footer />
-            </div>
-          </div>
+          {children}
         </ThemeProvider>
       </body>
     </html>
