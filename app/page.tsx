@@ -1,10 +1,15 @@
 'use client'
 import { motion } from 'motion/react'
+import { useState, useEffect } from 'react'
+
 import { XIcon } from 'lucide-react'
+import { BlogPost } from '@/contentful/blogPosts'
+
 import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
-import { Spotlight } from '@/components/ui/spotlight'
+import { PostCard } from '@/components/ui/post-card'
+
 import { Magnetic } from '@/components/ui/magnetic'
 import {
   MorphingDialog,
@@ -14,7 +19,6 @@ import {
   MorphingDialogContainer,
 } from '@/components/ui/morphing-dialog'
 import Link from 'next/link'
-import { AnimatedBackground } from '@/components/ui/animated-background'
 import { RESUME_DATA } from '@/data/resume-data'
 import {
   PROJECTS,
@@ -114,6 +118,27 @@ function MagneticSocialLink({
 
 export default function Home() {
   const data = RESUME_DATA
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadBlogPosts() {
+      try {
+        const response = await fetch('/api/blog')
+        if (!response.ok) {
+          throw new Error('Failed to fetch blog posts')
+        }
+        const posts = await response.json()
+        setBlogPosts(posts)
+      } catch (error) {
+        console.error('Error loading blog posts:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadBlogPosts()
+  }, [])
 
   return (
     <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-inter-tight)]">
@@ -199,31 +224,22 @@ export default function Home() {
             variants={VARIANTS_SECTION}
             transition={TRANSITION_SECTION}
           >
-            <h3 className="mb-3 text-lg font-medium">Blog</h3>
+            <h3 className="mb-3 text-lg font-medium">Latest Posts</h3>
             <div className="flex flex-col space-y-0">
-              <AnimatedBackground
-                enableHover
-                className="h-full w-full rounded-lg bg-zinc-100 dark:bg-zinc-900/80"
-                transition={{ type: 'spring', bounce: 0, duration: 0.2 }}
-              >
-                {BLOG_POSTS.map((post) => (
-                  <Link
-                    key={post.uid}
-                    className="-mx-3 rounded-xl px-3 py-3"
-                    href={post.link}
-                    data-id={post.uid}
-                  >
-                    <div className="flex flex-col space-y-1">
-                      <h4 className="font-normal dark:text-zinc-100">
-                        {post.title}
-                      </h4>
-                      <p className="text-zinc-500 dark:text-zinc-400">
-                        {post.description}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </AnimatedBackground>
+              {isLoading ? (
+                <div className="text-zinc-500">Loading posts...</div>
+              ) : blogPosts.length > 0 ? (
+                blogPosts.map((post) => (
+                  <PostCard
+                    key={post.slug}
+                    title={post.title}
+                    link={`blog/${post.slug}`}
+                    date={post.date}
+                  />
+                ))
+              ) : (
+                <div className="text-zinc-500">No posts found.</div>
+              )}
             </div>
           </motion.section>
 
