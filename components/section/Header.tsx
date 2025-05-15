@@ -22,7 +22,6 @@ export default function Header() {
   const { theme, setTheme } = useTheme()
   const menuItems = [
     { key: 'home', href: '/' },
-    { key: 'project', href: '/project' },
     { key: 'blog', href: '/blog' },
   ]
 
