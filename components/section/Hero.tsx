@@ -11,7 +11,7 @@ export default function Hero() {
   const data = RESUME_DATA
 
   return (
-    <header className="mb-8 flex items-center justify-between">
+    <header className="mb-9 flex items-center justify-between">
       <div className="grid grid-cols-[1fr_auto] items-stretch gap-x-6">
         <Avatar className="size-20 max-sm:mt-5 max-sm:hidden max-sm:h-20 max-sm:w-20">
           <AvatarImage

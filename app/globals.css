@@ -2,20 +2,46 @@
 @plugin '@tailwindcss/typography';
 @custom-variant dark (&:is(.dark *));
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
+
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentColor);
+	}
+}
+
+/* View Transition Styles */
+::view-transition-group(root) {
+	animation-timing-function: ease;
+}
+
+::view-transition-new(root) {
+	mask: url('https://media.tenor.com/cyORI7kwShQAAAAi/shigure-ui-dance.gif') center / 0 no-repeat;
+	animation: scale 3s;
+}
+
+::view-transition-old(root),
+.dark::view-transition-old(root) {
+	animation: scale 3s;
+}
+
+@keyframes scale {
+	0% {
+		mask-size: 0;
+	}
+
+	10% {
+		mask-size: 50vmax;
+	}
+
+	90% {
+		mask-size: 50vmax;
+	}
+
+	100% {
+		mask-size: 2000vmax;
+	}
 }

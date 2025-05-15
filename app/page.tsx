@@ -146,7 +146,7 @@ export default function Home() {
         <Header />
         <Hero />
         <motion.main
-          className="space-y-14"
+          className="space-y-24"
           variants={VARIANTS_CONTAINER}
           initial="hidden"
           animate="visible"
@@ -165,11 +165,11 @@ export default function Home() {
             transition={TRANSITION_SECTION}
           >
             <h3 className="mb-5 text-lg font-medium">Selected Projects</h3>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2">
               {data.projects.map((project) => {
                 if (project.isFeatured) {
                   return (
-                    <div key={project.title} className="space-y-2">
+                    <div key={project.title} className="space-y-4">
                       <div className="relative rounded-2xl bg-zinc-50/40 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950/40 dark:ring-zinc-800/50">
                         <Project src={project.img} />
                       </div>
@@ -249,18 +249,14 @@ export default function Home() {
           >
             <h3 className="mb-5 text-lg font-medium">Connect</h3>
             <p className="mb-5 text-zinc-600 dark:text-zinc-400">
-              Feel free to contact me at{' '}
-              <a
-                className="underline dark:text-zinc-300"
-                href={`mailto:${EMAIL}`}
-              >
-                {EMAIL}
-              </a>
+			If you need help in developing software, designing products,
+            solving problems or building teams, or just to grab some coffee and
+            have a good talk, please reach out via:
             </p>
             <div className="flex items-center justify-start space-x-3">
-              {SOCIAL_LINKS.map((link) => (
-                <MagneticSocialLink key={link.label} link={link.link}>
-                  {link.label}
+              {data.contact.social.map((link) => (
+                <MagneticSocialLink key={link.name} link={link.url}>
+                  {link.name}
                 </MagneticSocialLink>
               ))}
             </div>
