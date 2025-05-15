@@ -38,7 +38,7 @@ export default function Header() {
   }
 
   return (
-    <header className="relative z-50 leading-none font-medium tracking-[-0.41px] mb-10">
+    <header className="relative z-50 leading-none font-medium tracking-[-0.41px] mb-12">
       <div className="relative z-10">
         <nav className="relative flex items-center justify-end gap-8">
           {menuItems.map(({ key, href }) => (
