@@ -18,15 +18,8 @@ import {
   MorphingDialogClose,
   MorphingDialogContainer,
 } from '@/components/ui/morphing-dialog'
-import Link from 'next/link'
 import { RESUME_DATA } from '@/data/resume-data'
-import {
-  PROJECTS,
-  WORK_EXPERIENCE,
-  BLOG_POSTS,
-  EMAIL,
-  SOCIAL_LINKS,
-} from '../data/data'
+
 
 const VARIANTS_CONTAINER = {
   hidden: { opacity: 0 },
