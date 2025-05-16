@@ -1,6 +1,7 @@
 import { draftMode } from 'next/headers'
 import { fetchBlogPosts } from '../../contentful/blogPosts'
 import Header from '@/components/section/Header'
+import Footer from '@/components/section/Footer'
 import { PostCard } from '@/components/ui/post-card'
 
 async function Blog() {
@@ -24,6 +25,7 @@ async function Blog() {
             />
           )
         })}
+        <Footer />
       </div>
     </div>
   )
