@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import { RESUME_DATA } from '@/data/resume-data'
+import { Analytics } from '@vercel/analytics/next'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -39,6 +40,7 @@ export default function RootLayout({
           {children}
         </ThemeProvider>
       </body>
+      <Analytics />
     </html>
   )
 }
