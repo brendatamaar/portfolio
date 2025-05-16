@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import { Header } from './header'
-import { Footer } from './footer'
 import { ThemeProvider } from 'next-themes'
+import { RESUME_DATA } from '@/data/resume-data'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -12,9 +11,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Nim - Personal website template',
-  description:
-    'Nim is a free and open-source personal website template built with Next.js 15, React 19 and Motion-Primitives.',
+  title: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+  description: `${RESUME_DATA.description}`,
 }
 
 const geist = Geist({ variable: '--font-geist', subsets: ['latin'] })
