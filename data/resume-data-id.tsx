@@ -1,4 +1,4 @@
-import { GitHubIcon, LinkedInIcon } from "@/components/icons";
+import { GitHubIcon, LinkedInIcon } from "@/components/icon";
 
 export const RESUME_DATA_ID = {
   name: "Brendatama Akbar Ramadhan",

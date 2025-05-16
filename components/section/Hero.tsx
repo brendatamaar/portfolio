@@ -4,7 +4,7 @@ import { TextEffect } from '@/components/ui/text-effect'
 import Link from 'next/link'
 
 import { RESUME_DATA } from '@/data/resume-data'
-import { XIcon, GlobeIcon } from 'lucide-react'
+import { GlobeIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function Hero() {

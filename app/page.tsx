@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/morphing-dialog'
 import { RESUME_DATA } from '@/data/resume-data'
 
-
 const VARIANTS_CONTAINER = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
@@ -242,9 +241,9 @@ export default function Home() {
           >
             <h3 className="mb-5 text-lg font-medium">Connect</h3>
             <p className="mb-5 text-zinc-600 dark:text-zinc-400">
-			If you need help in developing software, designing products,
-            solving problems or building teams, or just to grab some coffee and
-            have a good talk, please reach out via:
+              If you need help in developing software, designing products,
+              solving problems or building teams, or just to grab some coffee
+              and have a good talk, please reach out via:
             </p>
             <div className="flex items-center justify-start space-x-3">
               {data.contact.social.map((link) => (
