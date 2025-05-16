@@ -40,6 +40,7 @@ export async function generateMetadata({
 
   return {
     title: blogPost.title,
+	description: blogPost.title
   }
 }
 

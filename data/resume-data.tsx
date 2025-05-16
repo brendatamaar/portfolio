@@ -14,7 +14,7 @@ export const RESUME_DATA = {
     'I am a web software developer specializing in designing and building applications with a focus on simplicity and usability. Currently, I work at PLN Icon Plus as a Web Software Developer. Have a keen interest in tech, RPG games, and good stories.🤖',
   avatarUrl:
     'https://avatars.githubusercontent.com/u/15965200?s=400&u=f240353cd552d7409e345f8d367046014c99161b&v=4',
-  personalWebsiteUrl: 'https://brendatama.vercel.app/',
+  personalWebsiteUrl: 'https://www.brendatama.xyz/',
   contact: {
     email: 'brendatamaa@gmail.com',
     tel: '+6282128947353',
