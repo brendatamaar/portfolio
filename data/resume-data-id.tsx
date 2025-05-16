@@ -11,7 +11,7 @@ export const RESUME_DATA_ID = {
   summary:
     "Saat ini, saya bekerja di PLN Icon Plus sebagai Web Developer. Keahlian saya meliputi: gemar mencari masalah untuk dipecahkan, mengotak-atik kodingan dalam membuat web & apps, serta selalu penasaran dengan hal-hal yang baru. Sangat suka ngobrol terkait tech, game RPG maupun cerita yang seru.🤖",
   avatarUrl: "https://avatars.githubusercontent.com/u/15965200?s=400&u=f240353cd552d7409e345f8d367046014c99161b&v=4",
-  personalWebsiteUrl: "https://brendatama.vercel.app/",
+  personalWebsiteUrl: "https://www.brendatama.xyz/",
   contact: {
     email: "brendatamaa@gmail.com",
     tel: "+6282128947353",

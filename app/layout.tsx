@@ -13,10 +13,74 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+  title: {
+    template: `%s | ${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+    default: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+  },
   description: `${RESUME_DATA.description}`,
-}
 
+  authors: [{ name: RESUME_DATA.name, url: RESUME_DATA.personalWebsiteUrl }],
+  creator: RESUME_DATA.name,
+  publisher: RESUME_DATA.name,
+
+  applicationName: `${RESUME_DATA.name} - Portfolio`,
+  keywords: [
+    RESUME_DATA.currentJob,
+    'portfolio',
+    'resume',
+    'professional',
+    ...RESUME_DATA.skills,
+  ],
+  category: 'portfolio',
+
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    alternateLocale: ['id_ID'],
+    url: RESUME_DATA.personalWebsiteUrl,
+    title: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+    description: RESUME_DATA.description,
+    siteName: `${RESUME_DATA.name} - Portfolio`,
+    images: [
+      {
+        url: `${RESUME_DATA.personalWebsiteUrl}preview.png`,
+        width: 1200,
+        height: 630,
+        alt: `${RESUME_DATA.name} - Portfolio`,
+      },
+    ],
+  },
+
+  twitter: {
+    card: 'summary_large_image',
+    title: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+    description: RESUME_DATA.description,
+    creator: '@berkelomang',
+    images: [`${RESUME_DATA.personalWebsiteUrl}preview.png`],
+  },
+
+  alternates: {
+    canonical: RESUME_DATA.personalWebsiteUrl,
+    languages: {
+      en: '/en',
+      id: '/id',
+    },
+  },
+
+  appleWebApp: {
+    title: `${RESUME_DATA.name} - Portfolio`,
+    statusBarStyle: 'black-translucent',
+    capable: true,
+  },
+
+  formatDetection: {
+    telephone: true,
+    date: true,
+    address: true,
+    email: true,
+    url: true,
+  },
+}
 const geist = Geist({ variable: '--font-geist', subsets: ['latin'] })
 
 const geistMono = Geist_Mono({
