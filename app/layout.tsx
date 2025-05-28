@@ -14,8 +14,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    template: `%s | ${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
-    default: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+    template: `%s | ${RESUME_DATA.name}`,
+    default: `${RESUME_DATA.name}`,
   },
   description: `${RESUME_DATA.description}`,
 
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     alternateLocale: ['id_ID'],
     url: RESUME_DATA.personalWebsiteUrl,
-    title: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+    title: `${RESUME_DATA.name}`,
     description: RESUME_DATA.description,
     siteName: `${RESUME_DATA.name} - Portfolio`,
     images: [
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
 
   twitter: {
     card: 'summary_large_image',
-    title: `${RESUME_DATA.name} - ${RESUME_DATA.currentJob}`,
+    title: `${RESUME_DATA.name}`,
     description: RESUME_DATA.description,
     creator: '@berkelomang',
     images: [`${RESUME_DATA.personalWebsiteUrl}images/preview.png`],
