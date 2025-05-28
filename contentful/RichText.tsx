@@ -31,9 +31,9 @@ const renderOptions: Options = {
           <CopyBlock
             text={node.content[0].value}
             language={'tsx'}
-            wrapLongLines={true}
+            wrapLongLines={false}
             codeBlock={true}
-            showLineNumbers={false}
+            showLineNumbers={true}
             theme={dracula}
           />
         )
@@ -146,9 +146,7 @@ const renderOptions: Options = {
   },
   renderMark: {
     [MARKS.BOLD]: (text) => (
-      <strong className="font-medium text-black dark:text-white">
-        {text}
-      </strong>
+      <strong className="font-medium text-black dark:text-white">{text}</strong>
     ),
     [MARKS.ITALIC]: (text) => <em>{text}</em>,
     [MARKS.UNDERLINE]: (text) => <u>{text}</u>,
