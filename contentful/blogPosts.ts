@@ -9,6 +9,7 @@ type BlogPostEntry = Entry<TypePersonalBlogSkeleton, undefined, string>
 
 export interface BlogPost {
   title: string
+  desc: string
   slug: string
   date: ISO8601DateTimeString
   body: RichTextDocument | null
@@ -27,6 +28,7 @@ export function parseContentfulBlogPost(
 
   return {
     title: blogPostEntry.fields.title || '',
+    desc: blogPostEntry.fields.desc || '',
     slug: blogPostEntry.fields.slug || '',
     date: blogPostEntry.fields.date,
     body: blogPostEntry.fields.body || null,

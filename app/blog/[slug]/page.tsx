@@ -40,7 +40,17 @@ export async function generateMetadata({
 
   return {
     title: blogPost.title,
-    description: blogPost.title,
+    description: blogPost.desc,
+    openGraph: {
+      title: blogPost.title,
+      description: blogPost.desc,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: blogPost.title,
+      description: blogPost.desc,
+    },
   }
 }
 
