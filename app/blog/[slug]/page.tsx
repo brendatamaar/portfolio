@@ -7,6 +7,7 @@ import Link from 'next/link'
 import RichText from '@/contentful/RichText'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
+import { RESUME_DATA } from '@/data/resume-data'
 
 interface BlogPostPageParams {
   slug: string
@@ -45,11 +46,23 @@ export async function generateMetadata({
       title: blogPost.title,
       description: blogPost.desc,
       type: 'article',
+      images: {
+        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.png`,
+        width: 1200,
+        height: 630,
+        alt: `${RESUME_DATA.name} - Portfolio`,
+      },
     },
     twitter: {
       card: 'summary_large_image',
       title: blogPost.title,
       description: blogPost.desc,
+      images: {
+        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.png`,
+        width: 1200,
+        height: 630,
+        alt: `${RESUME_DATA.name} - Portfolio`,
+      },
     },
   }
 }
