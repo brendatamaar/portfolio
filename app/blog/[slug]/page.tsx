@@ -47,7 +47,7 @@ export async function generateMetadata({
       description: blogPost.desc,
       type: 'article',
       images: {
-        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.png`,
+        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.jpg`,
         width: 1200,
         height: 630,
         alt: `${RESUME_DATA.name} - Portfolio`,
@@ -58,7 +58,7 @@ export async function generateMetadata({
       title: blogPost.title,
       description: blogPost.desc,
       images: {
-        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.png`,
+        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.jpg`,
         width: 1200,
         height: 630,
         alt: `${RESUME_DATA.name} - Portfolio`,

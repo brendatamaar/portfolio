@@ -44,16 +44,13 @@ function Project({ src }: ProjectProps) {
       }}
     >
       <MorphingDialogTrigger>
-        <img
-          src={src}
-          className="aspect-video w-full cursor-zoom-in rounded-xl"
-        />
+        <img src={src} className="h-40 max-w-full rounded-xl object-cover" />
       </MorphingDialogTrigger>
       <MorphingDialogContainer>
         <MorphingDialogContent className="relative aspect-video rounded-2xl bg-zinc-50 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950 dark:ring-zinc-800/50">
           <img
             src={src}
-            className="aspect-video h-[50vh] w-full rounded-xl md:h-[70vh]"
+            className="max-w-full rounded-xl object-contain md:h-[70vh] md:object-cover"
           />
         </MorphingDialogContent>
         <MorphingDialogClose
@@ -167,7 +164,7 @@ export default function Home() {
                       </div>
                       <div className="px-1">
                         <a
-                          className="font-base group relative inline-block font-[450] text-zinc-900 dark:text-zinc-50"
+                          className="font-base group relative inline-block font-[450] text-zinc-900 underline dark:text-zinc-50"
                           href={
                             'link' in project ? project.link.href : undefined
                           }

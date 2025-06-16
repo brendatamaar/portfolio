@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     siteName: `${RESUME_DATA.name} - Portfolio`,
     images: [
       {
-        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.png`,
+        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.jpg`,
         width: 1200,
         height: 630,
         alt: `${RESUME_DATA.name} - Portfolio`,
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     title: `${RESUME_DATA.name}`,
     description: RESUME_DATA.description,
     creator: '@berkelomang',
-    images: [`${RESUME_DATA.personalWebsiteUrl}images/preview.png`],
+    images: [`${RESUME_DATA.personalWebsiteUrl}images/preview.jpg`],
   },
 
   alternates: {

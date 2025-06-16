@@ -91,6 +91,51 @@ export const RESUME_DATA = {
   ],
   projects: [
     {
+      title: 'jpeg-encoder',
+      techStack: ['Side Project', 'Javascript'],
+      description: 'JPEG encoder with full compression pipeline.',
+      logo: '',
+      link: {
+        label: 'jpeg-encoder',
+        href: 'https://jpeg-encoder.vercel.app/',
+      },
+      img: '/images/jpeg-encoder.webp',
+      isFeatured: true,
+    },
+    {
+      title: 'skenatify',
+      techStack: [
+        'Side Project',
+        'NextJS',
+        'React',
+        'Tailwind',
+        'Typescript',
+        'Spotify API',
+      ],
+      description:
+        'Customized track recommendations based on your favorite artists.',
+      logo: '',
+      link: {
+        label: 'skenatify',
+        href: 'https://skenatify.vercel.app/',
+      },
+      img: '/images/skenatify.webp',
+      isFeatured: true,
+    },
+    {
+      title: 'sewagi',
+      techStack: ['Laravel', 'Bootstrap', 'Elasticsearch', 'Google API'],
+      description:
+        'All-in-one dashboard for managing apartment rentals and listings.',
+      logo: '',
+      link: {
+        label: 'sewagi-web',
+        href: 'https://sewagi-web.inspira.web.id',
+      },
+      img: '/images/sewagi.webp',
+      isFeatured: true,
+    },
+    {
       title: 'AIR Tax',
       techStack: ['Main Project', 'Vue', 'NodeJS', 'Spring Boot'],
       description:
@@ -101,7 +146,7 @@ export const RESUME_DATA = {
         href: 'https://web-blue.air.id/airtax-new',
       },
       img: '/images/airtax.webp',
-      isFeatured: true,
+      isFeatured: false,
     },
     {
       title: 'cheSKP',
@@ -114,7 +159,7 @@ export const RESUME_DATA = {
         href: 'https://cheskp-mobile.pln.co.id/',
       },
       img: '/images/cheskp.webp',
-      isFeatured: true,
+      isFeatured: false,
     },
     {
       title: 'Virtual Cubicle',
@@ -152,26 +197,6 @@ export const RESUME_DATA = {
       isFeatured: false,
     },
     {
-      title: 'Skenatify',
-      techStack: [
-        'Side Project',
-        'NextJS',
-        'React',
-        'Tailwind',
-        'Typescript',
-        'Spotify API',
-      ],
-      description:
-        'Customized track recommendations based on your favorite artists.',
-      logo: '',
-      link: {
-        label: 'skenatify',
-        href: 'https://skenatify.vercel.app/',
-      },
-      img: '/images/skenatify.webp',
-      isFeatured: false,
-    },
-    {
       title: 'Kenali Caleg',
       techStack: ['Side Project', 'React', 'NextJS', 'NodeJS', 'Tailwind'],
       description:
@@ -194,7 +219,7 @@ export const RESUME_DATA = {
         href: 'https://datatech.id/',
       },
       img: '/images/datatech.webp',
-      isFeatured: true,
+      isFeatured: false,
     },
     {
       title: 'Englishseed',
@@ -208,18 +233,6 @@ export const RESUME_DATA = {
       },
       img: '',
       isFeatured: false,
-    },
-    {
-      title: 'Sewagi',
-      techStack: ['Laravel', 'Bootstrap', 'Elasticsearch', 'Google API'],
-      description: 'User-friendly apartment management dashboard.',
-      logo: '',
-      link: {
-        label: 'sewagi-web',
-        href: 'https://sewagi-web.inspira.web.id',
-      },
-      img: '/images/sewagi.webp',
-      isFeatured: true,
     },
     {
       title: 'RRW',
