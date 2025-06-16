@@ -160,7 +160,7 @@ const RichText: React.FC<RichTextProps> = ({ document }) => {
   }
 
   return (
-    <div className="text-justify text-zinc-600 dark:text-zinc-500">
+    <div className="text-start text-zinc-600 dark:text-zinc-500">
       {documentToReactComponents(document, renderOptions)}
     </div>
   )
