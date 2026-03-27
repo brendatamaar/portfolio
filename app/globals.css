@@ -3,42 +3,57 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
 
-	*,
-	::after,
-	::before,
-	::backdrop,
-	::file-selector-button {
-		border-color: var(--color-gray-200, currentColor);
-	}
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* animated underline */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0% 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 0.25s ease;
+}
+.link-underline:hover {
+  background-size: 100% 1px;
 }
 
 /* View Transition Styles */
 ::view-transition-group(root) {
-	animation-timing-function: ease;
+  animation-timing-function: ease;
 }
 
 ::view-transition-old(root),
 .dark::view-transition-old(root) {
-	animation: anim 3s;
+  animation: anim 3s;
 }
 
 ::view-transition-new(root) {
-	mask: url('https://media.tenor.com/cyORI7kwShQAAAAi/shigure-ui-dance.gif') center / 0 no-repeat;
-	animation: anim 3s;
+  mask: url('https://media.tenor.com/cyORI7kwShQAAAAi/shigure-ui-dance.gif') center / 0 no-repeat;
+  animation: anim 3s;
 }
 
 @keyframes anim {
-	0% {
-		mask-size: 0;
-	}
+  0% {
+    mask-size: 0;
+  }
 
-	10%,
-	90% {
-		mask-size: 50vmax;
-	}
+  10%,
+  90% {
+    mask-size: 50vmax;
+  }
 
-	100% {
-		mask-size: 2000vmax;
-	}
+  100% {
+    mask-size: 2000vmax;
+  }
 }

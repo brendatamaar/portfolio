@@ -2,33 +2,86 @@ import { draftMode } from 'next/headers'
 import { fetchBlogPosts } from '../../contentful/blogPosts'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
-import { PostCard } from '@/components/ui/post-card'
+import Link from 'next/link'
 
-async function Blog() {
+function formatShortDate(dateString: string): string {
+  const d = new Date(dateString)
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const yy = String(d.getFullYear()).slice(2)
+  return `${mm}.${dd}.${yy}`
+}
+
+async function BlogPage() {
   const blogPosts = await fetchBlogPosts({
     preview: (await draftMode()).isEnabled,
   })
 
   return (
-    <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-inter-tight)]">
-      <div className="relative mx-auto w-full max-w-screen-sm flex-1 px-4 pt-20">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <div className="mx-auto max-w-2xl px-5 py-12 sm:py-20">
         <Header />
 
-        <h2 className="text-medium mb-8 font-medium">Latest Posts</h2>
-        {blogPosts.map((blogPost) => {
-          return (
-            <PostCard
-              key={blogPost.slug}
-              title={blogPost.title}
-              link={`blog/${blogPost.slug}`}
-              date={blogPost.date}
-            />
-          )
-        })}
+        <div className="mb-10">
+          <h1 className="mb-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            writing
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            thinking out loud &mdash; on building things, design, and whatever
+            else is on my mind.
+          </p>
+        </div>
+
+        <div className="border-t border-dashed border-zinc-200 dark:border-zinc-800">
+          {blogPosts.length === 0 && (
+            <p className="py-8 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+              nothing yet &mdash; soon.
+            </p>
+          )}
+          {blogPosts.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="group flex items-start justify-between gap-4 border-b border-dashed border-zinc-200 py-5 transition-opacity duration-200 hover:opacity-60 dark:border-zinc-800"
+            >
+              <div className="min-w-0 flex-1">
+                <h2 className="mb-1 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  {post.title}
+                </h2>
+                {post.desc && (
+                  <p className="line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">
+                    {post.desc}
+                  </p>
+                )}
+                {post.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {post.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="font-[family-name:var(--font-geist-mono)] text-[10px] text-zinc-400 dark:text-zinc-600"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+                  {formatShortDate(post.date)}
+                </span>
+                <span className="-translate-x-1 text-zinc-400 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 dark:text-zinc-600">
+                  &rarr;
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
         <Footer />
       </div>
     </div>
   )
 }
 
-export default Blog
+export default BlogPage
