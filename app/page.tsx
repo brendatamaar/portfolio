@@ -153,16 +153,20 @@ export default function Home() {
             variants={VARIANTS_SECTION}
             transition={TRANSITION_SECTION}
           >
-            <h3 className="mb-5 text-lg font-medium">Selected Projects</h3>
+            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Selected Projects
+            </h3>
             <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2">
               {data.projects.map((project) => {
                 if (project.isFeatured) {
                   return (
-                    <div key={project.title} className="space-y-4">
-                      <div className="relative rounded-2xl bg-zinc-50/40 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950/40 dark:ring-zinc-800/50">
-                        <Project src={project.img} />
+                    <div key={project.title} className="group flex flex-col space-y-4">
+                      <div className="relative overflow-hidden rounded-2xl bg-zinc-50 p-1 ring-1 ring-zinc-200/50 transition-all duration-300 group-hover:ring-zinc-300 dark:bg-zinc-900/20 dark:ring-zinc-800/50 dark:group-hover:ring-zinc-700">
+                        <div className="transition-transform duration-500 group-hover:scale-[1.02]">
+                          <Project src={project.img} />
+                        </div>
                       </div>
-                      <div className="px-1">
+                      <div className="px-1 transition-opacity duration-300 group-hover:opacity-100 opacity-90">
                         <a
                           className="font-base group relative inline-block font-[450] text-zinc-900 underline dark:text-zinc-50"
                           href={
@@ -188,19 +192,24 @@ export default function Home() {
             variants={VARIANTS_SECTION}
             transition={TRANSITION_SECTION}
           >
-            <h3 className="mb-5 text-lg font-medium">Work Experience</h3>
+            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Work Experience
+            </h3>
             <div className="flex flex-col gap-y-6">
               {data.work.map((work) => {
                 return (
-                  <div className="flex w-full flex-col" key={work.company}>
-                    <div className="flex flex-row items-end gap-x-2">
-                      <h4>{work.company}</h4>
-                      <p className="text-sm opacity-50">
-                        {work.start} - {work.end}
+                  <div 
+                    className="group relative flex w-full flex-col space-y-1.5 transition-all duration-300 hover:translate-x-1" 
+                    key={work.company}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-y-1">
+                      <h4 className="font-medium text-zinc-900 dark:text-zinc-100 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">{work.company}</h4>
+                      <p className="text-sm text-zinc-500 font-medium">
+                        {work.start} — {work.end}
                       </p>
                     </div>
 
-                    <p className="text-zinc-600 dark:text-zinc-400">
+                    <p className="text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
                       {work.description}
                     </p>
                   </div>
@@ -213,7 +222,9 @@ export default function Home() {
             variants={VARIANTS_SECTION}
             transition={TRANSITION_SECTION}
           >
-            <h3 className="mb-3 text-lg font-medium">Latest Posts</h3>
+            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Latest Posts
+            </h3>
             <div className="flex flex-col space-y-0">
               {isLoading ? (
                 <div className="text-zinc-500">Loading posts...</div>
@@ -236,7 +247,9 @@ export default function Home() {
             variants={VARIANTS_SECTION}
             transition={TRANSITION_SECTION}
           >
-            <h3 className="mb-5 text-lg font-medium">Connect</h3>
+            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Connect
+            </h3>
             <p className="mb-5 text-zinc-600 dark:text-zinc-400">
               If you need help in developing software, designing products,
               solving problems or building teams, or just to grab some coffee
