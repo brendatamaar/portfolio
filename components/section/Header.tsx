@@ -4,6 +4,7 @@ import { MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import { Button } from '@/components/ui/button'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
+import { Magnetic } from '@/components/ui/magnetic'
 
 interface NavLinkProps {
   href: string
@@ -12,9 +13,11 @@ interface NavLinkProps {
 
 function NavLink({ href, label }: NavLinkProps) {
   return (
-    <Link href={href} className="text-sm hover:underline">
-      {label}
-    </Link>
+    <Magnetic springOptions={{ bounce: 0 }} intensity={0.2}>
+      <Link href={href} className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 capitalize">
+        {label}
+      </Link>
+    </Magnetic>
   )
 }
 
@@ -31,24 +34,30 @@ export default function Header() {
         setTheme(theme === 'light' ? 'dark' : 'light')
       })
     } else {
-      // Fallback for browsers that don't support View Transitions
       setTheme(theme === 'light' ? 'dark' : 'light')
     }
   }
 
   return (
-    <header className="relative z-50 mb-12 leading-none font-medium tracking-[-0.41px]">
-      <div className="relative z-10">
-        <nav className="relative flex items-center justify-end gap-8">
+    <header className="relative z-50 mb-16 leading-none">
+      <div className="relative z-10 flex items-center justify-between">
+        <div className="flex items-center">
+        </div>
+        <nav className="relative flex items-center gap-6 rounded-full bg-zinc-50/50 px-4 py-2 ring-1 ring-zinc-200/50 backdrop-blur-md dark:bg-zinc-900/50 dark:ring-zinc-800/50">
           {menuItems.map(({ key, href }) => (
             <NavLink key={key} href={href} label={key} />
           ))}
-          <Button variant="outline" size="icon" onClick={toggleTheme}>
-            <SunIcon className="h-[1rem] w-[1rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-            <MoonIcon className="absolute h-[1rem] w-[1rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-            <span className="sr-only">{'toggleTheme'}</span>
-          </Button>
-          {/* <LocaleSwitcher /> */}
+          <div className="h-4 w-[1px] bg-zinc-200 dark:bg-zinc-800" />
+          <Magnetic springOptions={{ bounce: 0 }} intensity={0.2}>
+            <button 
+              onClick={toggleTheme}
+              className="group flex h-6 w-6 items-center justify-center rounded-full text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+            >
+              <SunIcon className="h-4 w-4 scale-100 rotate-0 transition-transform duration-300 dark:scale-0 dark:-rotate-90" />
+              <MoonIcon className="absolute h-4 w-4 scale-0 rotate-90 transition-transform duration-300 dark:scale-100 dark:rotate-0" />
+              <span className="sr-only">Toggle Theme</span>
+            </button>
+          </Magnetic>
         </nav>
       </div>
     </header>

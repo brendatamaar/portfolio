@@ -9,20 +9,20 @@ interface Props {
 
 export function PostCard({ title, link, date }: Props) {
   return (
-    <div>
-      <Link href={link} target="_blank">
-        <div className="border-opacity-50 focus:shadow-outline mb-4 grid grid-cols-12 gap-2 border-b py-2 transition duration-150 ease-in-out hover:text-black focus:outline-none dark:hover:text-white">
-          <div className="col-span-3 mt-1 text-sm opacity-50">
+    <Link href={link} target="_blank" className="group rounded-xl p-3 -mx-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50 block">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-baseline gap-x-6 gap-y-1">
+          <time className="text-sm font-medium text-zinc-400 dark:text-zinc-500 w-24 tabular-nums shrink-0">
             {formatDate(date)}
-          </div>
-          <div className="col-span-8">
-            <h4 className="text-zinc-600 dark:text-zinc-400">{title}</h4>
-          </div>
-          <div className="col-span-1 flex justify-end">
-            <span>→</span>
-          </div>
+          </time>
+          <h4 className="font-medium text-zinc-900 dark:text-zinc-100 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
+            {title}
+          </h4>
         </div>
-      </Link>
-    </div>
+        <div className="opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 hidden sm:block">
+          <span className="text-zinc-400">→</span>
+        </div>
+      </div>
+    </Link>
   )
 }
