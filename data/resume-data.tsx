@@ -3,7 +3,7 @@ import { GitHubIcon, LinkedInIcon } from '@/components/icon'
 export const RESUME_DATA = {
   name: 'Brendatama Akbar Ramadan',
   initials: 'BA',
-  location: 'Jakarta, Indonesia (GMT +07)',
+  location: 'Jakarta, Indonesia',
   locationLink: 'https://www.google.com/maps/place/Jakarta',
   currentJob: 'Web Software Developer',
   description:
@@ -20,17 +20,17 @@ export const RESUME_DATA = {
     tel: '+6282128947353',
     social: [
       {
-        name: 'Email',
+        name: 'email',
         url: 'mailto:brendatamaa@gmail.com',
         icon: GitHubIcon,
       },
       {
-        name: 'GitHub',
+        name: 'github',
         url: 'https://github.com/brendatamaar',
         icon: GitHubIcon,
       },
       {
-        name: 'LinkedIn',
+        name: 'linkedin',
         url: 'https://www.linkedin.com/in/brendatamaar/',
         icon: LinkedInIcon,
       },
@@ -92,7 +92,7 @@ export const RESUME_DATA = {
   projects: [
     {
       title: 'jpeg-encoder',
-      techStack: ['Side Project', 'Javascript'],
+      techStack: ['side project', 'Javascript'],
       description: 'JPEG encoder with full compression pipeline.',
       logo: '',
       link: {
@@ -104,16 +104,8 @@ export const RESUME_DATA = {
     },
     {
       title: 'skenatify',
-      techStack: [
-        'Side Project',
-        'NextJS',
-        'React',
-        'Tailwind',
-        'Typescript',
-        'Spotify API',
-      ],
-      description:
-        'Customized track recommendations based on your favorite artists.',
+      techStack: ['side project', 'NextJS', 'React', 'Tailwind', 'Spotify API'],
+      description: 'track recommendations based on your favorite artists.',
       logo: '',
       link: {
         label: 'skenatify',
@@ -124,9 +116,8 @@ export const RESUME_DATA = {
     },
     {
       title: 'sewagi',
-      techStack: ['Laravel', 'Bootstrap', 'Elasticsearch', 'Google API'],
-      description:
-        'All-in-one dashboard for managing apartment rentals and listings.',
+      techStack: ['side project', 'Laravel', 'Elasticsearch', 'Google API'],
+      description: 'dashboard for managing apartment rentals and listings.',
       logo: '',
       link: {
         label: 'sewagi-web',
@@ -137,9 +128,8 @@ export const RESUME_DATA = {
     },
     {
       title: 'AIR Tax',
-      techStack: ['Main Project', 'Vue', 'NodeJS', 'Spring Boot'],
-      description:
-        'Simplify tax calculation, reporting, and payment processes.',
+      techStack: ['work', 'Vue', 'NodeJS', 'Spring Boot'],
+      description: 'tax calculation, reporting, and payment platform.',
       logo: '',
       link: {
         label: 'air-tax',
@@ -150,9 +140,8 @@ export const RESUME_DATA = {
     },
     {
       title: 'cheSKP',
-      techStack: ['Main Project', 'Vue', 'NodeJS', 'Spring Boot', 'Kotlin'],
-      description:
-        'Conducting and analyzing customer satisfaction surveys seamlessly.',
+      techStack: ['work', 'Vue', 'NodeJS', 'Spring Boot', 'Kotlin'],
+      description: 'customer satisfaction survey platform.',
       logo: '',
       link: {
         label: 'cheskp',
@@ -163,9 +152,8 @@ export const RESUME_DATA = {
     },
     {
       title: 'Virtual Cubicle',
-      techStack: ['Main Project', 'Vue', 'NodeJS', 'Tailwind'],
-      description:
-        'Web platform to digitalize and streamline core business operations of PLN Enjiniring.',
+      techStack: ['work', 'Vue', 'NodeJS', 'Tailwind'],
+      description: 'web platform to digitalize core business operations.',
       logo: '',
       link: {
         label: 'vc',
@@ -176,31 +164,20 @@ export const RESUME_DATA = {
     },
     {
       title: 'ESDS',
-      techStack: ['Main Project', 'Vue', 'NodeJS', 'Kotlin'],
-      description:
-        'Digital platform to facilitate electric stove data distribution.',
+      techStack: ['work', 'Vue', 'NodeJS', 'Kotlin'],
+      description: 'platform to facilitate electric stove data distribution.',
       logo: '',
       link: {
-        label: 'vc',
+        label: 'esds',
         href: 'https://isds.pln.co.id',
       },
       img: '/images/esds.webp',
       isFeatured: false,
     },
     {
-      title: 'CheckMATE',
-      techStack: ['Main Project', 'Vue', 'NodeJS', 'Spring Boot'],
-      description:
-        'Web system for monitoring, analyzing, and evaluating the maturity levels of company units.',
-      logo: '',
-      img: '',
-      isFeatured: false,
-    },
-    {
       title: 'Kenali Caleg',
-      techStack: ['Side Project', 'React', 'NextJS', 'NodeJS', 'Tailwind'],
-      description:
-        'Webpage to provide info on legislative candidates for the 2024 Indonesian Election.',
+      techStack: ['side project', 'React', 'NextJS', 'Tailwind'],
+      description: 'info on legislative candidates for the 2024 indonesian election.',
       logo: '',
       link: {
         label: 'kenali-caleg',
@@ -211,8 +188,8 @@ export const RESUME_DATA = {
     },
     {
       title: 'datatech',
-      techStack: ['Side Project', 'AMP', 'Bootstrap'],
-      description: 'Landing page for a software solutions company.',
+      techStack: ['side project', 'AMP', 'Bootstrap'],
+      description: 'landing page for a software solutions company.',
       logo: '',
       link: {
         label: 'datatech.id',
@@ -222,42 +199,62 @@ export const RESUME_DATA = {
       isFeatured: false,
     },
     {
-      title: 'Englishseed',
-      techStack: ['Side Project', 'Wordpress', 'PHP', 'Google API'],
-      description:
-        'Online english learning class for kindergarten and elementary level.',
-      logo: '',
-      link: {
-        label: 'englishseed',
-        href: 'https://www.instagram.com/englishseed/',
-      },
-      img: '',
-      isFeatured: false,
-    },
-    {
-      title: 'RRW',
-      techStack: ['Main Project', 'Java', 'Laravel'],
-      description: 'A tool to assist SEO team in processing web reports.',
+      title: 'CheckMATE',
+      techStack: ['work', 'Vue', 'NodeJS', 'Spring Boot'],
+      description: 'monitoring and evaluating maturity levels of company units.',
       logo: '',
       img: '',
       isFeatured: false,
     },
+  ],
+  books: [
     {
-      title: 'Translight',
-      techStack: ['Side Project', 'Bootstrap'],
-      description: 'Landing page for a transportation company.',
-      logo: '',
-      img: '',
-      isFeatured: false,
+      title: 'The Pragmatic Programmer',
+      author: 'David Thomas & Andrew Hunt',
+      status: 'read' as const,
+      tags: ['programming', 'career'],
     },
     {
-      title: 'Tratus',
-      techStack: ['Main Project', 'Java', 'SQLite'],
-      description:
-        ' Mobile app to view information about tourist sites in West Java.',
-      logo: '',
-      img: '',
-      isFeatured: false,
+      title: 'Designing Data-Intensive Applications',
+      author: 'Martin Kleppmann',
+      status: 'reading' as const,
+      tags: ['systems', 'engineering'],
+    },
+    {
+      title: 'Clean Architecture',
+      author: 'Robert C. Martin',
+      status: 'read' as const,
+      tags: ['programming', 'architecture'],
+    },
+    {
+      title: 'The Design of Everyday Things',
+      author: 'Don Norman',
+      status: 'read' as const,
+      tags: ['design', 'ux'],
+    },
+    {
+      title: 'A Philosophy of Software Design',
+      author: 'John Ousterhout',
+      status: 'read' as const,
+      tags: ['programming', 'architecture'],
+    },
+    {
+      title: 'Staff Engineer',
+      author: 'Will Larson',
+      status: 'reading' as const,
+      tags: ['career', 'leadership'],
+    },
+    {
+      title: 'Atomic Habits',
+      author: 'James Clear',
+      status: 'read' as const,
+      tags: ['productivity', 'self-improvement'],
+    },
+    {
+      title: 'The Creative Act',
+      author: 'Rick Rubin',
+      status: 'reading' as const,
+      tags: ['creativity', 'art'],
     },
   ],
 } as const

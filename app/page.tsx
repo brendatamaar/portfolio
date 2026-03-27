@@ -1,269 +1,223 @@
 'use client'
-import { motion } from 'motion/react'
-import { useState, useEffect } from 'react'
-
-import { XIcon } from 'lucide-react'
+import { motion, useInView } from 'motion/react'
+import { useRef, useState, useEffect } from 'react'
+import { ArrowUpRightIcon } from 'lucide-react'
 import { BlogPost } from '@/contentful/blogPosts'
 
 import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
-import { PostCard } from '@/components/ui/post-card'
-
-import { Magnetic } from '@/components/ui/magnetic'
-import {
-  MorphingDialog,
-  MorphingDialogTrigger,
-  MorphingDialogContent,
-  MorphingDialogClose,
-  MorphingDialogContainer,
-} from '@/components/ui/morphing-dialog'
 import { RESUME_DATA } from '@/data/resume-data'
 
-const VARIANTS_CONTAINER = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
-}
+// helpers
 
-const VARIANTS_SECTION = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
-  visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
-}
-
-const TRANSITION_SECTION = { duration: 0.3 }
-
-type ProjectProps = { src: string }
-
-function Project({ src }: ProjectProps) {
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
-    <MorphingDialog
-      transition={{
-        type: 'spring',
-        bounce: 0,
-        duration: 0.3,
-      }}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 14 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.4, ease: 'easeOut', delay }}
     >
-      <MorphingDialogTrigger>
-        <img src={src} className="h-40 max-w-full rounded-xl object-cover" />
-      </MorphingDialogTrigger>
-      <MorphingDialogContainer>
-        <MorphingDialogContent className="relative aspect-video rounded-2xl bg-zinc-50 p-1 ring-1 ring-zinc-200/50 ring-inset dark:bg-zinc-950 dark:ring-zinc-800/50">
-          <img
-            src={src}
-            className="max-w-full rounded-xl object-contain md:h-[70vh] md:object-cover"
-          />
-        </MorphingDialogContent>
-        <MorphingDialogClose
-          className="fixed top-6 right-6 h-fit w-fit rounded-full bg-white p-1"
-          variants={{
-            initial: { opacity: 0 },
-            animate: {
-              opacity: 1,
-              transition: { delay: 0.3, duration: 0.1 },
-            },
-            exit: { opacity: 0, transition: { duration: 0 } },
-          }}
-        >
-          <XIcon className="h-5 w-5 text-zinc-500" />
-        </MorphingDialogClose>
-      </MorphingDialogContainer>
-    </MorphingDialog>
+      {children}
+    </motion.div>
   )
 }
 
-function MagneticSocialLink({
-  children,
-  link,
-}: {
-  children: React.ReactNode
-  link: string
-}) {
+function SectionHeading({ num, label }: { num: string; label: string }) {
   return (
-    <Magnetic springOptions={{ bounce: 0 }} intensity={0.3}>
-      <a
-        href={link}
-        className="group relative inline-flex shrink-0 items-center gap-[1px] rounded-full bg-zinc-100 px-2.5 py-1 text-sm text-black transition-colors duration-200 hover:bg-zinc-950 hover:text-zinc-50 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
-      >
-        {children}
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 15 15"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-3 w-3"
-        >
-          <path
-            d="M3.64645 11.3536C3.45118 11.1583 3.45118 10.8417 3.64645 10.6465L10.2929 4L6 4C5.72386 4 5.5 3.77614 5.5 3.5C5.5 3.22386 5.72386 3 6 3L11.5 3C11.6326 3 11.7598 3.05268 11.8536 3.14645C11.9473 3.24022 12 3.36739 12 3.5L12 9.00001C12 9.27615 11.7761 9.50001 11.5 9.50001C11.2239 9.50001 11 9.27615 11 9.00001V4.70711L4.35355 11.3536C4.15829 11.5488 3.84171 11.5488 3.64645 11.3536Z"
-            fill="currentColor"
-            fillRule="evenodd"
-            clipRule="evenodd"
-          ></path>
-        </svg>
-      </a>
-    </Magnetic>
+    <div className="mb-4 flex items-center gap-2 border-b border-dashed border-zinc-200 pb-3 dark:border-zinc-800">
+      <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+        {num}
+      </span>
+      <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{label}</span>
+    </div>
   )
 }
+
+// project row
+
+type Project = (typeof RESUME_DATA.projects)[number]
+
+function ProjectRow({ project }: { project: Project }) {
+  const hasLink = 'link' in project
+
+  return (
+    <div className="group flex items-baseline justify-between gap-4 border-b border-dashed border-zinc-200 py-3 dark:border-zinc-800">
+      <div className="flex min-w-0 items-baseline gap-3">
+        <span className="shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+          {project.techStack[0] === 'side project' ? '~' : '*'}
+        </span>
+        {hasLink ? (
+          <a
+            href={(project as { link: { href: string } }).link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-underline shrink-0 text-sm font-medium text-zinc-900 dark:text-zinc-100"
+          >
+            {project.title}
+            <ArrowUpRightIcon className="mb-0.5 ml-0.5 inline h-3 w-3 opacity-0 transition-all duration-150 group-hover:opacity-60 group-hover:translate-x-px group-hover:-translate-y-px" />
+          </a>
+        ) : (
+          <span className="shrink-0 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            {project.title}
+          </span>
+        )}
+      </div>
+      <p className="hidden truncate text-right text-sm text-zinc-500 dark:text-zinc-400 sm:block sm:max-w-xs lg:max-w-sm">
+        {project.description}
+      </p>
+    </div>
+  )
+}
+
+// main
 
 export default function Home() {
   const data = RESUME_DATA
+  const [showAllProjects, setShowAllProjects] = useState(false)
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  const PREVIEW_COUNT = 4
+  const visibleProjects = showAllProjects ? data.projects : data.projects.slice(0, PREVIEW_COUNT)
+  const remaining = data.projects.length - PREVIEW_COUNT
 
   useEffect(() => {
     async function loadBlogPosts() {
       try {
         const response = await fetch('/api/blog')
-        if (!response.ok) {
-          throw new Error('Failed to fetch blog posts')
-        }
-        const posts = await response.json()
-        setBlogPosts(posts)
+        if (!response.ok) throw new Error('Failed to fetch blog posts')
+        setBlogPosts(await response.json())
       } catch (error) {
         console.error('Error loading blog posts:', error)
       } finally {
         setIsLoading(false)
       }
     }
-
     loadBlogPosts()
   }, [])
 
   return (
-    <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-inter-tight)]">
-      <div className="relative mx-auto w-full max-w-screen-sm flex-1 px-4 pt-20">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <div className="mx-auto max-w-2xl px-5 py-12 sm:py-20">
         <Header />
         <Hero />
-        <motion.main
-          className="space-y-24"
-          variants={VARIANTS_CONTAINER}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.section
-            variants={VARIANTS_SECTION}
-            transition={TRANSITION_SECTION}
-          >
-            <div className="flex-1">
-              <p className="text-zinc-600 dark:text-zinc-400">{data.about}</p>
-            </div>
-          </motion.section>
 
-          <motion.section
-            variants={VARIANTS_SECTION}
-            transition={TRANSITION_SECTION}
-          >
-            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Selected Projects
-            </h3>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2">
-              {data.projects.map((project) => {
-                if (project.isFeatured) {
-                  return (
-                    <div key={project.title} className="group flex flex-col space-y-4">
-                      <div className="relative overflow-hidden rounded-2xl bg-zinc-50 p-1 ring-1 ring-zinc-200/50 transition-all duration-300 group-hover:ring-zinc-300 dark:bg-zinc-900/20 dark:ring-zinc-800/50 dark:group-hover:ring-zinc-700">
-                        <div className="transition-transform duration-500 group-hover:scale-[1.02]">
-                          <Project src={project.img} />
-                        </div>
-                      </div>
-                      <div className="px-1 transition-opacity duration-300 group-hover:opacity-100 opacity-90">
-                        <a
-                          className="font-base group relative inline-block font-[450] text-zinc-900 underline dark:text-zinc-50"
-                          href={
-                            'link' in project ? project.link.href : undefined
-                          }
-                          target="_blank"
-                        >
-                          {project.title}
-                          <span className="absolute bottom-0.5 left-0 block h-[1px] w-full max-w-0 bg-zinc-900 transition-all duration-200 group-hover:max-w-full"></span>
-                        </a>
-                        <p className="text-zinc-600 dark:text-zinc-400">
-                          {project.description}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                }
-              })}
-            </div>
-          </motion.section>
+        <main className="space-y-16">
 
-          <motion.section
-            variants={VARIANTS_SECTION}
-            transition={TRANSITION_SECTION}
-          >
-            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Work Experience
-            </h3>
-            <div className="flex flex-col gap-y-6">
-              {data.work.map((work) => {
-                return (
-                  <div 
-                    className="group relative flex w-full flex-col space-y-1.5 transition-all duration-300 hover:translate-x-1" 
-                    key={work.company}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-y-1">
-                      <h4 className="font-medium text-zinc-900 dark:text-zinc-100 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">{work.company}</h4>
-                      <p className="text-sm text-zinc-500 font-medium">
-                        {work.start} — {work.end}
-                      </p>
-                    </div>
-
-                    <p className="text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-                      {work.description}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-          </motion.section>
-
-          <motion.section
-            variants={VARIANTS_SECTION}
-            transition={TRANSITION_SECTION}
-          >
-            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Latest Posts
-            </h3>
-            <div className="flex flex-col space-y-0">
-              {isLoading ? (
-                <div className="text-zinc-500">Loading posts...</div>
-              ) : blogPosts.length > 0 ? (
-                blogPosts.map((post) => (
-                  <PostCard
-                    key={post.slug}
-                    title={post.title}
-                    link={`blog/${post.slug}`}
-                    date={post.date}
-                  />
-                ))
-              ) : (
-                <div className="text-zinc-500">No posts found.</div>
+          {/* projects */}
+          <Reveal>
+            <section>
+              <SectionHeading num="01" label="projects" />
+              <div>
+                {visibleProjects.map((project) => (
+                  <ProjectRow key={project.title} project={project} />
+                ))}
+              </div>
+              {!showAllProjects && remaining > 0 && (
+                <button
+                  onClick={() => setShowAllProjects(true)}
+                  className="link-underline mt-4 text-sm text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-zinc-100"
+                >
+                  see all {data.projects.length} projects &rarr;
+                </button>
               )}
-            </div>
-          </motion.section>
+            </section>
+          </Reveal>
 
-          <motion.section
-            variants={VARIANTS_SECTION}
-            transition={TRANSITION_SECTION}
-          >
-            <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Connect
-            </h3>
-            <p className="mb-5 text-zinc-600 dark:text-zinc-400">
-              If you need help in developing software, designing products,
-              solving problems or building teams, or just to grab some coffee
-              and have a good talk, please reach out via:
-            </p>
-            <div className="flex items-center justify-start space-x-3">
-              {data.contact.social.map((link) => (
-                <MagneticSocialLink key={link.name} link={link.url}>
-                  {link.name}
-                </MagneticSocialLink>
-              ))}
-            </div>
-          </motion.section>
-        </motion.main>
+          {/* work */}
+          <Reveal delay={0.05}>
+            <section>
+              <SectionHeading num="02" label="work" />
+              <div>
+                {data.work.map((work) => (
+                  <div
+                    key={work.company}
+                    className="flex items-baseline justify-between gap-4 border-b border-dashed border-zinc-200 py-3 dark:border-zinc-800"
+                  >
+                    <div className="flex min-w-0 items-baseline gap-3">
+                      <span className="shrink-0 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        {work.company}
+                      </span>
+                      <span className="hidden truncate text-sm text-zinc-500 dark:text-zinc-400 sm:block">
+                        {work.description}
+                      </span>
+                    </div>
+                    <span className="shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+                      {work.start}&ndash;{work.end}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </Reveal>
+
+          {/* writing */}
+          <Reveal delay={0.05}>
+            <section>
+              <SectionHeading num="03" label="writing" />
+              <div>
+                {isLoading ? (
+                  <p className="py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+                    loading...
+                  </p>
+                ) : blogPosts.length > 0 ? (
+                  blogPosts.map((post) => (
+                    <a
+                      key={post.slug}
+                      href={`/blog/${post.slug}`}
+                      className="group flex items-baseline justify-between gap-4 border-b border-dashed border-zinc-200 py-3 dark:border-zinc-800"
+                    >
+                      <span className="link-underline text-sm text-zinc-900 dark:text-zinc-100">
+                        {post.title}
+                      </span>
+                      <span className="shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+                        {new Date(post.date).toLocaleDateString('en-US', {
+                          month: '2-digit',
+                          day: '2-digit',
+                          year: '2-digit',
+                        })}
+                      </span>
+                    </a>
+                  ))
+                ) : (
+                  <p className="py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+                    nothing yet &mdash; soon.
+                  </p>
+                )}
+              </div>
+            </section>
+          </Reveal>
+
+          {/* connect */}
+          <Reveal delay={0.05}>
+            <section>
+              <SectionHeading num="04" label="connect" />
+              <p className="mb-5 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+                If you need help in developing software, designing products, solving problems or
+                building teams, or just to grab some coffee and have a good talk, please reach out via:
+              </p>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                {data.contact.social.map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="link-underline text-sm text-zinc-900 dark:text-zinc-100"
+                  >
+                    {link.name}
+                  </a>
+                ))}
+              </div>
+            </section>
+          </Reveal>
+
+        </main>
+
         <Footer />
       </div>
     </div>
