@@ -56,7 +56,7 @@ function CodeBlock({ text }: { text: string }) {
   return (
     <div className="my-8 border-2 border-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
       <div className="bg-black border-b-2 border-black dark:border-white px-4 py-2">
-        <span className="font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase tracking-widest text-white/40">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-white/40">
           code
         </span>
       </div>
@@ -154,7 +154,7 @@ const renderOptions: Options = {
 
     [BLOCKS.QUOTE]: (_node: any, children: React.ReactNode) => (
       <blockquote className="my-8 border-l-4 border-black dark:border-white pl-5">
-        <div className="font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30 mb-2">
+        <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30 mb-2">
           quote
         </div>
         <div className="text-base italic leading-relaxed text-black/70 dark:text-white/70">
@@ -214,7 +214,7 @@ const renderOptions: Options = {
           />
         </div>
         {node.data.target.fields.description && (
-          <figcaption className="mt-3 font-[family-name:var(--font-mono)] text-[11px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 text-center">
+          <figcaption className="mt-3 font-mono text-[11px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 text-center">
             {node.data.target.fields.description}
           </figcaption>
         )}
@@ -229,7 +229,7 @@ const renderOptions: Options = {
     [MARKS.ITALIC]: (text) => <em className="italic">{text}</em>,
     [MARKS.UNDERLINE]: (text) => <u className="underline underline-offset-2">{text}</u>,
     [MARKS.CODE]: (text) => (
-      <code className="font-[family-name:var(--font-mono)] text-[0.875em] bg-black/8 dark:bg-white/10 text-black dark:text-white px-1.5 py-0.5 border border-black/20 dark:border-white/20">
+      <code className="font-mono text-[0.875em] bg-black/8 dark:bg-white/10 text-black dark:text-white px-1.5 py-0.5 border border-black/20 dark:border-white/20">
         {text}
       </code>
     ),
