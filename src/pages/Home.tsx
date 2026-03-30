@@ -9,6 +9,7 @@ import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
+import { formatDate } from '@/components/util/formatDate'
 
 // helpers
 
@@ -27,51 +28,90 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   )
 }
 
-function SectionHeading({ num, label }: { num: string; label: string }) {
+function SectionLabel({ num, label }: { num: string; label: string }) {
   return (
-    <div className="mb-4 flex items-center gap-2 border-b border-dashed border-zinc-200 pb-3 dark:border-zinc-800">
-      <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+    <div className="mb-8 flex items-center gap-4 border-b-2 border-black dark:border-white pb-4">
+      <span className="font-[family-name:var(--font-mono)] text-[11px] text-black/40 dark:text-white/40">
         {num}
       </span>
-      <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{label}</span>
+      <h2 className="text-xs font-black uppercase tracking-widest text-black dark:text-white">
+        {label}
+      </h2>
     </div>
   )
 }
 
-// project row
+// project card
 
 type Project = (typeof RESUME_DATA.projects)[number]
 
-function ProjectRow({ project }: { project: Project }) {
+function ProjectCard({ project, index }: { project: Project; index: number }) {
   const hasLink = 'link' in project
+  const type = project.techStack[0]
+  const tech = project.techStack.slice(1)
+  const color = type === 'work' ? 'bg-blue-500' : 'bg-orange-500'
+  const num = String(index + 1).padStart(2, '0')
 
-  return (
-    <div className="group flex items-baseline justify-between gap-4 border-b border-dashed border-zinc-200 py-3 dark:border-zinc-800">
-      <div className="flex min-w-0 items-baseline gap-3">
-        <span className="shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
-          {project.techStack[0] === 'side project' ? '~' : '*'}
+  const content = (
+    <div className="group h-full border-2 border-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] hover:shadow-[6px_6px_0px_#000] dark:hover:shadow-[6px_6px_0px_#fff] hover:-translate-x-px hover:-translate-y-px transition-all duration-150 flex flex-col bg-white dark:bg-black p-5">
+
+      {/* top row: type badge + number */}
+      <div className="flex items-center justify-between mb-5">
+        <span className={`${color} inline-flex items-center px-2.5 py-0.5 font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase tracking-widest text-white border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] transition-all`}>
+          {type}
         </span>
-        {hasLink ? (
-          <a
-            href={(project as { link: { href: string } }).link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-underline shrink-0 text-sm font-medium text-zinc-900 dark:text-zinc-100"
-          >
-            {project.title}
-            <ArrowUpRightIcon className="mb-0.5 ml-0.5 inline h-3 w-3 opacity-0 transition-all duration-150 group-hover:opacity-60 group-hover:translate-x-px group-hover:-translate-y-px" />
-          </a>
-        ) : (
-          <span className="shrink-0 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            {project.title}
-          </span>
-        )}
+        <span className="font-[family-name:var(--font-mono)] text-[11px] font-bold text-black/25 dark:text-white/25">
+          {num}
+        </span>
       </div>
-      <p className="hidden truncate text-right text-sm text-zinc-500 dark:text-zinc-400 sm:block sm:max-w-xs lg:max-w-sm">
+
+      {/* title + arrow */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <h3 className="text-xl font-black uppercase tracking-tight text-black dark:text-white group-hover:underline decoration-2 underline-offset-4 leading-tight">
+          {project.title}
+        </h3>
+        <ArrowUpRightIcon
+          className={`mt-1 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
+            hasLink ? 'text-black dark:text-white' : 'text-black/20 dark:text-white/20'
+          }`}
+        />
+      </div>
+
+      {/* description */}
+      <p className="text-sm font-medium text-black/60 dark:text-white/60 line-clamp-2 leading-relaxed">
         {project.description}
       </p>
+
+      {/* tech tags */}
+      {tech.length > 0 && (
+        <div className="mt-auto pt-5 flex flex-wrap gap-1.5">
+          {tech.slice(0, 3).map((t) => (
+            <span
+              key={t}
+              className="inline-flex items-center px-2.5 py-0.5 font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase tracking-wide text-black dark:text-white bg-white dark:bg-black border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] transition-all"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
+
+  if (hasLink) {
+    return (
+      <a
+        href={(project as { link: { href: string } }).link.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block h-full"
+      >
+        {content}
+      </a>
+    )
+  }
+
+  return <div className="h-full">{content}</div>
 }
 
 // main
@@ -101,28 +141,28 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <div className="mx-auto max-w-2xl px-5 py-12 sm:py-20">
+    <div className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
+      <div className="mx-auto max-w-3xl py-10 sm:py-16">
         <Header />
         <Hero />
 
-        <main className="space-y-16">
+        <main className="space-y-20">
 
           {/* projects */}
           <Reveal>
             <section>
-              <SectionHeading num="01" label="projects" />
-              <div>
-                {visibleProjects.map((project) => (
-                  <ProjectRow key={project.title} project={project} />
+              <SectionLabel num="01" label="Projects" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+                {visibleProjects.map((project, i) => (
+                  <ProjectCard key={project.title} project={project} index={i} />
                 ))}
               </div>
-              {!showAllProjects && remaining > 0 && (
+              {remaining > 0 && (
                 <button
-                  onClick={() => setShowAllProjects(true)}
-                  className="link-underline mt-4 text-sm text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-zinc-100"
+                  onClick={() => setShowAllProjects((prev) => !prev)}
+                  className="mt-6 border-2 border-black dark:border-white px-5 py-2.5 font-[family-name:var(--font-mono)] text-xs uppercase tracking-widest text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
                 >
-                  see all {data.projects.length} projects &rarr;
+                  {showAllProjects ? '− show less' : `+ ${remaining} more projects`}
                 </button>
               )}
             </section>
@@ -131,23 +171,30 @@ export default function Home() {
           {/* work */}
           <Reveal delay={0.05}>
             <section>
-              <SectionHeading num="02" label="work" />
+              <SectionLabel num="02" label="Work" />
               <div>
-                {data.work.map((work) => (
+                {data.work.map((work, i) => (
                   <div
                     key={work.company}
-                    className="flex items-baseline justify-between gap-4 border-b border-dashed border-zinc-200 py-3 dark:border-zinc-800"
+                    className={`flex items-start justify-between gap-6 py-5 ${
+                      i < data.work.length - 1 ? 'border-b-2 border-black dark:border-white' : ''
+                    }`}
                   >
-                    <div className="flex min-w-0 items-baseline gap-3">
-                      <span className="shrink-0 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                        {work.company}
-                      </span>
-                      <span className="hidden truncate text-sm text-zinc-500 dark:text-zinc-400 sm:block">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-3 mb-1">
+                        <span className="text-sm font-black uppercase tracking-tight text-black dark:text-white">
+                          {work.company}
+                        </span>
+                        <span className="font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40">
+                          {work.title}
+                        </span>
+                      </div>
+                      <p className="text-sm text-black/60 dark:text-white/60">
                         {work.description}
-                      </span>
+                      </p>
                     </div>
-                    <span className="shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
-                      {work.start}&ndash;{work.end}
+                    <span className="shrink-0 font-[family-name:var(--font-mono)] text-[11px] text-black/50 dark:text-white/50 tabular-nums">
+                      {work.start}–{work.end}
                     </span>
                   </div>
                 ))}
@@ -158,34 +205,52 @@ export default function Home() {
           {/* writing */}
           <Reveal delay={0.05}>
             <section>
-              <SectionHeading num="03" label="writing" />
+              <SectionLabel num="03" label="Writing" />
               <div>
                 {isLoading ? (
-                  <p className="py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+                  <p className="py-4 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
                     loading...
                   </p>
                 ) : blogPosts.length > 0 ? (
-                  blogPosts.map((post) => (
-                    <Link
-                      key={post.slug}
-                      to={`/blog/${post.slug}`}
-                      className="group flex items-baseline justify-between gap-4 border-b border-dashed border-zinc-200 py-3 dark:border-zinc-800"
-                    >
-                      <span className="link-underline text-sm text-zinc-900 dark:text-zinc-100">
-                        {post.title}
-                      </span>
-                      <span className="shrink-0 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
-                        {new Date(post.date).toLocaleDateString('en-US', {
-                          month: '2-digit',
-                          day: '2-digit',
-                          year: '2-digit',
-                        })}
-                      </span>
-                    </Link>
-                  ))
+                  <div className="flex flex-col gap-4">
+                    {blogPosts.map((post) => (
+                      <Link
+                        key={post.slug}
+                        to={`/blog/${post.slug}`}
+                        className="group block border-2 border-black dark:border-white bg-white dark:bg-black shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] hover:shadow-[6px_6px_0px_#000] dark:hover:shadow-[6px_6px_0px_#fff] hover:-translate-x-px hover:-translate-y-px transition-all duration-150 p-5"
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <span className="font-[family-name:var(--font-mono)] text-[11px] font-bold text-black/40 dark:text-white/40 tabular-nums">
+                            {formatDate(post.date)}
+                          </span>
+                          <ArrowUpRightIcon className="h-4 w-4 shrink-0 text-black dark:text-white transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        </div>
+                        <h3 className="text-xl font-black uppercase tracking-tight text-black dark:text-white group-hover:underline decoration-2 underline-offset-4 mb-2">
+                          {post.title}
+                        </h3>
+                        {post.desc && (
+                          <p className="text-sm font-medium text-black/60 dark:text-white/60 line-clamp-2 leading-relaxed mb-3">
+                            {post.desc}
+                          </p>
+                        )}
+                        {post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-3">
+                            {post.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center px-2.5 py-0.5 font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase tracking-wide text-black dark:text-white bg-white dark:bg-black border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
                 ) : (
-                  <p className="py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
-                    nothing yet &mdash; soon.
+                  <p className="py-4 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
+                    Nothing yet — soon.
                   </p>
                 )}
               </div>
@@ -195,21 +260,21 @@ export default function Home() {
           {/* connect */}
           <Reveal delay={0.05}>
             <section>
-              <SectionHeading num="04" label="connect" />
-              <p className="mb-5 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-                If you need help in developing software, designing products, solving problems or
-                building teams, or just to grab some coffee and have a good talk, please reach out via:
+              <SectionLabel num="04" label="Connect" />
+              <p className="text-base leading-relaxed text-black/60 dark:text-white/60 mb-8">
+                If you need help building software, designing products, or just want to grab coffee
+                and talk — reach out.
               </p>
-              <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <div className="flex flex-wrap gap-3">
                 {data.contact.social.map((link) => (
                   <a
                     key={link.name}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="link-underline text-sm text-zinc-900 dark:text-zinc-100"
+                    className="border-2 border-black dark:border-white px-5 py-2.5 font-[family-name:var(--font-mono)] text-xs uppercase tracking-widest text-black dark:text-white hover:bg-[#FFE600] hover:border-black dark:hover:bg-[#FFE600] dark:hover:border-[#FFE600] dark:hover:text-black transition-colors shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
                   >
-                    {link.name}
+                    {link.name} ↗
                   </a>
                 ))}
               </div>
