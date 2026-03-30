@@ -1,8 +1,9 @@
-'use client'
 import { motion, useInView } from 'motion/react'
 import { useRef, useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowUpRightIcon } from 'lucide-react'
-import { BlogPost } from '@/contentful/blogPosts'
+import { fetchBlogPosts } from '@/contentful/blogPosts'
+import type { BlogPost } from '@/contentful/blogPosts'
 
 import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
@@ -88,9 +89,8 @@ export default function Home() {
   useEffect(() => {
     async function loadBlogPosts() {
       try {
-        const response = await fetch('/api/blog')
-        if (!response.ok) throw new Error('Failed to fetch blog posts')
-        setBlogPosts(await response.json())
+        const posts = await fetchBlogPosts({ preview: false })
+        setBlogPosts(posts)
       } catch (error) {
         console.error('Error loading blog posts:', error)
       } finally {
@@ -166,9 +166,9 @@ export default function Home() {
                   </p>
                 ) : blogPosts.length > 0 ? (
                   blogPosts.map((post) => (
-                    <a
+                    <Link
                       key={post.slug}
-                      href={`/blog/${post.slug}`}
+                      to={`/blog/${post.slug}`}
                       className="group flex items-baseline justify-between gap-4 border-b border-dashed border-zinc-200 py-3 dark:border-zinc-800"
                     >
                       <span className="link-underline text-sm text-zinc-900 dark:text-zinc-100">
@@ -181,7 +181,7 @@ export default function Home() {
                           year: '2-digit',
                         })}
                       </span>
-                    </a>
+                    </Link>
                   ))
                 ) : (
                   <p className="py-3 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
