@@ -16,29 +16,28 @@ export default function Header() {
   }
 
   return (
-    <header className="mb-16 flex items-center justify-between">
+    <header className="mb-16 border-b-2 border-black dark:border-white pb-5 flex items-center justify-between">
       <Link
         to="/"
-        className="link-underline font-[family-name:var(--font-geist-mono)] text-xs text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100"
+        className="font-[family-name:var(--font-mono)] text-xs font-bold uppercase tracking-widest text-black dark:text-white"
       >
-        brendatama.xyz
+        home
       </Link>
 
       <div className="flex items-center gap-5">
         <Link
           to="/blog"
-          className="link-underline text-sm text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100"
+          className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-widest text-black dark:text-white hover:underline"
         >
           writing
         </Link>
         <button
           onClick={toggleTheme}
-          className="text-zinc-400 transition-colors hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100"
+          className="border-2 border-black dark:border-white p-1.5 text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
           aria-label="Toggle theme"
         >
-          <SunIcon className="h-3.5 w-3.5 scale-100 rotate-0 transition-transform duration-300 dark:scale-0 dark:-rotate-90 absolute" />
-          <MoonIcon className="h-3.5 w-3.5 scale-0 rotate-90 transition-transform duration-300 dark:scale-100 dark:rotate-0 absolute" />
-          <span className="h-3.5 w-3.5 block" />
+          <SunIcon className="h-3 w-3 block dark:hidden" />
+          <MoonIcon className="h-3 w-3 hidden dark:block" />
         </button>
       </div>
     </header>

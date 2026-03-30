@@ -3,8 +3,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-geist: 'Geist', system-ui, sans-serif;
-  --font-geist-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 @layer base {
@@ -13,7 +13,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: currentColor;
   }
 
   html {
@@ -21,22 +21,10 @@
   }
 
   body {
-    font-family: var(--font-geist);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-}
-
-/* animated underline */
-.link-underline {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-position: 0% 100%;
-  background-repeat: no-repeat;
-  background-size: 0% 1px;
-  transition: background-size 0.25s ease;
-}
-.link-underline:hover {
-  background-size: 100% 1px;
 }
 
 /* View Transition Styles */
