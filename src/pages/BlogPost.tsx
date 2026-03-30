@@ -1,16 +1,10 @@
-import { Metadata } from 'next'
-import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
-import { fetchBlogPost, fetchBlogPosts } from '@/contentful/blogPosts'
-import Link from 'next/link'
-import RichText from '@/contentful/RichText'
+import { useState, useEffect } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { fetchBlogPost } from '@/contentful/blogPosts'
+import type { BlogPost as BlogPostType } from '@/contentful/blogPosts'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
-import { RESUME_DATA } from '@/data/resume-data'
-
-interface BlogPostPageProps {
-  params: Promise<{ [key: string]: string }>
-}
+import RichText from '@/contentful/RichText'
 
 function formatShortDate(dateString: string): string {
   const d = new Date(dateString)
@@ -20,86 +14,90 @@ function formatShortDate(dateString: string): string {
   return `${mm}.${dd}.${yy}`
 }
 
-export async function generateStaticParams() {
-  const blogPosts = await fetchBlogPosts({ preview: false })
-  return blogPosts.map((post) => ({ slug: post.slug }))
-}
+export default function BlogPostPage() {
+  const { slug } = useParams<{ slug: string }>()
+  const [post, setPost] = useState<BlogPostType | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
-export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params
-  const blogPost = await fetchBlogPost({
-    slug,
-    preview: (await draftMode()).isEnabled,
-  })
+  useEffect(() => {
+    if (!slug) return
+    async function load() {
+      try {
+        const result = await fetchBlogPost({ slug: slug!, preview: false })
+        if (!result) {
+          setNotFound(true)
+        } else {
+          setPost(result)
+        }
+      } catch {
+        setNotFound(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [slug])
 
-  if (!blogPost) return notFound()
-
-  return {
-    title: blogPost.title,
-    description: blogPost.desc,
-    openGraph: {
-      title: blogPost.title,
-      description: blogPost.desc,
-      type: 'article',
-      images: {
-        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.jpg`,
-        width: 1200,
-        height: 630,
-        alt: `${RESUME_DATA.name} - Portfolio`,
-      },
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: blogPost.title,
-      description: blogPost.desc,
-      images: {
-        url: `${RESUME_DATA.personalWebsiteUrl}images/preview.jpg`,
-        width: 1200,
-        height: 630,
-        alt: `${RESUME_DATA.name} - Portfolio`,
-      },
-    },
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+        <div className="mx-auto max-w-2xl px-5 py-12 sm:py-20">
+          <Header />
+          <p className="font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+            loading...
+          </p>
+        </div>
+      </div>
+    )
   }
-}
 
-export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params
-  const blogPost = await fetchBlogPost({
-    slug,
-    preview: (await draftMode()).isEnabled,
-  })
-
-  if (!blogPost) return notFound()
+  if (notFound || !post) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+        <div className="mx-auto max-w-2xl px-5 py-12 sm:py-20">
+          <Header />
+          <p className="mb-4 font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
+            post not found.
+          </p>
+          <Link
+            to="/blog"
+            className="link-underline font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-zinc-100"
+          >
+            ← back to writing
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <div className="mx-auto max-w-2xl px-5 py-12 sm:py-20">
         <Header />
 
-        {/* back link */}
         <Link
-          href="/blog"
+          to="/blog"
           className="link-underline mb-10 inline-block font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-zinc-100"
         >
           ← back to writing
         </Link>
 
-        {/* post header */}
         <div className="mb-8 border-b border-dashed border-zinc-200 pb-6 dark:border-zinc-800">
           <h1 className="mb-3 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-3xl">
-            {blogPost.title}
+            {post.title}
           </h1>
 
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 dark:text-zinc-600">
-              {formatShortDate(blogPost.date)}
+              {formatShortDate(post.date)}
             </span>
 
-            {blogPost.tags.length > 0 && (
+            {post.tags.length > 0 && (
               <>
                 <span className="text-zinc-300 dark:text-zinc-700">·</span>
                 <div className="flex flex-wrap gap-2">
-                  {blogPost.tags.map((tag) => (
+                  {post.tags.map((tag) => (
                     <span
                       key={tag}
                       className="font-[family-name:var(--font-geist-mono)] text-[10px] text-zinc-400 dark:text-zinc-600"
@@ -112,22 +110,20 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             )}
           </div>
 
-          {blogPost.desc && (
+          {post.desc && (
             <p className="mt-3 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-              {blogPost.desc}
+              {post.desc}
             </p>
           )}
         </div>
 
-        {/* prose content */}
         <div className="prose prose-sm prose-zinc max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-zinc-900 prose-a:underline-offset-2 dark:prose-a:text-zinc-100 prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed prose-hr:border-dashed prose-hr:border-zinc-200 dark:prose-hr:border-zinc-800">
-          <RichText document={blogPost.body} />
+          <RichText document={post.body} />
         </div>
 
-        {/* bottom back link */}
         <div className="mt-12 border-t border-dashed border-zinc-200 pt-6 dark:border-zinc-800">
           <Link
-            href="/blog"
+            to="/blog"
             className="link-underline font-[family-name:var(--font-geist-mono)] text-[11px] text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-zinc-100"
           >
             ← back to writing

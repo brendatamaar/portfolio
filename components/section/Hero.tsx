@@ -1,4 +1,3 @@
-'use client'
 import { motion } from 'motion/react'
 import { RESUME_DATA } from '@/data/resume-data'
 

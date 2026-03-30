@@ -1,7 +1,6 @@
-'use client'
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import { useTheme } from 'next-themes'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
@@ -19,7 +18,7 @@ export default function Header() {
   return (
     <header className="mb-16 flex items-center justify-between">
       <Link
-        href="/"
+        to="/"
         className="link-underline font-[family-name:var(--font-geist-mono)] text-xs text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100"
       >
         brendatama.xyz
@@ -27,7 +26,7 @@ export default function Header() {
 
       <div className="flex items-center gap-5">
         <Link
-          href="/blog"
+          to="/blog"
           className="link-underline text-sm text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100"
         >
           writing

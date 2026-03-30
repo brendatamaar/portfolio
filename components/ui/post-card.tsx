@@ -1,5 +1,5 @@
 import { formatDate } from '@/components/util/formatDate'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 
 interface Props {
   title: string
@@ -9,7 +9,7 @@ interface Props {
 
 export function PostCard({ title, link, date }: Props) {
   return (
-    <Link href={link} target="_blank" className="group rounded-xl p-3 -mx-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50 block">
+    <Link to={link} target="_blank" className="group rounded-xl p-3 -mx-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50 block">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2">
         <div className="flex flex-col sm:flex-row sm:items-baseline gap-x-6 gap-y-1">
           <time className="text-sm font-medium text-zinc-400 dark:text-zinc-500 w-24 tabular-nums shrink-0">
