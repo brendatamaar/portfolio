@@ -20,7 +20,7 @@ export default function Hero() {
         {/* info card */}
         <div className="sm:w-44 shrink-0 border-2 border-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] self-start">
           <div className="px-4 py-3 border-b-2 border-black dark:border-white">
-            <p className="font-[family-name:var(--font-mono)] text-[9px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 mb-1">
+            <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 mb-1">
               Role
             </p>
             <p className="font-black text-xs uppercase tracking-tight text-black dark:text-white">
@@ -28,7 +28,7 @@ export default function Hero() {
             </p>
           </div>
           <div className="px-4 py-3">
-            <p className="font-[family-name:var(--font-mono)] text-[9px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 mb-1">
+            <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 mb-1">
               Location
             </p>
             <p className="font-black text-xs uppercase tracking-tight text-black dark:text-white">

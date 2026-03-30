@@ -19,7 +19,7 @@ export default function Header() {
     <header className="mb-16 border-b-2 border-black dark:border-white pb-5 flex items-center justify-between">
       <Link
         to="/"
-        className="font-[family-name:var(--font-mono)] text-xs font-bold uppercase tracking-widest text-black dark:text-white"
+        className="font-mono text-xs font-bold uppercase tracking-widest text-black dark:text-white"
       >
         home
       </Link>
@@ -27,7 +27,7 @@ export default function Header() {
       <div className="flex items-center gap-5">
         <Link
           to="/blog"
-          className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-widest text-black dark:text-white hover:underline"
+          className="font-mono text-xs uppercase tracking-widest text-black dark:text-white hover:underline"
         >
           writing
         </Link>
