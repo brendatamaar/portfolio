@@ -9,6 +9,7 @@ import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
 import { BlogPostCard } from '@/components/ui/post-card'
+import { Magnetic } from '@/components/ui/magnetic'
 
 // helpers
 
@@ -113,6 +114,20 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
   return <div className="h-full">{content}</div>
 })
 
+function SkeletonCard() {
+  return (
+    <div className="border-2 border-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] p-5 animate-pulse">
+      <div className="flex justify-between mb-3">
+        <div className="h-3 w-20 bg-black/10 dark:bg-white/10" />
+        <div className="h-4 w-4 bg-black/10 dark:bg-white/10" />
+      </div>
+      <div className="h-5 w-3/4 bg-black/10 dark:bg-white/10 mb-2" />
+      <div className="h-4 w-full bg-black/10 dark:bg-white/10" />
+      <div className="h-4 w-2/3 bg-black/10 dark:bg-white/10 mt-1" />
+    </div>
+  )
+}
+
 // main
 
 export default function Home() {
@@ -134,7 +149,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
-      <div className="mx-auto max-w-3xl py-10 sm:py-16">
+      <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
         <Header />
         <Hero />
 
@@ -200,9 +215,9 @@ export default function Home() {
               <SectionLabel num="03" label="Writing" />
               <div>
                 {isLoading ? (
-                  <p className="py-4 font-mono text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
-                    loading...
-                  </p>
+                  <div className="flex flex-col gap-4">
+                    {[0, 1, 2].map((i) => <SkeletonCard key={i} />)}
+                  </div>
                 ) : blogPosts.length > 0 ? (
                   <div className="flex flex-col gap-4">
                     {blogPosts.map((post) => (
@@ -228,15 +243,16 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-3">
                 {data.contact.social.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="border-2 border-black dark:border-white px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-black dark:text-white hover:bg-[#FFE600] hover:border-black dark:hover:bg-[#FFE600] dark:hover:border-[#FFE600] dark:hover:text-black transition-colors shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
-                  >
-                    {link.name} ↗
-                  </a>
+                  <Magnetic key={link.name} intensity={0.4} range={80}>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border-2 border-black dark:border-white px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-black dark:text-white hover:bg-[#FFE600] hover:border-black dark:hover:bg-[#FFE600] dark:hover:border-[#FFE600] dark:hover:text-black transition-colors shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
+                    >
+                      {link.name} ↗
+                    </a>
+                  </Magnetic>
                 ))}
               </div>
             </section>

@@ -1,11 +1,43 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { motion, AnimatePresence } from 'motion/react'
 import { api } from '@/src/lib/api'
 import type { PostDetail } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import MarkdownRenderer from '@/src/components/blog/MarkdownRenderer'
 import { formatDate } from '@/components/util/formatDate'
+import { ScrollProgress } from '@/components/ui/scroll-progress'
+
+function readingTime(html: string) {
+  const text = html.replace(/<[^>]+>/g, '')
+  const words = text.trim().split(/\s+/).length
+  return Math.max(1, Math.round(words / 200))
+}
+
+function BackToTop() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 400)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-6 z-50 border-2 border-black dark:border-white px-4 py-2 font-mono text-xs uppercase tracking-widest text-black dark:text-white bg-white dark:bg-black shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] hover:bg-[#FFE600] hover:border-black dark:hover:bg-[#FFE600] dark:hover:border-[#FFE600] dark:hover:text-black transition-colors"
+        >
+          ↑ top
+        </motion.button>
+      )}
+    </AnimatePresence>
+  )
+}
 
 export default function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -60,6 +92,8 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
+      <ScrollProgress className="fixed z-50 bg-[#FFE600] border-b-2 border-black dark:border-white" />
+      <BackToTop />
       {/* Narrow header/hero zone */}
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
         <Header />
@@ -95,9 +129,15 @@ export default function BlogPostPage() {
             </p>
           )}
 
-          <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">
-            {formatDate(date)}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">
+              {formatDate(date)}
+            </span>
+            <span className="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+            <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
+              {readingTime(html)} min read
+            </span>
+          </div>
         </div>
       </div>
 
