@@ -14,10 +14,9 @@
     "jsx": "react-jsx",
     "strict": true,
     "paths": {
-      "@/*": ["./*"],
-      "@portfolio/shared/*": ["./shared/*"]
+      "@portfolio/shared/*": ["../shared/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", "contentful", "server", "admin", "shared"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
 }

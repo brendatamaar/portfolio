@@ -1,26 +1,19 @@
 import { useState, useEffect } from 'react'
-import { fetchBlogPosts } from '@/contentful/blogPosts'
-import type { BlogPost } from '@/contentful/blogPosts'
+import { api } from '@/src/lib/api'
+import type { PostSummary } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { BlogPostCard } from '@/components/ui/post-card'
 
 export default function BlogPage() {
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
+  const [posts, setPosts] = useState<PostSummary[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function load() {
-      try {
-        const posts = await fetchBlogPosts({ preview: false })
-        setBlogPosts(posts)
-      } catch (error) {
-        console.error('Failed to fetch blog posts:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
+    api.getPosts()
+      .then(setPosts)
+      .catch((err) => console.error('Failed to fetch posts:', err))
+      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -42,13 +35,13 @@ export default function BlogPage() {
             <p className="py-8 font-mono text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
               loading...
             </p>
-          ) : blogPosts.length === 0 ? (
+          ) : posts.length === 0 ? (
             <p className="py-8 font-mono text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
               Nothing yet — soon.
             </p>
           ) : (
             <div className="flex flex-col gap-4">
-              {blogPosts.map((post) => (
+              {posts.map((post) => (
                 <BlogPostCard key={post.slug} post={post} />
               ))}
             </div>

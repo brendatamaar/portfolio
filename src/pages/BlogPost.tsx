@@ -1,36 +1,24 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { fetchBlogPost } from '@/contentful/blogPosts'
-import type { BlogPost as BlogPostType } from '@/contentful/blogPosts'
+import { api } from '@/src/lib/api'
+import type { PostDetail } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
-import RichText from '@/contentful/RichText'
+import MarkdownRenderer from '@/src/components/blog/MarkdownRenderer'
 import { formatDate } from '@/components/util/formatDate'
-
 
 export default function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>()
-  const [post, setPost] = useState<BlogPostType | null>(null)
+  const [data, setData] = useState<PostDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     if (!slug) return
-    async function load() {
-      try {
-        const result = await fetchBlogPost({ slug: slug!, preview: false })
-        if (!result) {
-          setNotFound(true)
-        } else {
-          setPost(result)
-        }
-      } catch {
-        setNotFound(true)
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
+    api.getPost(slug)
+      .then(setData)
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false))
   }, [slug])
 
   if (loading) {
@@ -46,7 +34,7 @@ export default function BlogPostPage() {
     )
   }
 
-  if (notFound || !post) {
+  if (notFound || !data) {
     return (
       <div className="min-h-screen bg-white dark:bg-black">
         <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
@@ -65,15 +53,18 @@ export default function BlogPostPage() {
     )
   }
 
+  const { post, html, toc, sidenotes } = data
+  const date = post.publishedAt
+    ? new Date(post.publishedAt * 1000)
+    : new Date(post.createdAt * 1000)
+
   return (
     <div className="min-h-screen bg-white dark:bg-black">
+      {/* Narrow header/hero zone */}
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
         <Header />
 
-        {/* post header */}
-        <div className="mb-16 pb-10 border-b-2 border-black dark:border-white">
-
-          {/* back link */}
+        <div className="mb-10 pb-10 border-b-2 border-black dark:border-white">
           <Link
             to="/blog"
             className="mb-8 inline-block font-mono text-[11px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors"
@@ -81,45 +72,43 @@ export default function BlogPostPage() {
             ← writing
           </Link>
 
-          {/* tags row */}
           {post.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-5">
               {post.tags.map((tag) => (
                 <span
-                  key={tag}
+                  key={tag.slug}
                   className="inline-flex items-center px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-black dark:text-white bg-white dark:bg-black border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
                 >
-                  #{tag}
+                  #{tag.name}
                 </span>
               ))}
             </div>
           )}
 
-          {/* title */}
           <h1 className="font-black text-5xl sm:text-6xl uppercase tracking-tighter leading-[0.9] text-black dark:text-white mb-4">
             {post.title}
           </h1>
 
-          {/* description */}
-          {post.desc && (
+          {post.description && (
             <p className="text-xl leading-relaxed text-black/60 dark:text-white/60 max-w-2xl mb-8">
-              {post.desc}
+              {post.description}
             </p>
           )}
 
-          {/* date */}
           <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">
-            {formatDate(post.date)}
+            {formatDate(date)}
           </span>
         </div>
+      </div>
 
-        {/* article body */}
-        <div>
-          <RichText document={post.body} />
-        </div>
+      {/* 3-column article layout — wider than max-w-3xl to accommodate side columns */}
+      <div className="mx-auto px-6 pb-16" style={{ maxWidth: '72rem' }}>
+        <MarkdownRenderer html={html} toc={toc} sidenotes={sidenotes} />
+      </div>
 
-        {/* footer nav */}
-        <div className="mt-16 pt-6 border-t-2 border-black dark:border-white flex items-center justify-between">
+      {/* Footer in narrow container */}
+      <div className="mx-auto max-w-3xl px-6 pb-16">
+        <div className="pt-6 border-t-2 border-black dark:border-white flex items-center justify-between">
           <Link
             to="/blog"
             className="font-mono text-[11px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors"
@@ -127,7 +116,6 @@ export default function BlogPostPage() {
             ← all posts
           </Link>
         </div>
-
         <Footer />
       </div>
     </div>

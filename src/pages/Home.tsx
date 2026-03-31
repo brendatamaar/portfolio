@@ -1,8 +1,8 @@
 import { memo, useRef, useState, useEffect } from 'react'
 import { motion, useInView } from 'motion/react'
 import { ArrowUpRightIcon } from 'lucide-react'
-import { fetchBlogPosts } from '@/contentful/blogPosts'
-import type { BlogPost } from '@/contentful/blogPosts'
+import { api } from '@/src/lib/api'
+import type { PostSummary } from '@/src/lib/api'
 
 import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
@@ -118,7 +118,7 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
 export default function Home() {
   const data = RESUME_DATA
   const [showAllProjects, setShowAllProjects] = useState(false)
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
+  const [blogPosts, setBlogPosts] = useState<PostSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const PREVIEW_COUNT = 4
@@ -126,17 +126,10 @@ export default function Home() {
   const remaining = data.projects.length - PREVIEW_COUNT
 
   useEffect(() => {
-    async function loadBlogPosts() {
-      try {
-        const posts = await fetchBlogPosts({ preview: false })
-        setBlogPosts(posts)
-      } catch (error) {
-        console.error('Error loading blog posts:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadBlogPosts()
+    api.getPosts()
+      .then((posts) => setBlogPosts(posts.slice(0, 3)))
+      .catch((err) => console.error('Error loading blog posts:', err))
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
