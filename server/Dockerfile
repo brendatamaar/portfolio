@@ -2,14 +2,16 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# better-sqlite3 requires native compilation
 RUN apk add --no-cache python3 make g++
 
-COPY package*.json ./
-RUN npm install
+# Copy shared module (server imports from ../../../shared/markdown/parser.js)
+COPY shared/ ./shared/
 
-COPY . .
-RUN npm run build
+COPY server/package*.json ./server/
+RUN cd server && npm install
+
+COPY server/ ./server/
+RUN cd server && npm run build
 
 FROM node:20-alpine
 
@@ -17,8 +19,9 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/server/dist ./dist
+COPY --from=build /app/server/node_modules ./node_modules
+COPY --from=build /app/shared ./shared
 
 EXPOSE 3001
 
