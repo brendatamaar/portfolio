@@ -1,0 +1,34 @@
+services:
+  server:
+    build: ./server
+    ports:
+      - "3003:3001"
+    environment:
+      - PORT=3001
+    volumes:
+      - ./server/data:/app/data
+    restart: always
+
+  portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "3001:80"
+    depends_on:
+      - server
+    restart: always
+
+  admin:
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "3002:80"
+    depends_on:
+      - server
+    restart: always
