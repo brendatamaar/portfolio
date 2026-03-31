@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
 
-# Copy shared module (server imports from ../../../shared/markdown/parser.js)
+# Copy shared module (rootDir is repo root, so tsc compiles shared/ into dist/shared/)
 COPY shared/ ./shared/
 
 COPY server/package*.json ./server/
@@ -21,8 +21,7 @@ WORKDIR /app
 
 COPY --from=build /app/server/dist ./dist
 COPY --from=build /app/server/node_modules ./node_modules
-COPY --from=build /app/shared ./shared
 
 EXPOSE 3001
 
-CMD ["node", "dist/src/index.js"]
+CMD ["node", "dist/server/src/index.js"]
