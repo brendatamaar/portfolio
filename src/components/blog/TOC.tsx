@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { TocItem } from '../../../shared/markdown/types.js'
 
 interface Props {
@@ -16,9 +16,6 @@ export default function TOC({ toc }: Props) {
       .map((item) => document.getElementById(item.id))
       .filter(Boolean) as HTMLElement[]
 
-    // rootMargin clips the observation zone to the top 40% of the viewport,
-    // so only headings near the top of the screen are considered "active".
-    // When multiple headings are visible we take the topmost one.
     observerRef.current = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -33,18 +30,35 @@ export default function TOC({ toc }: Props) {
     return () => observerRef.current?.disconnect()
   }, [toc])
 
+  // Compute hierarchical section numbers (e.g. "1", "1.1", "2")
+  const { numbered, minLevel } = useMemo(() => {
+    if (!toc.length) return { numbered: [], minLevel: 1 }
+    const min = Math.min(...toc.map((t) => t.level))
+    const counters = new Array(7).fill(0)
+    const items = toc.map((item) => {
+      counters[item.level]++
+      for (let l = item.level + 1; l <= 6; l++) counters[l] = 0
+      const num = counters.slice(min, item.level + 1).join('.')
+      return { ...item, num }
+    })
+    return { numbered: items, minLevel: min }
+  }, [toc])
+
   if (!toc.length) return null
 
   return (
-    <nav className="toc sticky top-8 w-48 shrink-0 hidden lg:block" aria-label="Table of contents">
-      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30 mb-3">
+    <nav
+      className="toc sticky top-8 hidden w-48 shrink-0 lg:block"
+      aria-label="Table of contents"
+    >
+      <p className="mb-3 font-mono text-[10px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
         Contents
       </p>
       <ul className="space-y-1.5">
-        {toc.map((item) => (
+        {numbered.map((item) => (
           <li
             key={item.id}
-            style={{ paddingLeft: `${(item.level - 1) * 10}px` }}
+            style={{ paddingLeft: `${(item.level - minLevel) * 10}px` }}
           >
             <a
               href={`#${item.id}`}
@@ -52,9 +66,12 @@ export default function TOC({ toc }: Props) {
                 'block text-[12px] leading-snug transition-colors',
                 activeId === item.id
                   ? 'font-bold text-black dark:text-white'
-                  : 'text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white',
+                  : 'text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white',
               ].join(' ')}
             >
+              <span className="mr-1.5 font-mono text-[10px] opacity-50">
+                {item.num}
+              </span>
               {item.text}
             </a>
           </li>

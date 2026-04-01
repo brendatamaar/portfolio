@@ -9,7 +9,11 @@ function authHeaders(): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+async function req<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers: {
@@ -27,7 +31,11 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
   return res.json() as Promise<T>
 }
 
-export interface Tag { id: number; name: string; slug: string }
+export interface Tag {
+  id: number
+  name: string
+  slug: string
+}
 export interface Post {
   id: number
   title: string
@@ -58,8 +66,10 @@ export const api = {
   posts: {
     list: () => req<Post[]>('GET', '/admin/posts'),
     create: (data: Partial<Post>) => req<Post>('POST', '/admin/posts', data),
-    update: (id: number, data: Partial<Post>) => req<Post>('PUT', `/admin/posts/${id}`, data),
-    delete: (id: number) => req<{ ok: boolean }>('DELETE', `/admin/posts/${id}`),
+    update: (id: number, data: Partial<Post>) =>
+      req<Post>('PUT', `/admin/posts/${id}`, data),
+    delete: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/posts/${id}`),
   },
 
   tags: {
@@ -79,8 +89,13 @@ export const api = {
         body: fd,
       })
       if (!res.ok) throw new Error(`Upload failed ${res.status}`)
-      return res.json() as Promise<{ id: number; url: string; filename: string }>
+      return res.json() as Promise<{
+        id: number
+        url: string
+        filename: string
+      }>
     },
-    delete: (id: number) => req<{ ok: boolean }>('DELETE', `/admin/images/${id}`),
+    delete: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/images/${id}`),
   },
 }

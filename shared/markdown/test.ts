@@ -2,7 +2,7 @@
  * Quick smoke test — run with: npx tsx shared/markdown/test.ts
  */
 
-import { parse } from './parser.js';
+import { parse } from './parser.js'
 
 const md = `
 # Hello World
@@ -59,14 +59,14 @@ Use a library analogy: books are data, shelves are RAM.
 ---
 
 [^1]: This is the sidenote content for ref 1.
-`;
+`
 
-const result = parse(md);
+const result = parse(md)
 
-console.log('=== HTML (first 500 chars) ===');
-console.log(result.html.slice(0, 500));
-console.log('\n=== TOC ===');
-console.log(JSON.stringify(result.toc, null, 2));
-console.log('\n=== Sidenotes ===');
-console.log(JSON.stringify(result.sidenotes, null, 2));
-console.log('\nDone.');
+console.log('=== HTML (first 500 chars) ===')
+console.log(result.html.slice(0, 500))
+console.log('\n=== TOC ===')
+console.log(JSON.stringify(result.toc, null, 2))
+console.log('\n=== Sidenotes ===')
+console.log(JSON.stringify(result.sidenotes, null, 2))
+console.log('\nDone.')

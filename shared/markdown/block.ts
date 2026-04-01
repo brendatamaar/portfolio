@@ -7,52 +7,58 @@ import type {
   HeadingToken,
   ListItemToken,
   AdmonitionType,
-} from './types.js';
+} from './types.js'
 
 function slugify(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
     .trim()
-    .replace(/\s+/g, '-');
+    .replace(/\s+/g, '-')
 }
 
 function stripInlineMarkers(text: string): string {
-  return text.replace(/[*_`~\[\]]/g, '');
+  return text.replace(/[*_`~\[\]]/g, '')
 }
 
 // ─── List parsing ────────────────────────────────────────────────────────────
 
 function parseListItems(lines: string[], ordered: boolean): ListItemToken[] {
-  const items: ListItemToken[] = [];
-  let current: { text: string; subLines: string[] } | null = null;
-  const bulletRe = ordered ? /^\d+\.\s+(.*)/ : /^[-*+]\s+(.*)/;
-  const subBulletRe = ordered ? /^\s{2,}\d+\.\s+(.*)/ : /^\s{2,}[-*+]\s+(.*)/;
+  const items: ListItemToken[] = []
+  let current: { text: string; subLines: string[] } | null = null
+  const bulletRe = ordered ? /^\d+\.\s+(.*)/ : /^[-*+]\s+(.*)/
+  const subBulletRe = ordered ? /^\s{2,}\d+\.\s+(.*)/ : /^\s{2,}[-*+]\s+(.*)/
 
   for (const line of lines) {
-    const subMatch = line.match(subBulletRe);
-    const topMatch = !subMatch && line.match(bulletRe);
+    const subMatch = line.match(subBulletRe)
+    const topMatch = !subMatch && line.match(bulletRe)
 
     if (topMatch) {
-      if (current) items.push(buildListItem(current.text, current.subLines, ordered));
-      current = { text: topMatch[1], subLines: [] };
+      if (current)
+        items.push(buildListItem(current.text, current.subLines, ordered))
+      current = { text: topMatch[1], subLines: [] }
     } else if (subMatch && current) {
-      current.subLines.push(line.trimStart());
+      current.subLines.push(line.trimStart())
     } else if (current && line.trim()) {
-      current.text += ' ' + line.trim();
+      current.text += ' ' + line.trim()
     }
   }
 
-  if (current) items.push(buildListItem(current.text, current.subLines, ordered));
-  return items;
+  if (current)
+    items.push(buildListItem(current.text, current.subLines, ordered))
+  return items
 }
 
-function buildListItem(text: string, subLines: string[], ordered: boolean): ListItemToken {
+function buildListItem(
+  text: string,
+  subLines: string[],
+  ordered: boolean,
+): ListItemToken {
   return {
     type: 'list_item',
     text,
     children: subLines.length ? parseListItems(subLines, ordered) : [],
-  };
+  }
 }
 
 // ─── Table parsing ───────────────────────────────────────────────────────────
@@ -61,147 +67,200 @@ function parseTableRow(line: string): string[] {
   return line
     .split('|')
     .slice(1, -1)
-    .map((c) => c.trim());
+    .map((c) => c.trim())
 }
 
-function parseTableAlign(cells: string[]): Array<'left' | 'center' | 'right' | null> {
+function parseTableAlign(
+  cells: string[],
+): Array<'left' | 'center' | 'right' | null> {
   return cells.map((c) => {
-    if (/^:-+:$/.test(c)) return 'center';
-    if (/^-+:$/.test(c)) return 'right';
-    if (/^:-+$/.test(c)) return 'left';
-    return null;
-  });
+    if (/^:-+:$/.test(c)) return 'center'
+    if (/^-+:$/.test(c)) return 'right'
+    if (/^:-+$/.test(c)) return 'left'
+    return null
+  })
 }
 
 // ─── Main tokenizer ───────────────────────────────────────────────────────────
 
 export function tokenizeBlocks(markdown: string): BlockToken[] {
-  const lines = markdown.split('\n');
-  const tokens: BlockToken[] = [];
-  let i = 0;
+  const lines = markdown.split('\n')
+  const tokens: BlockToken[] = []
+  let i = 0
 
   while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
+    const line = lines[i]
+    const trimmed = line.trim()
 
     // Skip empty lines
-    if (!trimmed) { i++; continue; }
+    if (!trimmed) {
+      i++
+      continue
+    }
 
     // Heading
-    const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)/);
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)/)
     if (headingMatch) {
-      const level = headingMatch[1].length as HeadingToken['level'];
-      const text = headingMatch[2].trim();
-      tokens.push({ type: 'heading', level, text, id: slugify(stripInlineMarkers(text)) });
-      i++;
-      continue;
+      const level = headingMatch[1].length as HeadingToken['level']
+      const text = headingMatch[2].trim()
+      tokens.push({
+        type: 'heading',
+        level,
+        text,
+        id: slugify(stripInlineMarkers(text)),
+      })
+      i++
+      continue
     }
 
     // HR
     if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
-      tokens.push({ type: 'hr' });
-      i++;
-      continue;
+      tokens.push({ type: 'hr' })
+      i++
+      continue
     }
 
     // Fenced code block
-    const fenceMatch = trimmed.match(/^```(\w*)/);
+    const fenceMatch = trimmed.match(/^```(\w*)/)
     if (fenceMatch) {
-      const lang = fenceMatch[1] || '';
-      const codeLines: string[] = [];
-      i++;
+      const lang = fenceMatch[1] || ''
+      const codeLines: string[] = []
+      i++
       while (i < lines.length && !lines[i].trim().startsWith('```')) {
-        codeLines.push(lines[i]);
-        i++;
+        codeLines.push(lines[i])
+        i++
       }
-      i++; // closing ```
-      tokens.push({ type: 'code', lang, text: codeLines.join('\n') });
-      continue;
+      i++ // closing ```
+      tokens.push({ type: 'code', lang, text: codeLines.join('\n') })
+      continue
     }
 
     // Admonition :::type
-    const admonitionMatch = trimmed.match(/^:::(\w+)/);
+    const admonitionMatch = trimmed.match(/^:::(\w+)/)
     if (admonitionMatch) {
-      const kind = admonitionMatch[1] as AdmonitionType;
-      const innerLines: string[] = [];
-      i++;
+      const kind = admonitionMatch[1] as AdmonitionType
+      const innerLines: string[] = []
+      i++
       while (i < lines.length && lines[i].trim() !== ':::') {
-        innerLines.push(lines[i]);
-        i++;
+        innerLines.push(lines[i])
+        i++
       }
-      i++; // closing :::
-      const children = tokenizeBlocks(innerLines.join('\n'));
-      tokens.push({ type: 'admonition', kind, children });
-      continue;
+      i++ // closing :::
+      const children = tokenizeBlocks(innerLines.join('\n'))
+      tokens.push({ type: 'admonition', kind, children })
+      continue
     }
 
     // Blockquote
     if (trimmed.startsWith('>')) {
-      const quoteLines: string[] = [];
+      const quoteLines: string[] = []
       while (i < lines.length && lines[i].trim().startsWith('>')) {
-        quoteLines.push(lines[i].replace(/^>\s?/, ''));
-        i++;
+        quoteLines.push(lines[i].replace(/^>\s?/, ''))
+        i++
       }
-      const children = tokenizeBlocks(quoteLines.join('\n'));
-      tokens.push({ type: 'blockquote', children });
-      continue;
+      const children = tokenizeBlocks(quoteLines.join('\n'))
+      tokens.push({ type: 'blockquote', children })
+      continue
     }
 
     // Footnote definition [^id]: text
-    const fnMatch = trimmed.match(/^\[\^([^\]]+)\]:\s*(.*)/);
+    const fnMatch = trimmed.match(/^\[\^([^\]]+)\]:\s*(.*)/)
     if (fnMatch) {
-      tokens.push({ type: 'footnote_def', id: fnMatch[1], text: fnMatch[2] });
-      i++;
-      continue;
+      tokens.push({ type: 'footnote_def', id: fnMatch[1], text: fnMatch[2] })
+      i++
+      continue
     }
 
     // Ordered list
     if (/^\d+\.\s/.test(trimmed)) {
-      const listLines: string[] = [];
+      const listLines: string[] = []
       while (
         i < lines.length &&
         (lines[i].trim() === '' ? false : /^\d+\.\s|^\s{2,}/.test(lines[i]))
       ) {
-        listLines.push(lines[i]);
-        i++;
+        listLines.push(lines[i])
+        i++
       }
-      const items = parseListItems(listLines, true);
-      tokens.push({ type: 'list', ordered: true, items });
-      continue;
+      const items = parseListItems(listLines, true)
+      tokens.push({ type: 'list', ordered: true, items })
+      continue
     }
 
     // Unordered list
     if (/^[-*+]\s/.test(trimmed)) {
-      const listLines: string[] = [];
+      const listLines: string[] = []
       while (
         i < lines.length &&
         (lines[i].trim() === '' ? false : /^[-*+]\s|^\s{2,}/.test(lines[i]))
       ) {
-        listLines.push(lines[i]);
-        i++;
+        listLines.push(lines[i])
+        i++
       }
-      const items = parseListItems(listLines, false);
-      tokens.push({ type: 'list', ordered: false, items });
-      continue;
+      const items = parseListItems(listLines, false)
+      tokens.push({ type: 'list', ordered: false, items })
+      continue
     }
 
     // Table (header | separator | rows)
-    if (trimmed.includes('|') && i + 1 < lines.length && /^\|?[\s:|-]+\|/.test(lines[i + 1])) {
-      const headers = parseTableRow(trimmed);
-      i++;
-      const align = parseTableAlign(parseTableRow(lines[i]));
-      i++;
-      const rows: string[][] = [];
+    if (
+      trimmed.includes('|') &&
+      i + 1 < lines.length &&
+      /^\|?[\s:|-]+\|/.test(lines[i + 1])
+    ) {
+      const headers = parseTableRow(trimmed)
+      i++
+      const align = parseTableAlign(parseTableRow(lines[i]))
+      i++
+      const rows: string[][] = []
       while (i < lines.length && lines[i].trim().includes('|')) {
-        rows.push(parseTableRow(lines[i]));
-        i++;
+        rows.push(parseTableRow(lines[i]))
+        i++
       }
-      tokens.push({ type: 'table', headers, align, rows });
-      continue;
+      tokens.push({ type: 'table', headers, align, rows })
+      continue
+    }
+
+    // Definition list: "term\n: definition" pattern
+    // Matches a plain line immediately followed by a line starting with ": "
+    if (
+      !trimmed.match(/^[#>`*+\-:]/) &&
+      !trimmed.match(/^\d+\./) &&
+      !trimmed.match(/^\[\^/) &&
+      !trimmed.match(/^```/) &&
+      !trimmed.match(/^:::/) &&
+      !/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed) &&
+      i + 1 < lines.length &&
+      lines[i + 1].trim().startsWith(': ')
+    ) {
+      const defItems: Array<{ term: string; defs: string[] }> = []
+      while (i < lines.length) {
+        if (!lines[i].trim()) {
+          i++
+          continue
+        }
+        const term = lines[i].trim()
+        let j = i + 1
+        while (j < lines.length && !lines[j].trim()) j++
+        if (j < lines.length && lines[j].trim().startsWith(': ')) {
+          i = j
+          const defs: string[] = []
+          while (i < lines.length && lines[i].trim().startsWith(': ')) {
+            defs.push(lines[i].trim().slice(2))
+            i++
+          }
+          defItems.push({ term, defs })
+        } else {
+          break
+        }
+      }
+      if (defItems.length) {
+        tokens.push({ type: 'definition_list', items: defItems })
+        continue
+      }
     }
 
     // Paragraph — collect until blank line or block-level element
-    const paraLines: string[] = [];
+    const paraLines: string[] = []
     while (
       i < lines.length &&
       lines[i].trim() !== '' &&
@@ -214,13 +273,13 @@ export function tokenizeBlocks(markdown: string): BlockToken[] {
       !lines[i].trim().match(/^\[\^[^\]]+\]:/) &&
       !/^(-{3,}|\*{3,}|_{3,})$/.test(lines[i].trim())
     ) {
-      paraLines.push(lines[i]);
-      i++;
+      paraLines.push(lines[i])
+      i++
     }
     if (paraLines.length) {
-      tokens.push({ type: 'paragraph', text: paraLines.join('\n') });
+      tokens.push({ type: 'paragraph', text: paraLines.join('\n') })
     }
   }
 
-  return tokens;
+  return tokens
 }

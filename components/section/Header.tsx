@@ -16,10 +16,10 @@ export default function Header() {
   }
 
   return (
-    <header className="mb-16 border-b-2 border-black dark:border-white pb-5 flex items-center justify-between">
+    <header className="mb-16 flex items-center justify-between border-b-2 border-black pb-5 dark:border-white">
       <Link
         to="/"
-        className="font-mono text-xs font-bold uppercase tracking-widest text-black dark:text-white"
+        className="font-mono text-xs font-bold tracking-widest text-black uppercase dark:text-white"
       >
         home
       </Link>
@@ -27,17 +27,17 @@ export default function Header() {
       <div className="flex items-center gap-5">
         <Link
           to="/blog"
-          className="font-mono text-xs uppercase tracking-widest text-black dark:text-white hover:underline"
+          className="font-mono text-xs tracking-widest text-black uppercase hover:underline dark:text-white"
         >
           writing
         </Link>
         <button
           onClick={toggleTheme}
-          className="border-2 border-black dark:border-white p-1.5 text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+          className="border-2 border-black p-1.5 text-black transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black"
           aria-label="Toggle theme"
         >
-          <SunIcon className="h-3 w-3 block dark:hidden" />
-          <MoonIcon className="h-3 w-3 hidden dark:block" />
+          <SunIcon className="block h-3 w-3 dark:hidden" />
+          <MoonIcon className="hidden h-3 w-3 dark:block" />
         </button>
       </div>
     </header>

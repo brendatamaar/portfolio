@@ -9,7 +9,12 @@ const BlogPost = lazy(() => import('./pages/BlogPost'))
 
 export default function App() {
   return (
-    <ThemeProvider enableSystem attribute="class" storageKey="theme" defaultTheme="system">
+    <ThemeProvider
+      enableSystem
+      attribute="class"
+      storageKey="theme"
+      defaultTheme="system"
+    >
       <BrowserRouter>
         {/* Suspense is required by React.lazy; null fallback keeps the layout shift minimal */}
         <Suspense fallback={null}>

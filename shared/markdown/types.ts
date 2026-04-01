@@ -7,7 +7,8 @@ export type AdmonitionType =
   | 'tldr'
   | 'update'
   | 'definition'
-  | 'ai';
+  | 'ai'
+  | 'see-also'
 
 export type BlockTokenType =
   | 'heading'
@@ -19,64 +20,70 @@ export type BlockTokenType =
   | 'hr'
   | 'table'
   | 'admonition'
-  | 'footnote_def';
+  | 'footnote_def'
+  | 'definition_list'
 
 export interface HeadingToken {
-  type: 'heading';
-  level: 1 | 2 | 3 | 4 | 5 | 6;
-  text: string;
-  id: string;
+  type: 'heading'
+  level: 1 | 2 | 3 | 4 | 5 | 6
+  text: string
+  id: string
 }
 
 export interface ParagraphToken {
-  type: 'paragraph';
-  text: string;
+  type: 'paragraph'
+  text: string
 }
 
 export interface CodeToken {
-  type: 'code';
-  lang: string;
-  text: string;
+  type: 'code'
+  lang: string
+  text: string
 }
 
 export interface BlockquoteToken {
-  type: 'blockquote';
-  children: BlockToken[];
+  type: 'blockquote'
+  children: BlockToken[]
 }
 
 export interface ListItemToken {
-  type: 'list_item';
-  text: string;
-  children: ListItemToken[];
+  type: 'list_item'
+  text: string
+  children: ListItemToken[]
 }
 
 export interface ListToken {
-  type: 'list';
-  ordered: boolean;
-  items: ListItemToken[];
+  type: 'list'
+  ordered: boolean
+  items: ListItemToken[]
 }
 
 export interface HrToken {
-  type: 'hr';
+  type: 'hr'
 }
 
 export interface TableToken {
-  type: 'table';
-  headers: string[];
-  align: Array<'left' | 'center' | 'right' | null>;
-  rows: string[][];
+  type: 'table'
+  headers: string[]
+  align: Array<'left' | 'center' | 'right' | null>
+  rows: string[][]
 }
 
 export interface AdmonitionToken {
-  type: 'admonition';
-  kind: AdmonitionType;
-  children: BlockToken[];
+  type: 'admonition'
+  kind: AdmonitionType
+  children: BlockToken[]
 }
 
 export interface FootnoteDefToken {
-  type: 'footnote_def';
-  id: string;
-  text: string;
+  type: 'footnote_def'
+  id: string
+  text: string
+}
+
+export interface DefinitionListToken {
+  type: 'definition_list'
+  items: Array<{ term: string; defs: string[] }>
 }
 
 export type BlockToken =
@@ -88,21 +95,22 @@ export type BlockToken =
   | HrToken
   | TableToken
   | AdmonitionToken
-  | FootnoteDefToken;
+  | FootnoteDefToken
+  | DefinitionListToken
 
 export interface TocItem {
-  id: string;
-  text: string;
-  level: 1 | 2 | 3 | 4 | 5 | 6;
+  id: string
+  text: string
+  level: 1 | 2 | 3 | 4 | 5 | 6
 }
 
 export interface Sidenote {
-  id: string;
-  html: string;
+  id: string
+  html: string
 }
 
 export interface ParseResult {
-  html: string;
-  toc: TocItem[];
-  sidenotes: Sidenote[];
+  html: string
+  toc: TocItem[]
+  sidenotes: Sidenote[]
 }

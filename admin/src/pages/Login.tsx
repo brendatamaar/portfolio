@@ -28,10 +28,10 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f0f0f0] dark:bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-[#f0f0f0] dark:bg-black">
       <button
         onClick={toggle}
-        className="fixed top-4 right-4 p-2 text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white transition-colors"
+        className="fixed top-4 right-4 p-2 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
         title="Toggle theme"
       >
         {isDark ? <SunIcon size={16} /> : <MoonIcon size={16} />}
@@ -39,20 +39,20 @@ export default function Login() {
 
       <form
         onSubmit={submit}
-        className="w-full max-w-sm border-2 border-black dark:border-white p-8"
+        className="w-full max-w-sm border-2 border-black p-8 dark:border-white"
       >
-        <h1 className="font-black text-2xl uppercase tracking-tighter text-black dark:text-white mb-6">
+        <h1 className="mb-6 text-2xl font-black tracking-tighter text-black uppercase dark:text-white">
           Admin Login
         </h1>
 
         {error && (
-          <p className="mb-4 font-mono text-xs text-red-500 dark:text-red-400 border border-red-500 dark:border-red-400 p-2">
+          <p className="mb-4 border border-red-500 p-2 font-mono text-xs text-red-500 dark:border-red-400 dark:text-red-400">
             {error}
           </p>
         )}
 
-        <label className="block mb-4">
-          <span className="font-mono text-[11px] uppercase tracking-widest text-black/50 dark:text-white/50 mb-1 block">
+        <label className="mb-4 block">
+          <span className="mb-1 block font-mono text-[11px] tracking-widest text-black/50 uppercase dark:text-white/50">
             Username
           </span>
           <input
@@ -61,12 +61,12 @@ export default function Login() {
             onChange={(e) => setUsername(e.target.value)}
             required
             autoFocus
-            className="w-full bg-white dark:bg-black border-2 border-black/30 dark:border-white/30 focus:border-black dark:focus:border-white text-black dark:text-white px-3 py-2 font-mono text-sm outline-none transition-colors"
+            className="w-full border-2 border-black/30 bg-white px-3 py-2 font-mono text-sm text-black transition-colors outline-none focus:border-black dark:border-white/30 dark:bg-black dark:text-white dark:focus:border-white"
           />
         </label>
 
-        <label className="block mb-6">
-          <span className="font-mono text-[11px] uppercase tracking-widest text-black/50 dark:text-white/50 mb-1 block">
+        <label className="mb-6 block">
+          <span className="mb-1 block font-mono text-[11px] tracking-widest text-black/50 uppercase dark:text-white/50">
             Password
           </span>
           <input
@@ -74,14 +74,14 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full bg-white dark:bg-black border-2 border-black/30 dark:border-white/30 focus:border-black dark:focus:border-white text-black dark:text-white px-3 py-2 font-mono text-sm outline-none transition-colors"
+            className="w-full border-2 border-black/30 bg-white px-3 py-2 font-mono text-sm text-black transition-colors outline-none focus:border-black dark:border-white/30 dark:bg-black dark:text-white dark:focus:border-white"
           />
         </label>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-black dark:bg-white text-white dark:text-black font-black uppercase tracking-tight py-2.5 hover:bg-black/80 dark:hover:bg-white/80 transition-colors disabled:opacity-50"
+          className="w-full bg-black py-2.5 font-black tracking-tight text-white uppercase transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
