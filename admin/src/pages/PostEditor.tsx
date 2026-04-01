@@ -3,7 +3,7 @@ import {
   type KeyboardEvent, type DragEvent, type ClipboardEvent,
 } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeftIcon, SaveIcon, GlobeIcon, EyeOffIcon, SunIcon, MoonIcon } from 'lucide-react'
+import { ArrowLeftIcon, SaveIcon, GlobeIcon, EyeOffIcon, SunIcon, MoonIcon, ImageIcon, XIcon, RefreshCwIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Post, Tag } from '../lib/api.ts'
 import Toolbar from '../components/Toolbar.tsx'
@@ -37,6 +37,8 @@ export default function PostEditor() {
   const [mode, setMode] = useState<Mode>('split')
   const [syncScroll, setSyncScroll] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
+  const [showCoverGallery, setShowCoverGallery] = useState(false)
+  const [showMeta, setShowMeta] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [loading, setLoading] = useState(!isNew)
@@ -212,18 +214,27 @@ export default function PostEditor() {
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-[#0a0a0a] text-black dark:text-white overflow-hidden">
       {/* Top nav */}
-      <header className="h-14 border-b border-black/10 dark:border-white/10 flex items-center gap-4 px-4 shrink-0">
-        <Link to="/" className="text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors">
+      <header className="h-14 border-b border-black/10 dark:border-white/10 flex items-center gap-3 px-4 shrink-0">
+        <Link to="/" className="text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors shrink-0">
           <ArrowLeftIcon size={15} />
         </Link>
 
-        <div className="flex-1 flex items-center gap-3 min-w-0">
+        <div className="flex-1 flex items-center gap-2.5 min-w-0">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Post title..."
             className="bg-transparent font-black text-base uppercase tracking-tight text-black dark:text-white placeholder-black/20 dark:placeholder-white/20 outline-none flex-1 min-w-0"
           />
+          {/* Status badge */}
+          <span className={[
+            'font-mono text-[9px] uppercase tracking-widest px-1.5 py-0.5 shrink-0 border',
+            status === 'published'
+              ? 'border-green-500/40 text-green-600 dark:text-green-400 bg-green-500/10'
+              : 'border-black/15 dark:border-white/15 text-black/30 dark:text-white/30',
+          ].join(' ')}>
+            {status}
+          </span>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -272,64 +283,6 @@ export default function PostEditor() {
         </div>
       </header>
 
-      {/* Meta bar */}
-      <div className="border-b border-black/10 dark:border-white/10 px-4 py-2.5 flex flex-wrap items-center gap-4 bg-[#f5f5f5] dark:bg-[#0d0d0d] shrink-0">
-        <label className="flex items-center gap-2 min-w-0">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30 shrink-0">Slug</span>
-          <input
-            value={slug}
-            onChange={(e) => { slugTouched.current = true; setSlug(e.target.value) }}
-            className="bg-transparent font-mono text-xs text-black/60 dark:text-white/60 outline-none border-b border-black/10 dark:border-white/10 focus:border-black/40 dark:focus:border-white/40 min-w-0 w-48 pb-0.5 transition-colors"
-          />
-        </label>
-
-        <label className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30 shrink-0">Desc</span>
-          <input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Short description..."
-            className="bg-transparent font-mono text-xs text-black/60 dark:text-white/60 placeholder-black/20 dark:placeholder-white/20 outline-none border-b border-black/10 dark:border-white/10 focus:border-black/40 dark:focus:border-white/40 flex-1 min-w-0 pb-0.5 transition-colors"
-          />
-        </label>
-
-        <label className="flex items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30 shrink-0">Cover</span>
-          <input
-            value={coverImageUrl}
-            onChange={(e) => setCoverImageUrl(e.target.value)}
-            placeholder="/uploads/..."
-            className="bg-transparent font-mono text-xs text-black/60 dark:text-white/60 placeholder-black/20 dark:placeholder-white/20 outline-none border-b border-black/10 dark:border-white/10 focus:border-black/40 dark:focus:border-white/40 w-40 pb-0.5 transition-colors"
-          />
-        </label>
-
-        {/* Tags */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {allTags.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              onClick={() => toggleTag(tag.id)}
-              className={[
-                'font-mono text-[10px] uppercase tracking-wide px-2 py-0.5 border transition-colors',
-                selectedTagIds.includes(tag.id)
-                  ? 'border-black dark:border-white text-black dark:text-white bg-black/10 dark:bg-white/10'
-                  : 'border-black/20 dark:border-white/20 text-black/30 dark:text-white/30 hover:border-black/40 dark:hover:border-white/40',
-              ].join(' ')}
-            >
-              #{tag.name}
-            </button>
-          ))}
-          <input
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-            placeholder="+ tag"
-            className="font-mono text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 placeholder-black/20 dark:placeholder-white/20 bg-transparent outline-none border-b border-black/10 dark:border-white/10 focus:border-black/30 dark:focus:border-white/30 w-16 pb-0.5"
-          />
-        </div>
-      </div>
-
       {/* Toolbar */}
       <Toolbar
         textareaRef={textareaRef}
@@ -338,48 +291,175 @@ export default function PostEditor() {
         onImageClick={() => setShowGallery(true)}
         syncScroll={syncScroll}
         onSyncScrollChange={setSyncScroll}
+        metaOpen={showMeta}
+        onMetaToggle={() => setShowMeta((v) => !v)}
       />
 
-      {/* Editor / Preview panes */}
-      <div className="flex flex-1 min-h-0 divide-x divide-black/10 dark:divide-white/10">
-        {editorVisible && (
-          <div className={`flex flex-col min-h-0 ${mode === 'split' ? 'w-1/2' : 'w-full'}`}>
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onDrop={handleDrop}
-              onPaste={handlePaste}
-              spellCheck={false}
-              className="editor-textarea editor-pane"
-              placeholder="Start writing in markdown..."
-            />
-          </div>
-        )}
+      {/* Editor / Preview panes + Meta sidebar */}
+      <div className="flex flex-1 min-h-0">
+        {/* Editor + Preview */}
+        <div className="flex flex-1 min-h-0 divide-x divide-black/10 dark:divide-white/10">
+          {editorVisible && (
+            <div className={`flex flex-col min-h-0 ${mode === 'split' ? 'w-1/2' : 'w-full'}`}>
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onDrop={handleDrop}
+                onPaste={handlePaste}
+                spellCheck={false}
+                className="editor-textarea editor-pane"
+                placeholder="Start writing in markdown..."
+              />
+            </div>
+          )}
 
-        {previewVisible && (
-          <div ref={previewRef} className={`overflow-y-auto min-h-0 ${mode === 'split' ? 'w-1/2' : 'w-full'}`}>
-            <Preview markdown={content} />
+          {previewVisible && (
+            <div ref={previewRef} className={`overflow-y-auto min-h-0 ${mode === 'split' ? 'w-1/2' : 'w-full'}`}>
+              <Preview markdown={content} />
+            </div>
+          )}
+        </div>
+
+        {/* Meta sidebar */}
+        {showMeta && (
+          <div className="w-64 shrink-0 border-l border-black/10 dark:border-white/10 overflow-y-auto bg-[#f5f5f5] dark:bg-[#0d0d0d] flex flex-col">
+            <div className="flex flex-col gap-5 p-4">
+
+              {/* Slug */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30">Slug</label>
+                <input
+                  value={slug}
+                  onChange={(e) => { slugTouched.current = true; setSlug(e.target.value) }}
+                  className="bg-transparent font-mono text-xs text-black/70 dark:text-white/70 outline-none border-b border-black/15 dark:border-white/15 focus:border-black/40 dark:focus:border-white/40 pb-1 transition-colors w-full"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Short description..."
+                  rows={3}
+                  className="bg-transparent font-mono text-xs text-black/70 dark:text-white/70 placeholder-black/20 dark:placeholder-white/20 outline-none border border-black/10 dark:border-white/10 focus:border-black/30 dark:focus:border-white/30 p-2 resize-none transition-colors w-full"
+                />
+              </div>
+
+              {/* Cover image */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30">Cover image</label>
+                {coverImageUrl ? (
+                  <div className="relative group w-full aspect-video border border-black/10 dark:border-white/10 overflow-hidden">
+                    <img
+                      src={coverImageUrl}
+                      alt="Cover"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => setShowCoverGallery(true)}
+                        title="Change cover"
+                        className="p-1.5 bg-white/10 hover:bg-white/20 text-white transition-colors"
+                      >
+                        <RefreshCwIcon size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCoverImageUrl('')}
+                        title="Remove cover"
+                        className="p-1.5 bg-white/10 hover:bg-red-500/60 text-white transition-colors"
+                      >
+                        <XIcon size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCoverGallery(true)}
+                    className="w-full aspect-video border border-dashed border-black/20 dark:border-white/20 hover:border-black/40 dark:hover:border-white/40 flex flex-col items-center justify-center gap-1.5 text-black/30 dark:text-white/30 hover:text-black/50 dark:hover:text-white/50 transition-colors"
+                  >
+                    <ImageIcon size={18} />
+                    <span className="font-mono text-[10px] uppercase tracking-widest">Select cover</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-col gap-2">
+                <label className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30">Tags</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      className={[
+                        'font-mono text-[10px] uppercase tracking-wide px-2 py-0.5 border transition-colors',
+                        selectedTagIds.includes(tag.id)
+                          ? 'border-black dark:border-white text-black dark:text-white bg-black/10 dark:bg-white/10'
+                          : 'border-black/20 dark:border-white/20 text-black/30 dark:text-white/30 hover:border-black/40 dark:hover:border-white/40',
+                      ].join(' ')}
+                    >
+                      #{tag.name}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                  placeholder="+ new tag"
+                  className="font-mono text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 placeholder-black/20 dark:placeholder-white/20 bg-transparent outline-none border-b border-black/10 dark:border-white/10 focus:border-black/30 dark:focus:border-white/30 pb-0.5 w-full transition-colors"
+                />
+              </div>
+
+            </div>
+
+            {/* Word count at bottom of sidebar */}
+            <div className="mt-auto border-t border-black/10 dark:border-white/10 px-4 py-2.5 flex gap-3">
+              <span className="font-mono text-[10px] text-black/30 dark:text-white/30 uppercase tracking-widest">
+                {wordCount} words
+              </span>
+              <span className="font-mono text-[10px] text-black/20 dark:text-white/20 uppercase tracking-widest">
+                {content.length} chars
+              </span>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div className="h-7 border-t border-black/10 dark:border-white/10 flex items-center px-4 gap-4 bg-[#f5f5f5] dark:bg-[#0d0d0d] shrink-0">
-        <span className="font-mono text-[10px] text-black/30 dark:text-white/30 uppercase tracking-widest">
-          {wordCount} words
-        </span>
-        <span className="font-mono text-[10px] text-black/20 dark:text-white/20 uppercase tracking-widest">
-          {content.length} chars
-        </span>
-      </div>
+      {/* Footer (hidden when meta sidebar is open) */}
+      {!showMeta && (
+        <div className="h-7 border-t border-black/10 dark:border-white/10 flex items-center px-4 gap-4 bg-[#f5f5f5] dark:bg-[#0d0d0d] shrink-0">
+          <span className="font-mono text-[10px] text-black/30 dark:text-white/30 uppercase tracking-widest">
+            {wordCount} words
+          </span>
+          <span className="font-mono text-[10px] text-black/20 dark:text-white/20 uppercase tracking-widest">
+            {content.length} chars
+          </span>
+        </div>
+      )}
 
-      {/* Image gallery modal */}
+      {/* Image gallery modal — insert into editor */}
       {showGallery && (
         <ImageGallery
           onSelect={insertImageUrl}
           onClose={() => setShowGallery(false)}
+        />
+      )}
+
+      {/* Image gallery modal — pick cover */}
+      {showCoverGallery && (
+        <ImageGallery
+          onSelect={(url) => setCoverImageUrl(url)}
+          onClose={() => setShowCoverGallery(false)}
         />
       )}
     </div>

@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite",
-		"dev:all": "concurrently -n server,portfolio,admin -c yellow,cyan,magenta \"npm run dev --prefix server\" \"npm run dev\" \"npm run dev --prefix admin\"",
+		"dev:all": "concurrently -k -n server,portfolio,admin -c yellow,cyan,magenta \"npm run dev --prefix server\" \"npm run dev\" \"npm run dev --prefix admin\"",
 		"build": "tsc -b && vite build",
 		"preview": "vite preview",
 		"lint": "eslint ."
