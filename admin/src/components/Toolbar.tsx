@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  BoldIcon, ItalicIcon, StrikethroughIcon, CodeIcon, Code2Icon,
+  BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon, CodeIcon, Code2Icon,
   Heading1Icon, Heading2Icon, Heading3Icon,
   QuoteIcon, ListIcon, ListOrderedIcon,
   MinusIcon, LinkIcon, ImageIcon, FootprintsIcon,
-  BotIcon, SplitIcon, PanelLeftIcon, EyeIcon,
-  Undo2Icon, Redo2Icon, Link2Icon, Link2OffIcon,
+  BotIcon, Columns2Icon, PanelLeftIcon, EyeIcon,
+  Undo2Icon, Redo2Icon, Link2Icon, Link2OffIcon, PanelRightIcon,
 } from 'lucide-react'
 
 type Mode = 'split' | 'editor' | 'preview'
@@ -18,6 +18,8 @@ interface Props {
   onImageClick: () => void
   syncScroll: boolean
   onSyncScrollChange: (v: boolean) => void
+  metaOpen: boolean
+  onMetaToggle: () => void
 }
 
 function wrap(
@@ -56,7 +58,7 @@ const ADMONITION_TYPES = [
   'note', 'warning', 'danger', 'tip', 'info', 'tldr', 'update', 'definition', 'ai',
 ] as const
 
-export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick, syncScroll, onSyncScrollChange }: Props) {
+export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick, syncScroll, onSyncScrollChange, metaOpen, onMetaToggle }: Props) {
   const ta = () => textareaRef.current!
 
   const [admonitionOpen, setAdmonitionOpen] = useState(false)
@@ -83,6 +85,7 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
 
   function bold() { wrap(ta(), '**') }
   function italic() { wrap(ta(), '*') }
+  function underline() { wrap(ta(), '<u>', '</u>') }
   function strike() { wrap(ta(), '~~') }
   function code() { wrap(ta(), '`') }
   function codeBlock() {
@@ -130,6 +133,11 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
     insertBlock(ta(), `\n:::${type}\n\n:::\n`)
   }
 
+  const btnBase = 'flex items-center justify-center w-7 h-7 rounded transition-colors'
+  const btnActive = 'bg-black/20 dark:bg-white/20 text-black dark:text-white'
+  const btnInactive = 'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+  const labelBtnBase = 'flex items-center gap-1 px-2 h-7 font-mono text-[10px] uppercase tracking-widest rounded transition-colors'
+
   const Btn = ({
     onClick,
     title,
@@ -145,12 +153,7 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       type="button"
       onClick={onClick}
       title={title}
-      className={[
-        'flex items-center justify-center w-7 h-7 rounded transition-colors',
-        active
-          ? 'bg-black/20 dark:bg-white/20 text-black dark:text-white'
-          : 'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10',
-      ].join(' ')}
+      className={[btnBase, active ? btnActive : btnInactive].join(' ')}
     >
       {children}
     </button>
@@ -166,9 +169,10 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       <Sep />
 
       {/* Inline formatting */}
-      <Btn onClick={bold} title="Bold (Ctrl+B)">    <BoldIcon size={13} /> </Btn>
-      <Btn onClick={italic} title="Italic (Ctrl+I)">  <ItalicIcon size={13} /> </Btn>
-      <Btn onClick={strike} title="Strikethrough">    <StrikethroughIcon size={13} /> </Btn>
+      <Btn onClick={bold} title="Bold (Ctrl+B)"><BoldIcon size={13} /></Btn>
+      <Btn onClick={italic} title="Italic (Ctrl+I)"><ItalicIcon size={13} /></Btn>
+      <Btn onClick={underline} title="Underline"><UnderlineIcon size={13} /></Btn>
+      <Btn onClick={strike} title="Strikethrough"><StrikethroughIcon size={13} /></Btn>
       <Btn onClick={code} title="Inline code">      <CodeIcon size={13} /> </Btn>
       <Btn onClick={codeBlock} title="Code block">       <Code2Icon size={13} /></Btn>
       <Sep />
@@ -187,9 +191,18 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       <Sep />
 
       {/* Links & images */}
-      <Btn onClick={link} title="Link (Ctrl+K)">     <LinkIcon size={13} /></Btn>
-      <Btn onClick={onImageClick} title="Image">             <ImageIcon size={13} /></Btn>
-      <Btn onClick={footnote} title="Footnote/sidenote"> <FootprintsIcon size={13} /></Btn>
+      <Btn onClick={link} title="Link (Ctrl+K)"><LinkIcon size={13} /></Btn>
+      <Btn onClick={onImageClick} title="Image"><ImageIcon size={13} /></Btn>
+      {/* Footnote with label */}
+      <button
+        type="button"
+        onClick={footnote}
+        title="Footnote/sidenote"
+        className={[labelBtnBase, btnInactive].join(' ')}
+      >
+        <FootprintsIcon size={13} />
+        <span>Note</span>
+      </button>
       <Sep />
 
       {/* Admonition picker */}
@@ -199,10 +212,8 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
         title="Admonition"
         onClick={openAdmonition}
         className={[
-          'flex items-center gap-1 px-2 h-7 font-mono text-[10px] uppercase tracking-widest rounded transition-colors',
-          admonitionOpen
-            ? 'bg-black/20 dark:bg-white/20 text-black dark:text-white'
-            : 'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10',
+          labelBtnBase,
+          admonitionOpen ? btnActive : btnInactive,
         ].join(' ')}
       >
         <BotIcon size={13} />
@@ -246,9 +257,15 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       )}
 
       {/* View mode */}
-      <Btn onClick={() => onModeChange('editor')} title="Editor only" active={mode === 'editor'}>  <PanelLeftIcon size={13} /> </Btn>
-      <Btn onClick={() => onModeChange('split')} title="Split view" active={mode === 'split'}>   <SplitIcon size={13} /> </Btn>
-      <Btn onClick={() => onModeChange('preview')} title="Preview only" active={mode === 'preview'}>  <EyeIcon size={13} /> </Btn>
+      <Btn onClick={() => onModeChange('editor')} title="Editor only" active={mode === 'editor'}><PanelLeftIcon size={13} /></Btn>
+      <Btn onClick={() => onModeChange('split')} title="Split view" active={mode === 'split'}><Columns2Icon size={13} /></Btn>
+      <Btn onClick={() => onModeChange('preview')} title="Preview only" active={mode === 'preview'}><EyeIcon size={13} /></Btn>
+      <Sep />
+
+      {/* Meta sidebar toggle */}
+      <Btn onClick={onMetaToggle} title="Post settings" active={metaOpen}>
+        <PanelRightIcon size={13} />
+      </Btn>
     </div>
   )
 }
