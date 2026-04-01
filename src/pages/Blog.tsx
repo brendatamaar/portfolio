@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { api } from '@/src/lib/api'
 import type { PostSummary } from '@/src/lib/api'
 import Header from '@/components/section/Header'
@@ -31,8 +31,28 @@ export default function BlogPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const allTags = [...new Set(posts.flatMap(p => p.tags.map(t => t.slug)))]
-  const visible = activeTag ? posts.filter(p => p.tags.some(t => t.slug === activeTag)) : posts
+  // Build a deduplicated tag list and a slug→name lookup in one pass.
+  // Both are stable as long as `posts` doesn't change.
+  const { allTagSlugs, tagNames } = useMemo(() => {
+    const names: Record<string, string> = {}
+    const seen = new Set<string>()
+    const slugs: string[] = []
+    for (const post of posts) {
+      for (const tag of post.tags) {
+        names[tag.slug] = tag.name
+        if (!seen.has(tag.slug)) {
+          seen.add(tag.slug)
+          slugs.push(tag.slug)
+        }
+      }
+    }
+    return { allTagSlugs: slugs, tagNames: names }
+  }, [posts])
+
+  const visible = useMemo(
+    () => activeTag ? posts.filter(p => p.tags.some(t => t.slug === activeTag)) : posts,
+    [posts, activeTag],
+  )
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -48,7 +68,7 @@ export default function BlogPage() {
           </p>
         </div>
 
-        {allTags.length > 0 && (
+        {allTagSlugs.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             <button
               onClick={() => setActiveTag(null)}
@@ -60,22 +80,19 @@ export default function BlogPage() {
             >
               all
             </button>
-            {allTags.map(slug => {
-              const tag = posts.flatMap(p => p.tags).find(t => t.slug === slug)
-              return (
-                <button
-                  key={slug}
-                  onClick={() => setActiveTag(slug === activeTag ? null : slug)}
-                  className={`inline-flex items-center px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] transition-colors ${
-                    activeTag === slug
-                      ? 'bg-[#FFE600] text-black border-black dark:border-black'
-                      : 'bg-white dark:bg-black text-black dark:text-white hover:bg-[#FFE600] hover:text-black dark:hover:bg-[#FFE600] dark:hover:text-black dark:hover:border-black'
-                  }`}
-                >
-                  #{tag?.name ?? slug}
-                </button>
-              )
-            })}
+            {allTagSlugs.map(slug => (
+              <button
+                key={slug}
+                onClick={() => setActiveTag(slug === activeTag ? null : slug)}
+                className={`inline-flex items-center px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] transition-colors ${
+                  activeTag === slug
+                    ? 'bg-[#FFE600] text-black border-black dark:border-black'
+                    : 'bg-white dark:bg-black text-black dark:text-white hover:bg-[#FFE600] hover:text-black dark:hover:bg-[#FFE600] dark:hover:text-black dark:hover:border-black'
+                }`}
+              >
+                #{tagNames[slug] ?? slug}
+              </button>
+            ))}
           </div>
         )}
 

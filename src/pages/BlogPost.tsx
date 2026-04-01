@@ -9,12 +9,14 @@ import MarkdownRenderer from '@/src/components/blog/MarkdownRenderer'
 import { formatDate } from '@/components/util/formatDate'
 import { ScrollProgress } from '@/components/ui/scroll-progress'
 
+/** Estimate reading time in minutes (200 wpm, minimum 1). */
 function readingTime(html: string) {
   const text = html.replace(/<[^>]+>/g, '')
   const words = text.trim().split(/\s+/).length
   return Math.max(1, Math.round(words / 200))
 }
 
+/** Floating button that appears after scrolling 400px down. */
 function BackToTop() {
   const [show, setShow] = useState(false)
   useEffect(() => {
@@ -86,15 +88,15 @@ export default function BlogPostPage() {
   }
 
   const { post, html, toc, sidenotes } = data
-  const date = post.publishedAt
-    ? new Date(post.publishedAt * 1000)
-    : new Date(post.createdAt * 1000)
+  // Server stores timestamps as Unix seconds; prefer publishedAt if available.
+  const date = new Date((post.publishedAt ?? post.createdAt) * 1000)
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       <ScrollProgress className="fixed z-50 bg-[#FFE600] border-b-2 border-black dark:border-white" />
       <BackToTop />
-      {/* Narrow header/hero zone */}
+
+      {/* Narrow header / post meta zone */}
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
         <Header />
 
@@ -141,12 +143,12 @@ export default function BlogPostPage() {
         </div>
       </div>
 
-      {/* 3-column article layout — wider than max-w-3xl to accommodate side columns */}
+      {/* 3-column article layout — wider than max-w-3xl to fit sidenotes + TOC */}
       <div className="mx-auto px-6 pb-16" style={{ maxWidth: '72rem' }}>
         <MarkdownRenderer html={html} toc={toc} sidenotes={sidenotes} />
       </div>
 
-      {/* Footer in narrow container */}
+      {/* Narrow footer zone */}
       <div className="mx-auto max-w-3xl px-6 pb-16">
         <div className="pt-6 border-t-2 border-black dark:border-white flex items-center justify-between">
           <Link

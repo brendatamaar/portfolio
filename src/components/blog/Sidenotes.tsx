@@ -12,6 +12,10 @@ export default function Sidenotes({ sidenotes, contentRef }: Props) {
   useEffect(() => {
     if (!contentRef.current || !containerRef.current) return
 
+    // Align each note's top edge to its inline reference marker.
+    // Both elements use document-relative Y via getBoundingClientRect + scrollY,
+    // then we subtract the container's own offset so the `top` value is relative
+    // to the container (which is `position: relative`).
     const position = () => {
       sidenotes.forEach(({ id }) => {
         const ref = contentRef.current?.querySelector(`[data-sidenote-id="${id}"]`) as HTMLElement | null
@@ -25,8 +29,19 @@ export default function Sidenotes({ sidenotes, contentRef }: Props) {
     }
 
     position()
-    window.addEventListener('resize', position)
-    return () => window.removeEventListener('resize', position)
+
+    // Debounce resize so we don't thrash layout on every pixel of resize.
+    let timer: ReturnType<typeof setTimeout>
+    const onResize = () => {
+      clearTimeout(timer)
+      timer = setTimeout(position, 50)
+    }
+
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      clearTimeout(timer)
+    }
   }, [sidenotes, contentRef])
 
   if (!sidenotes.length) return null

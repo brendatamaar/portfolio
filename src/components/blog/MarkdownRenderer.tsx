@@ -12,6 +12,11 @@ interface Props {
 export default function MarkdownRenderer({ html, toc, sidenotes }: Props) {
   const contentRef = useRef<HTMLDivElement>(null)
 
+  // Inject a "copy" button into every code block after the HTML mounts.
+  // Done via DOM manipulation because the HTML comes pre-rendered from the server
+  // and we can't hook into individual <pre> elements at the JSX level.
+  // The guard `if (pre.querySelector('.copy-btn')) return` prevents duplicates
+  // if `html` identity changes without the DOM being replaced.
   useEffect(() => {
     const pres = contentRef.current?.querySelectorAll('pre')
     pres?.forEach(pre => {
@@ -31,17 +36,17 @@ export default function MarkdownRenderer({ html, toc, sidenotes }: Props) {
 
   return (
     <div className="blog-layout flex gap-10 items-start w-full">
-      {/* Left: sidenotes (desktop only) */}
+      {/* Left: margin notes (desktop only, positioned by Sidenotes.tsx) */}
       <Sidenotes sidenotes={sidenotes} contentRef={contentRef} />
 
-      {/* Center: article content */}
+      {/* Center: article content — HTML is trusted (server-generated from our own parser) */}
       <div
         ref={contentRef}
         className="blog-content prose-custom min-w-0 flex-1"
         dangerouslySetInnerHTML={{ __html: html }}
       />
 
-      {/* Right: TOC (desktop only) */}
+      {/* Right: sticky scrollspy TOC (desktop only) */}
       <TOC toc={toc} />
     </div>
   )
