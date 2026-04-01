@@ -1,5 +1,6 @@
 import type { TocItem, Sidenote } from '../../shared/markdown/types.js'
 
+// Falls back to localhost in development; set VITE_API_URL in production.
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 
 export interface PostTag {
@@ -13,13 +14,16 @@ export interface PostSummary {
   slug: string
   description: string
   coverImageUrl: string | null
+  /** Unix timestamp (seconds). Null if the post was never explicitly published. */
   publishedAt: number | null
+  /** Unix timestamp (seconds) of row creation. */
   createdAt: number
   tags: PostTag[]
 }
 
 export interface PostDetail {
   post: PostSummary
+  /** Server-rendered HTML from the markdown parser. */
   html: string
   toc: TocItem[]
   sidenotes: Sidenote[]

@@ -16,15 +16,17 @@ export default function TOC({ toc }: Props) {
       .map((item) => document.getElementById(item.id))
       .filter(Boolean) as HTMLElement[]
 
+    // rootMargin clips the observation zone to the top 40% of the viewport,
+    // so only headings near the top of the screen are considered "active".
+    // When multiple headings are visible we take the topmost one.
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        // Find the topmost visible heading
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
         if (visible.length) setActiveId(visible[0].target.id)
       },
-      { rootMargin: '0px 0px -60% 0px', threshold: 0 }
+      { rootMargin: '0px 0px -60% 0px', threshold: 0 },
     )
 
     headingEls.forEach((el) => observerRef.current!.observe(el))

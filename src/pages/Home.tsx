@@ -11,8 +11,9 @@ import { RESUME_DATA } from '@/data/resume-data'
 import { BlogPostCard } from '@/components/ui/post-card'
 import { Magnetic } from '@/components/ui/magnetic'
 
-// helpers
+// --- Shared helpers ---
 
+/** Fade-in + slide-up when the element scrolls into view. Triggers once. */
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
@@ -28,6 +29,7 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   )
 }
 
+/** Numbered section header with bottom border. */
 function SectionLabel({ num, label }: { num: string; label: string }) {
   return (
     <div className="mb-8 flex items-center gap-4 border-b-2 border-black dark:border-white pb-4">
@@ -41,12 +43,14 @@ function SectionLabel({ num, label }: { num: string; label: string }) {
   )
 }
 
-// project card
+// --- Project card ---
 
 type Project = (typeof RESUME_DATA.projects)[number]
 
+/** Memoized project card. Wrapped in an <a> only when the project has a link. */
 const ProjectCard = memo(function ProjectCard({ project, index }: { project: Project; index: number }) {
   const hasLink = 'link' in project
+  // First techStack entry is the project type ("work" | "personal" | …); rest are tech tags.
   const type = project.techStack[0]
   const tech = project.techStack.slice(1)
   const color = type === 'work' ? 'bg-blue-500' : 'bg-orange-500'
@@ -55,7 +59,6 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
   const content = (
     <div className="group h-full border-2 border-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] hover:shadow-[6px_6px_0px_#000] dark:hover:shadow-[6px_6px_0px_#fff] hover:-translate-x-px hover:-translate-y-px transition-all duration-150 flex flex-col bg-white dark:bg-black p-5">
 
-      {/* top row: type badge + number */}
       <div className="flex items-center justify-between mb-5">
         <span className={`${color} inline-flex items-center px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-white border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] transition-all`}>
           {type}
@@ -65,7 +68,6 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
         </span>
       </div>
 
-      {/* title + arrow */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <h3 className="text-xl font-black uppercase tracking-tight text-black dark:text-white group-hover:underline decoration-2 underline-offset-4 leading-tight">
           {project.title}
@@ -77,12 +79,10 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
         />
       </div>
 
-      {/* description */}
       <p className="text-sm font-medium text-black/60 dark:text-white/60 line-clamp-2 leading-relaxed">
         {project.description}
       </p>
 
-      {/* tech tags */}
       {tech.length > 0 && (
         <div className="mt-auto pt-5 flex flex-wrap gap-1.5">
           {tech.slice(0, 3).map((t) => (
@@ -114,6 +114,7 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
   return <div className="h-full">{content}</div>
 })
 
+/** Animated placeholder shown while blog posts are loading. */
 function SkeletonCard() {
   return (
     <div className="border-2 border-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] p-5 animate-pulse">
@@ -128,7 +129,7 @@ function SkeletonCard() {
   )
 }
 
-// main
+// --- Page ---
 
 export default function Home() {
   const data = RESUME_DATA
@@ -140,6 +141,7 @@ export default function Home() {
   const visibleProjects = showAllProjects ? data.projects : data.projects.slice(0, PREVIEW_COUNT)
   const remaining = data.projects.length - PREVIEW_COUNT
 
+  // Fetch only the 3 most recent posts for the Writing preview section.
   useEffect(() => {
     api.getPosts()
       .then((posts) => setBlogPosts(posts.slice(0, 3)))
@@ -155,7 +157,7 @@ export default function Home() {
 
         <main className="space-y-20">
 
-          {/* projects */}
+          {/* 01 — Projects */}
           <Reveal>
             <section>
               <SectionLabel num="01" label="Projects" />
@@ -175,7 +177,7 @@ export default function Home() {
             </section>
           </Reveal>
 
-          {/* work */}
+          {/* 02 — Work */}
           <Reveal delay={0.05}>
             <section>
               <SectionLabel num="02" label="Work" />
@@ -209,7 +211,7 @@ export default function Home() {
             </section>
           </Reveal>
 
-          {/* writing */}
+          {/* 03 — Writing */}
           <Reveal delay={0.05}>
             <section>
               <SectionLabel num="03" label="Writing" />
@@ -233,7 +235,7 @@ export default function Home() {
             </section>
           </Reveal>
 
-          {/* connect */}
+          {/* 04 — Connect */}
           <Reveal delay={0.05}>
             <section>
               <SectionLabel num="04" label="Connect" />
