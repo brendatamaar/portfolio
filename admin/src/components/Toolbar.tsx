@@ -81,10 +81,10 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
   function undo() { ta().focus(); document.execCommand('undo') }
   function redo() { ta().focus(); document.execCommand('redo') }
 
-  function bold()   { wrap(ta(), '**') }
+  function bold() { wrap(ta(), '**') }
   function italic() { wrap(ta(), '*') }
   function strike() { wrap(ta(), '~~') }
-  function code()   { wrap(ta(), '`') }
+  function code() { wrap(ta(), '`') }
   function codeBlock() {
     const textarea = ta()
     const { selectionStart: s, selectionEnd: e, value } = textarea
@@ -100,14 +100,14 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       textarea.setSelectionRange(cursorPos, cursorPos)
     }
   }
-  function h1()     { insertLine(ta(), '# ') }
-  function h2()     { insertLine(ta(), '## ') }
-  function h3()     { insertLine(ta(), '### ') }
-  function quote()  { insertLine(ta(), '> ') }
-  function ul()     { insertLine(ta(), '- ') }
-  function ol()     { insertLine(ta(), '1. ') }
-  function hr()     { insertBlock(ta(), '\n---\n') }
-  function link()   { wrap(ta(), '[', '](url)') }
+  function h1() { insertLine(ta(), '# ') }
+  function h2() { insertLine(ta(), '## ') }
+  function h3() { insertLine(ta(), '### ') }
+  function quote() { insertLine(ta(), '> ') }
+  function ul() { insertLine(ta(), '- ') }
+  function ol() { insertLine(ta(), '1. ') }
+  function hr() { insertBlock(ta(), '\n---\n') }
+  function link() { wrap(ta(), '[', '](url)') }
   function footnote() {
     const textarea = ta()
     const { value, selectionEnd: e } = textarea
@@ -148,28 +148,28 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       className={[
         'flex items-center justify-center w-7 h-7 rounded transition-colors',
         active
-          ? 'bg-white/20 text-white'
-          : 'text-white/50 hover:text-white hover:bg-white/10',
+          ? 'bg-black/20 dark:bg-white/20 text-black dark:text-white'
+          : 'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10',
       ].join(' ')}
     >
       {children}
     </button>
   )
 
-  const Sep = () => <div className="w-px h-4 bg-white/15 mx-0.5" />
+  const Sep = () => <div className="w-px h-4 bg-black/15 dark:bg-white/15 mx-0.5" />
 
   return (
-    <div className="flex items-center gap-0.5 px-3 h-10 border-b border-white/10 bg-[#111] overflow-x-auto">
+    <div className="flex items-center gap-0.5 px-3 h-10 border-b border-black/10 dark:border-white/10 bg-[#f0f0f0] dark:bg-[#111] overflow-x-auto">
       {/* Undo / Redo */}
       <Btn onClick={undo} title="Undo (Ctrl+Z)"><Undo2Icon size={13} /></Btn>
       <Btn onClick={redo} title="Redo (Ctrl+Y)"><Redo2Icon size={13} /></Btn>
       <Sep />
 
       {/* Inline formatting */}
-      <Btn onClick={bold}      title="Bold (Ctrl+B)">    <BoldIcon size={13} /> </Btn>
-      <Btn onClick={italic}    title="Italic (Ctrl+I)">  <ItalicIcon size={13} /> </Btn>
-      <Btn onClick={strike}    title="Strikethrough">    <StrikethroughIcon size={13} /> </Btn>
-      <Btn onClick={code}      title="Inline code">      <CodeIcon size={13} /> </Btn>
+      <Btn onClick={bold} title="Bold (Ctrl+B)">    <BoldIcon size={13} /> </Btn>
+      <Btn onClick={italic} title="Italic (Ctrl+I)">  <ItalicIcon size={13} /> </Btn>
+      <Btn onClick={strike} title="Strikethrough">    <StrikethroughIcon size={13} /> </Btn>
+      <Btn onClick={code} title="Inline code">      <CodeIcon size={13} /> </Btn>
       <Btn onClick={codeBlock} title="Code block">       <Code2Icon size={13} /></Btn>
       <Sep />
 
@@ -181,15 +181,15 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
 
       {/* Blocks */}
       <Btn onClick={quote} title="Blockquote">    <QuoteIcon size={13} /> </Btn>
-      <Btn onClick={ul}    title="Bullet list">   <ListIcon size={13} /> </Btn>
-      <Btn onClick={ol}    title="Numbered list"> <ListOrderedIcon size={13} /> </Btn>
-      <Btn onClick={hr}    title="Horizontal rule"><MinusIcon size={13} /> </Btn>
+      <Btn onClick={ul} title="Bullet list">   <ListIcon size={13} /> </Btn>
+      <Btn onClick={ol} title="Numbered list"> <ListOrderedIcon size={13} /> </Btn>
+      <Btn onClick={hr} title="Horizontal rule"><MinusIcon size={13} /> </Btn>
       <Sep />
 
       {/* Links & images */}
-      <Btn onClick={link}         title="Link (Ctrl+K)">     <LinkIcon size={13} /></Btn>
+      <Btn onClick={link} title="Link (Ctrl+K)">     <LinkIcon size={13} /></Btn>
       <Btn onClick={onImageClick} title="Image">             <ImageIcon size={13} /></Btn>
-      <Btn onClick={footnote}     title="Footnote/sidenote"> <FootprintsIcon size={13} /></Btn>
+      <Btn onClick={footnote} title="Footnote/sidenote"> <FootprintsIcon size={13} /></Btn>
       <Sep />
 
       {/* Admonition picker */}
@@ -200,7 +200,9 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
         onClick={openAdmonition}
         className={[
           'flex items-center gap-1 px-2 h-7 font-mono text-[10px] uppercase tracking-widest rounded transition-colors',
-          admonitionOpen ? 'bg-white/20 text-white' : 'text-white/50 hover:text-white hover:bg-white/10',
+          admonitionOpen
+            ? 'bg-black/20 dark:bg-white/20 text-black dark:text-white'
+            : 'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10',
         ].join(' ')}
       >
         <BotIcon size={13} />
@@ -208,7 +210,7 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       </button>
       {admonitionOpen && createPortal(
         <div
-          className="fixed flex flex-col bg-[#1a1a1a] border border-white/20 min-w-max z-[9999] shadow-xl"
+          className="fixed flex flex-col bg-[#f0f0f0] dark:bg-[#1a1a1a] border border-black/20 dark:border-white/20 min-w-max z-[9999] shadow-xl"
           style={{ top: admonitionPos.top, left: admonitionPos.left }}
           onMouseDown={(e) => e.stopPropagation()}
         >
@@ -217,7 +219,7 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
               key={t}
               type="button"
               onClick={() => { admonition(t); setAdmonitionOpen(false) }}
-              className="px-3 py-1.5 text-left font-mono text-[11px] text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+              className="px-3 py-1.5 text-left font-mono text-[11px] text-black/60 dark:text-white/60 hover:bg-black/10 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-colors"
             >
               :::{t}
             </button>
@@ -244,8 +246,8 @@ export default function Toolbar({ textareaRef, mode, onModeChange, onImageClick,
       )}
 
       {/* View mode */}
-      <Btn onClick={() => onModeChange('editor')}  title="Editor only"  active={mode === 'editor'}>  <PanelLeftIcon size={13} /> </Btn>
-      <Btn onClick={() => onModeChange('split')}   title="Split view"   active={mode === 'split'}>   <SplitIcon size={13} /> </Btn>
+      <Btn onClick={() => onModeChange('editor')} title="Editor only" active={mode === 'editor'}>  <PanelLeftIcon size={13} /> </Btn>
+      <Btn onClick={() => onModeChange('split')} title="Split view" active={mode === 'split'}>   <SplitIcon size={13} /> </Btn>
       <Btn onClick={() => onModeChange('preview')} title="Preview only" active={mode === 'preview'}>  <EyeIcon size={13} /> </Btn>
     </div>
   )

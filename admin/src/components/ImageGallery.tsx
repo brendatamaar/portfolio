@@ -42,19 +42,19 @@ export default function ImageGallery({ onSelect, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="bg-[#111] border border-white/20 w-full max-w-3xl max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="bg-[#f0f0f0] dark:bg-[#111] border border-black/20 dark:border-white/20 w-full max-w-3xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-black/10 dark:border-white/10">
           <h2 className="font-black text-sm uppercase tracking-tight">Image Gallery</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors">
             <XIcon size={16} />
           </button>
         </div>
 
         {/* Upload bar */}
-        <div className="px-4 py-3 border-b border-white/10 flex items-center gap-3">
-          <label className="flex items-center gap-2 cursor-pointer bg-white text-black font-bold text-xs uppercase tracking-wide px-3 py-1.5 hover:bg-white/80 transition-colors">
+        <div className="px-4 py-3 border-b border-black/10 dark:border-white/10 flex items-center gap-3">
+          <label className="flex items-center gap-2 cursor-pointer bg-black dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-wide px-3 py-1.5 hover:bg-black/80 dark:hover:bg-white/80 transition-colors">
             <UploadIcon size={12} />
             {uploading ? 'Uploading...' : 'Upload'}
             <input
@@ -66,7 +66,7 @@ export default function ImageGallery({ onSelect, onClose }: Props) {
               disabled={uploading}
             />
           </label>
-          <span className="font-mono text-[10px] text-white/30 uppercase tracking-widest">
+          <span className="font-mono text-[10px] text-black/30 dark:text-white/30 uppercase tracking-widest">
             Click an image to insert it
           </span>
         </div>
@@ -74,9 +74,9 @@ export default function ImageGallery({ onSelect, onClose }: Props) {
         {/* Grid */}
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <p className="font-mono text-xs text-white/40 uppercase tracking-widest">Loading...</p>
+            <p className="font-mono text-xs text-black/40 dark:text-white/40 uppercase tracking-widest">Loading...</p>
           ) : images.length === 0 ? (
-            <p className="font-mono text-xs text-white/40 uppercase tracking-widest">No images yet.</p>
+            <p className="font-mono text-xs text-black/40 dark:text-white/40 uppercase tracking-widest">No images yet.</p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {images.map((img) => (
@@ -84,7 +84,7 @@ export default function ImageGallery({ onSelect, onClose }: Props) {
                   <button
                     type="button"
                     onClick={() => { onSelect(img.url); onClose() }}
-                    className="block w-full h-full border border-white/10 hover:border-white/40 transition-colors overflow-hidden"
+                    className="block w-full h-full border border-black/10 dark:border-white/10 hover:border-black/40 dark:hover:border-white/40 transition-colors overflow-hidden"
                   >
                     <img
                       src={img.url}
