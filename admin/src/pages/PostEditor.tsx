@@ -3,12 +3,13 @@ import {
   type KeyboardEvent, type DragEvent, type ClipboardEvent,
 } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeftIcon, SaveIcon, GlobeIcon, EyeOffIcon } from 'lucide-react'
+import { ArrowLeftIcon, SaveIcon, GlobeIcon, EyeOffIcon, SunIcon, MoonIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Post, Tag } from '../lib/api.ts'
 import Toolbar from '../components/Toolbar.tsx'
 import Preview from '../components/Preview.tsx'
 import ImageGallery from '../components/ImageGallery.tsx'
+import { useTheme } from '../lib/theme.ts'
 
 type Mode = 'split' | 'editor' | 'preview'
 
@@ -18,26 +19,27 @@ export default function PostEditor() {
   const isNew = !id
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const previewRef  = useRef<HTMLDivElement>(null)
-  const isSyncing   = useRef(false)
-  const saveRef     = useRef<() => void>(() => {})
+  const previewRef = useRef<HTMLDivElement>(null)
+  const isSyncing = useRef(false)
+  const saveRef = useRef<() => void>(() => { })
 
-  const [title, setTitle]               = useState('')
-  const [slug, setSlug]                 = useState('')
-  const [description, setDescription]  = useState('')
-  const [content, setContent]           = useState('')
-  const [status, setStatus]             = useState<'draft' | 'published'>('draft')
+  const [title, setTitle] = useState('')
+  const [slug, setSlug] = useState('')
+  const [description, setDescription] = useState('')
+  const [content, setContent] = useState('')
+  const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
-  const [allTags, setAllTags]           = useState<Tag[]>([])
-  const [newTagName, setNewTagName]     = useState('')
+  const [allTags, setAllTags] = useState<Tag[]>([])
+  const [newTagName, setNewTagName] = useState('')
 
-  const [mode, setMode]                 = useState<Mode>('split')
-  const [syncScroll, setSyncScroll]     = useState(false)
-  const [showGallery, setShowGallery]   = useState(false)
-  const [saving, setSaving]             = useState(false)
-  const [saveMsg, setSaveMsg]           = useState('')
-  const [loading, setLoading]           = useState(!isNew)
+  const { isDark, toggle } = useTheme()
+  const [mode, setMode] = useState<Mode>('split')
+  const [syncScroll, setSyncScroll] = useState(false)
+  const [showGallery, setShowGallery] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveMsg, setSaveMsg] = useState('')
+  const [loading, setLoading] = useState(!isNew)
 
   // Load existing post
   useEffect(() => {
@@ -198,20 +200,20 @@ export default function PostEditor() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <p className="font-mono text-xs text-white/40 uppercase tracking-widest">Loading...</p>
+      <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex items-center justify-center">
+        <p className="font-mono text-xs text-black/40 dark:text-white/40 uppercase tracking-widest">Loading...</p>
       </div>
     )
   }
 
-  const editorVisible  = mode === 'split' || mode === 'editor'
+  const editorVisible = mode === 'split' || mode === 'editor'
   const previewVisible = mode === 'split' || mode === 'preview'
 
   return (
-    <div className="h-screen flex flex-col bg-[#0a0a0a] text-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-white dark:bg-[#0a0a0a] text-black dark:text-white overflow-hidden">
       {/* Top nav */}
-      <header className="h-14 border-b border-white/10 flex items-center gap-4 px-4 shrink-0">
-        <Link to="/" className="text-white/40 hover:text-white transition-colors">
+      <header className="h-14 border-b border-black/10 dark:border-white/10 flex items-center gap-4 px-4 shrink-0">
+        <Link to="/" className="text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors">
           <ArrowLeftIcon size={15} />
         </Link>
 
@@ -220,13 +222,13 @@ export default function PostEditor() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Post title..."
-            className="bg-transparent font-black text-base uppercase tracking-tight text-white placeholder-white/20 outline-none flex-1 min-w-0"
+            className="bg-transparent font-black text-base uppercase tracking-tight text-black dark:text-white placeholder-black/20 dark:placeholder-white/20 outline-none flex-1 min-w-0"
           />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           {saveMsg && (
-            <span className="font-mono text-[10px] text-white/40 uppercase tracking-widest">
+            <span className="font-mono text-[10px] text-black/40 dark:text-white/40 uppercase tracking-widest">
               {saveMsg}
             </span>
           )}
@@ -235,7 +237,7 @@ export default function PostEditor() {
             <button
               onClick={() => save('draft')}
               disabled={saving}
-              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1.5 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1.5 border border-black/20 dark:border-white/20 text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:border-black/40 dark:hover:border-white/40 transition-colors disabled:opacity-50"
             >
               <EyeOffIcon size={12} />
               Unpublish
@@ -254,42 +256,50 @@ export default function PostEditor() {
           <button
             onClick={() => save()}
             disabled={saving}
-            className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1.5 bg-white text-black hover:bg-white/80 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80 transition-colors disabled:opacity-50"
           >
             <SaveIcon size={12} />
             Save
+          </button>
+
+          <button
+            onClick={toggle}
+            className="p-1.5 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors"
+            title="Toggle theme"
+          >
+            {isDark ? <SunIcon size={15} /> : <MoonIcon size={15} />}
           </button>
         </div>
       </header>
 
       {/* Meta bar */}
-      <div className="border-b border-white/10 px-4 py-2.5 flex flex-wrap items-center gap-4 bg-[#0d0d0d] shrink-0">
+      <div className="border-b border-black/10 dark:border-white/10 px-4 py-2.5 flex flex-wrap items-center gap-4 bg-[#f5f5f5] dark:bg-[#0d0d0d] shrink-0">
         <label className="flex items-center gap-2 min-w-0">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-white/30 shrink-0">Slug</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30 shrink-0">Slug</span>
           <input
             value={slug}
             onChange={(e) => { slugTouched.current = true; setSlug(e.target.value) }}
-            className="bg-transparent font-mono text-xs text-white/60 outline-none border-b border-white/10 focus:border-white/40 min-w-0 w-48 pb-0.5 transition-colors"
+            className="bg-transparent font-mono text-xs text-black/60 dark:text-white/60 outline-none border-b border-black/10 dark:border-white/10 focus:border-black/40 dark:focus:border-white/40 min-w-0 w-48 pb-0.5 transition-colors"
           />
         </label>
 
         <label className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-white/30 shrink-0">Desc</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30 shrink-0">Desc</span>
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Short description..."
-            className="bg-transparent font-mono text-xs text-white/60 placeholder-white/20 outline-none border-b border-white/10 focus:border-white/40 flex-1 min-w-0 pb-0.5 transition-colors"
+            className="bg-transparent font-mono text-xs text-black/60 dark:text-white/60 placeholder-black/20 dark:placeholder-white/20 outline-none border-b border-black/10 dark:border-white/10 focus:border-black/40 dark:focus:border-white/40 flex-1 min-w-0 pb-0.5 transition-colors"
           />
         </label>
 
         <label className="flex items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-white/30 shrink-0">Cover</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-black/30 dark:text-white/30 shrink-0">Cover</span>
           <input
             value={coverImageUrl}
             onChange={(e) => setCoverImageUrl(e.target.value)}
             placeholder="/uploads/..."
-            className="bg-transparent font-mono text-xs text-white/60 placeholder-white/20 outline-none border-b border-white/10 focus:border-white/40 w-40 pb-0.5 transition-colors"
+            className="bg-transparent font-mono text-xs text-black/60 dark:text-white/60 placeholder-black/20 dark:placeholder-white/20 outline-none border-b border-black/10 dark:border-white/10 focus:border-black/40 dark:focus:border-white/40 w-40 pb-0.5 transition-colors"
           />
         </label>
 
@@ -303,8 +313,8 @@ export default function PostEditor() {
               className={[
                 'font-mono text-[10px] uppercase tracking-wide px-2 py-0.5 border transition-colors',
                 selectedTagIds.includes(tag.id)
-                  ? 'border-white text-white bg-white/10'
-                  : 'border-white/20 text-white/30 hover:border-white/40',
+                  ? 'border-black dark:border-white text-black dark:text-white bg-black/10 dark:bg-white/10'
+                  : 'border-black/20 dark:border-white/20 text-black/30 dark:text-white/30 hover:border-black/40 dark:hover:border-white/40',
               ].join(' ')}
             >
               #{tag.name}
@@ -315,7 +325,7 @@ export default function PostEditor() {
             onChange={(e) => setNewTagName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
             placeholder="+ tag"
-            className="font-mono text-[10px] uppercase tracking-wide text-white/40 placeholder-white/20 bg-transparent outline-none border-b border-white/10 focus:border-white/30 w-16 pb-0.5"
+            className="font-mono text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 placeholder-black/20 dark:placeholder-white/20 bg-transparent outline-none border-b border-black/10 dark:border-white/10 focus:border-black/30 dark:focus:border-white/30 w-16 pb-0.5"
           />
         </div>
       </div>
@@ -331,7 +341,7 @@ export default function PostEditor() {
       />
 
       {/* Editor / Preview panes */}
-      <div className="flex flex-1 min-h-0 divide-x divide-white/10">
+      <div className="flex flex-1 min-h-0 divide-x divide-black/10 dark:divide-white/10">
         {editorVisible && (
           <div className={`flex flex-col min-h-0 ${mode === 'split' ? 'w-1/2' : 'w-full'}`}>
             <textarea
@@ -356,11 +366,11 @@ export default function PostEditor() {
       </div>
 
       {/* Footer */}
-      <div className="h-7 border-t border-white/10 flex items-center px-4 gap-4 bg-[#0d0d0d] shrink-0">
-        <span className="font-mono text-[10px] text-white/30 uppercase tracking-widest">
+      <div className="h-7 border-t border-black/10 dark:border-white/10 flex items-center px-4 gap-4 bg-[#f5f5f5] dark:bg-[#0d0d0d] shrink-0">
+        <span className="font-mono text-[10px] text-black/30 dark:text-white/30 uppercase tracking-widest">
           {wordCount} words
         </span>
-        <span className="font-mono text-[10px] text-white/20 uppercase tracking-widest">
+        <span className="font-mono text-[10px] text-black/20 dark:text-white/20 uppercase tracking-widest">
           {content.length} chars
         </span>
       </div>
