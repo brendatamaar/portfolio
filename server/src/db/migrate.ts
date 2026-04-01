@@ -3,7 +3,7 @@
  * Called once at server startup.
  */
 
-import { sqlite } from './index.js';
+import { sqlite } from './index.js'
 
 export function runMigrations(): void {
   sqlite.exec(`
@@ -53,5 +53,5 @@ export function runMigrations(): void {
       url           TEXT NOT NULL,
       created_at    INTEGER NOT NULL DEFAULT (unixepoch())
     );
-  `);
+  `)
 }

@@ -32,7 +32,7 @@ function BackToTop() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-50 border-2 border-black dark:border-white px-4 py-2 font-mono text-xs uppercase tracking-widest text-black dark:text-white bg-white dark:bg-black shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] hover:bg-[#FFE600] hover:border-black dark:hover:bg-[#FFE600] dark:hover:border-[#FFE600] dark:hover:text-black transition-colors"
+          className="fixed right-6 bottom-6 z-50 border-2 border-black bg-white px-4 py-2 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:border-black hover:bg-[#FFE600] dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:border-[#FFE600] dark:hover:bg-[#FFE600] dark:hover:text-black"
         >
           ↑ top
         </motion.button>
@@ -49,7 +49,8 @@ export default function BlogPostPage() {
 
   useEffect(() => {
     if (!slug) return
-    api.getPost(slug)
+    api
+      .getPost(slug)
       .then(setData)
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
@@ -60,7 +61,7 @@ export default function BlogPostPage() {
       <div className="min-h-screen bg-white dark:bg-black">
         <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
           <Header />
-          <p className="font-mono text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
+          <p className="font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
             loading...
           </p>
         </div>
@@ -73,12 +74,12 @@ export default function BlogPostPage() {
       <div className="min-h-screen bg-white dark:bg-black">
         <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
           <Header />
-          <p className="mb-4 font-mono text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
+          <p className="mb-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
             Post not found.
           </p>
           <Link
             to="/blog"
-            className="font-mono text-[11px] uppercase tracking-widest text-black dark:text-white hover:underline"
+            className="font-mono text-[11px] tracking-widest text-black uppercase hover:underline dark:text-white"
           >
             ← back to writing
           </Link>
@@ -93,27 +94,27 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
-      <ScrollProgress className="fixed z-50 bg-[#FFE600] border-b-2 border-black dark:border-white" />
+      <ScrollProgress className="fixed z-50 border-b-2 border-black bg-[#FFE600] dark:border-white" />
       <BackToTop />
 
       {/* Narrow header / post meta zone */}
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
         <Header />
 
-        <div className="mb-10 pb-10 border-b-2 border-black dark:border-white">
+        <div className="mb-10 border-b-2 border-black pb-10 dark:border-white">
           <Link
             to="/blog"
-            className="mb-8 inline-block font-mono text-[11px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors"
+            className="mb-8 inline-block font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
           >
             ← writing
           </Link>
 
           {post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-5">
+            <div className="mb-5 flex flex-wrap gap-1.5">
               {post.tags.map((tag) => (
                 <span
                   key={tag.slug}
-                  className="inline-flex items-center px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-black dark:text-white bg-white dark:bg-black border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+                  className="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
                 >
                   #{tag.name}
                 </span>
@@ -121,21 +122,23 @@ export default function BlogPostPage() {
             </div>
           )}
 
-          <h1 className="font-black text-5xl sm:text-6xl uppercase tracking-tighter leading-[0.9] text-black dark:text-white mb-4">
+          <h1 className="mb-4 text-5xl leading-[0.9] font-black tracking-tighter text-black uppercase sm:text-6xl dark:text-white">
             {post.title}
           </h1>
 
           {post.description && (
-            <p className="text-xl leading-relaxed text-black/60 dark:text-white/60 max-w-2xl mb-8">
+            <p className="mb-8 max-w-2xl text-xl leading-relaxed text-black/60 dark:text-white/60">
               {post.description}
             </p>
           )}
 
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">
+            <span className="font-mono text-[11px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
               {formatDate(date)}
             </span>
-            <span className="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+            <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
+              ·
+            </span>
             <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
               {readingTime(html)} min read
             </span>
@@ -150,10 +153,10 @@ export default function BlogPostPage() {
 
       {/* Narrow footer zone */}
       <div className="mx-auto max-w-3xl px-6 pb-16">
-        <div className="pt-6 border-t-2 border-black dark:border-white flex items-center justify-between">
+        <div className="flex items-center justify-between border-t-2 border-black pt-6 dark:border-white">
           <Link
             to="/blog"
-            className="font-mono text-[11px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white transition-colors"
+            className="font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
           >
             ← all posts
           </Link>

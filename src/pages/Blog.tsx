@@ -7,14 +7,14 @@ import { BlogPostCard } from '@/components/ui/post-card'
 
 function SkeletonCard() {
   return (
-    <div className="border-2 border-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] p-5 animate-pulse">
-      <div className="flex justify-between mb-3">
+    <div className="animate-pulse border-2 border-black p-5 shadow-[4px_4px_0px_#000] dark:border-white dark:shadow-[4px_4px_0px_#fff]">
+      <div className="mb-3 flex justify-between">
         <div className="h-3 w-20 bg-black/10 dark:bg-white/10" />
         <div className="h-4 w-4 bg-black/10 dark:bg-white/10" />
       </div>
-      <div className="h-5 w-3/4 bg-black/10 dark:bg-white/10 mb-2" />
+      <div className="mb-2 h-5 w-3/4 bg-black/10 dark:bg-white/10" />
       <div className="h-4 w-full bg-black/10 dark:bg-white/10" />
-      <div className="h-4 w-2/3 bg-black/10 dark:bg-white/10 mt-1" />
+      <div className="mt-1 h-4 w-2/3 bg-black/10 dark:bg-white/10" />
     </div>
   )
 }
@@ -25,7 +25,8 @@ export default function BlogPage() {
   const [activeTag, setActiveTag] = useState<string | null>(null)
 
   useEffect(() => {
-    api.getPosts()
+    api
+      .getPosts()
       .then(setPosts)
       .catch((err) => console.error('Failed to fetch posts:', err))
       .finally(() => setLoading(false))
@@ -50,7 +51,10 @@ export default function BlogPage() {
   }, [posts])
 
   const visible = useMemo(
-    () => activeTag ? posts.filter(p => p.tags.some(t => t.slug === activeTag)) : posts,
+    () =>
+      activeTag
+        ? posts.filter((p) => p.tags.some((t) => t.slug === activeTag))
+        : posts,
     [posts, activeTag],
   )
 
@@ -60,7 +64,7 @@ export default function BlogPage() {
         <Header />
 
         <div className="mb-12">
-          <h1 className="text-5xl sm:text-7xl font-black uppercase tracking-tighter text-black dark:text-white mb-4">
+          <h1 className="mb-4 text-5xl font-black tracking-tighter text-black uppercase sm:text-7xl dark:text-white">
             Writing
           </h1>
           <p className="text-base leading-relaxed text-black/60 dark:text-white/60">
@@ -69,25 +73,25 @@ export default function BlogPage() {
         </div>
 
         {allTagSlugs.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="mb-6 flex flex-wrap gap-2">
             <button
               onClick={() => setActiveTag(null)}
-              className={`inline-flex items-center px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] transition-colors ${
+              className={`inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-colors dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] ${
                 activeTag === null
-                  ? 'bg-[#FFE600] text-black border-black dark:border-black'
-                  : 'bg-white dark:bg-black text-black dark:text-white hover:bg-[#FFE600] hover:text-black dark:hover:bg-[#FFE600] dark:hover:text-black dark:hover:border-black'
+                  ? 'border-black bg-[#FFE600] text-black dark:border-black'
+                  : 'bg-white text-black hover:bg-[#FFE600] hover:text-black dark:bg-black dark:text-white dark:hover:border-black dark:hover:bg-[#FFE600] dark:hover:text-black'
               }`}
             >
               all
             </button>
-            {allTagSlugs.map(slug => (
+            {allTagSlugs.map((slug) => (
               <button
                 key={slug}
                 onClick={() => setActiveTag(slug === activeTag ? null : slug)}
-                className={`inline-flex items-center px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] transition-colors ${
+                className={`inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-colors dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] ${
                   activeTag === slug
-                    ? 'bg-[#FFE600] text-black border-black dark:border-black'
-                    : 'bg-white dark:bg-black text-black dark:text-white hover:bg-[#FFE600] hover:text-black dark:hover:bg-[#FFE600] dark:hover:text-black dark:hover:border-black'
+                    ? 'border-black bg-[#FFE600] text-black dark:border-black'
+                    : 'bg-white text-black hover:bg-[#FFE600] hover:text-black dark:bg-black dark:text-white dark:hover:border-black dark:hover:bg-[#FFE600] dark:hover:text-black'
                 }`}
               >
                 #{tagNames[slug] ?? slug}
@@ -99,10 +103,12 @@ export default function BlogPage() {
         <div>
           {loading ? (
             <div className="flex flex-col gap-4">
-              {[0, 1, 2].map((i) => <SkeletonCard key={i} />)}
+              {[0, 1, 2].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
           ) : visible.length === 0 ? (
-            <p className="py-8 font-mono text-[11px] uppercase tracking-widest text-black/40 dark:text-white/40">
+            <p className="py-8 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
               Nothing yet — soon.
             </p>
           ) : (

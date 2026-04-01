@@ -7,7 +7,8 @@
 		"dev:all": "concurrently -k -n server,portfolio,admin -c yellow,cyan,magenta \"npm run dev --prefix server\" \"npm run dev\" \"npm run dev --prefix admin\"",
 		"build": "tsc -b && vite build",
 		"preview": "vite preview",
-		"lint": "eslint ."
+		"lint": "eslint .",
+		"format": "prettier --write \"src/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"shared/**/*.ts\" \"admin/src/**/*.{ts,tsx}\" \"server/src/**/*.ts\""
 	},
 	"dependencies": {
 		"@radix-ui/react-avatar": "^1.0.4",
