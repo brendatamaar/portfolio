@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { PlusIcon, LogOutIcon, Trash2Icon, EditIcon } from 'lucide-react'
+import { PlusIcon, LogOutIcon, Trash2Icon, EditIcon, GlobeIcon, EyeOffIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Post } from '../lib/api.ts'
 
-function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleDateString('en-US', {
+type StatusFilter = 'all' | 'draft' | 'published'
+
+function formatDate(ts: number, label: string) {
+  return `${label} ${new Date(ts * 1000).toLocaleDateString('en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
-  })
+  })}`
 }
 
 export default function PostList() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   useEffect(() => {
     api.posts.list()
@@ -32,6 +36,32 @@ export default function PostList() {
     await api.posts.delete(id)
     setPosts((p) => p.filter((x) => x.id !== id))
   }
+
+  async function toggleStatus(post: Post) {
+    const newStatus = post.status === 'published' ? 'draft' : 'published'
+    setTogglingId(post.id)
+    try {
+      const updated = await api.posts.update(post.id, { status: newStatus })
+      setPosts((p) => p.map((x) => x.id === post.id ? { ...x, ...updated } : x))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
+  const draftCount     = posts.filter((p) => p.status === 'draft').length
+  const publishedCount = posts.filter((p) => p.status === 'published').length
+
+  const filtered = statusFilter === 'all'
+    ? posts
+    : posts.filter((p) => p.status === statusFilter)
+
+  const tabs: { key: StatusFilter; label: string; count: number }[] = [
+    { key: 'all',       label: 'All',       count: posts.length },
+    { key: 'draft',     label: 'Draft',     count: draftCount },
+    { key: 'published', label: 'Published', count: publishedCount },
+  ]
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -59,16 +89,45 @@ export default function PostList() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <h1 className="font-black text-3xl uppercase tracking-tighter mb-6">Posts</h1>
 
+        {/* Filter tabs */}
+        {!loading && posts.length > 0 && (
+          <div className="flex items-center gap-1 mb-4 border-b border-white/10 pb-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={[
+                  'flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest px-3 py-2 border-b-2 -mb-px transition-colors',
+                  statusFilter === tab.key
+                    ? 'border-white text-white'
+                    : 'border-transparent text-white/30 hover:text-white/60',
+                ].join(' ')}
+              >
+                {tab.label}
+                <span className={[
+                  'text-[9px] px-1 py-px',
+                  statusFilter === tab.key ? 'bg-white/15' : 'bg-white/5',
+                ].join(' ')}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <p className="font-mono text-xs text-white/40 uppercase tracking-widest">Loading...</p>
-        ) : posts.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <p className="font-mono text-xs text-white/40 uppercase tracking-widest">
-            No posts yet.{' '}
-            <Link to="/posts/new" className="underline text-white/60">Create one.</Link>
+            {posts.length === 0 ? (
+              <>No posts yet.{' '}<Link to="/posts/new" className="underline text-white/60">Create one.</Link></>
+            ) : (
+              `No ${statusFilter} posts.`
+            )}
           </p>
         ) : (
           <div className="divide-y divide-white/10 border border-white/10">
-            {posts.map((post) => (
+            {filtered.map((post) => (
               <div key={post.id} className="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -83,7 +142,9 @@ export default function PostList() {
                       {post.status}
                     </span>
                     <span className="font-mono text-[10px] text-white/30">
-                      {formatDate(post.updatedAt)}
+                      {post.status === 'published' && post.publishedAt
+                        ? formatDate(post.publishedAt, 'Published')
+                        : formatDate(post.updatedAt, 'Updated')}
                     </span>
                   </div>
                   <p className="font-bold text-sm truncate">{post.title}</p>
@@ -93,6 +154,21 @@ export default function PostList() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => toggleStatus(post)}
+                    disabled={togglingId === post.id}
+                    title={post.status === 'published' ? 'Unpublish' : 'Publish'}
+                    className={[
+                      'p-1.5 transition-colors disabled:opacity-40',
+                      post.status === 'published'
+                        ? 'text-green-400/60 hover:text-white/60'
+                        : 'text-white/20 hover:text-[#FFE600]',
+                    ].join(' ')}
+                  >
+                    {post.status === 'published'
+                      ? <EyeOffIcon size={14} />
+                      : <GlobeIcon size={14} />}
+                  </button>
                   <Link
                     to={`/posts/${post.id}`}
                     className="p-1.5 text-white/40 hover:text-white transition-colors"
