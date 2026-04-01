@@ -10,7 +10,14 @@ services:
     volumes:
       - ./server/data:/app/data
     restart: always
-
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
   portfolio:
     build:
       context: .
@@ -22,7 +29,14 @@ services:
     depends_on:
       - server
     restart: always
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
   admin:
     build:
       context: .
@@ -34,3 +48,11 @@ services:
     depends_on:
       - server
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
