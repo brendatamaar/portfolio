@@ -1,6 +1,4 @@
-import { memo, useRef, useState, useEffect } from 'react'
-import { motion, useInView } from 'motion/react'
-import { ArrowUpRightIcon } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { api } from '@/src/lib/api'
 import type { PostSummary } from '@/src/lib/api'
 
@@ -13,159 +11,31 @@ import { BlogPostCard } from '@/components/ui/post-card'
 import { BookCard } from '@/components/ui/book-card'
 import { Magnetic } from '@/components/ui/magnetic'
 import { NowPlaying } from '@/components/ui/now-playing'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { Reveal } from '@/components/ui/reveal'
+import { SectionLabel } from '@/components/ui/section-label'
+import { ProjectCard } from '@/components/ui/project-card'
 
-// --- Shared helpers ---
-
-/** Fade-in + slide-up when the element scrolls into view. Triggers once. */
-function Reveal({
-  children,
-  delay = 0,
-}: {
-  children: React.ReactNode
-  delay?: number
-}) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 14 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.4, ease: 'easeOut', delay }}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-/** Numbered section header with bottom border. */
-function SectionLabel({ num, label }: { num: string; label: string }) {
-  return (
-    <div className="mb-8 flex items-center gap-4 border-b-2 border-black pb-4 dark:border-white">
-      <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
-        {num}
-      </span>
-      <h2 className="text-xs font-black tracking-widest text-black uppercase dark:text-white">
-        {label}
-      </h2>
-    </div>
-  )
-}
-
-// --- Project card ---
-
-type Project = (typeof RESUME_DATA.projects)[number]
-
-/** Memoized project card. Wrapped in an <a> only when the project has a link. */
-const ProjectCard = memo(function ProjectCard({
-  project,
-  index,
-}: {
-  project: Project
-  index: number
-}) {
-  const hasLink = 'link' in project
-  // First techStack entry is the project type ("work" | "personal" | …); rest are tech tags.
-  const type = project.techStack[0]
-  const tech = project.techStack.slice(1)
-  const color = type === 'work' ? 'bg-blue-500' : 'bg-orange-500'
-  const num = String(index + 1).padStart(2, '0')
-
-  const content = (
-    <div className="group flex h-full flex-col border-2 border-black bg-white p-5 shadow-[4px_4px_0px_#000] transition-all duration-150 hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_#000] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]">
-      <div className="mb-5 flex items-center justify-between">
-        <span
-          className={`${color} inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-widest text-white uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)]`}
-        >
-          {type}
-        </span>
-        <span className="font-mono text-[11px] font-bold text-black/25 dark:text-white/25">
-          {num}
-        </span>
-      </div>
-
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <h3 className="text-xl leading-tight font-black tracking-tight text-black uppercase decoration-2 underline-offset-4 group-hover:underline dark:text-white">
-          {project.title}
-        </h3>
-        <ArrowUpRightIcon
-          className={`mt-1 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
-            hasLink
-              ? 'text-black dark:text-white'
-              : 'text-black/20 dark:text-white/20'
-          }`}
-        />
-      </div>
-
-      <p className="line-clamp-2 text-sm leading-relaxed font-medium text-black/60 dark:text-white/60">
-        {project.description}
-      </p>
-
-      {tech.length > 0 && (
-        <div className="mt-auto flex flex-wrap gap-1.5 pt-5">
-          {tech.slice(0, 3).map((t) => (
-            <span
-              key={t}
-              className="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)]"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-
-  if (hasLink) {
-    return (
-      <a
-        href={(project as { link: { href: string } }).link.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block h-full"
-      >
-        {content}
-      </a>
-    )
-  }
-
-  return <div className="h-full">{content}</div>
-})
-
-/** Animated placeholder shown while blog posts are loading. */
-function SkeletonCard() {
-  return (
-    <div className="animate-pulse border-2 border-black p-5 shadow-[4px_4px_0px_#000] dark:border-white dark:shadow-[4px_4px_0px_#fff]">
-      <div className="mb-3 flex justify-between">
-        <div className="h-3 w-20 bg-black/10 dark:bg-white/10" />
-        <div className="h-4 w-4 bg-black/10 dark:bg-white/10" />
-      </div>
-      <div className="mb-2 h-5 w-3/4 bg-black/10 dark:bg-white/10" />
-      <div className="h-4 w-full bg-black/10 dark:bg-white/10" />
-      <div className="mt-1 h-4 w-2/3 bg-black/10 dark:bg-white/10" />
-    </div>
-  )
-}
+const PROJECT_PREVIEW_COUNT = 4
+const BLOG_POSTS_PREVIEW = 3
 
 // --- Page ---
 
 export default function Home() {
-  const data = RESUME_DATA
   const [showAllProjects, setShowAllProjects] = useState(false)
   const [blogPosts, setBlogPosts] = useState<PostSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const PREVIEW_COUNT = 4
   const visibleProjects = showAllProjects
-    ? data.projects
-    : data.projects.slice(0, PREVIEW_COUNT)
-  const remaining = data.projects.length - PREVIEW_COUNT
+    ? RESUME_DATA.projects
+    : RESUME_DATA.projects.slice(0, PROJECT_PREVIEW_COUNT)
+  const remaining = RESUME_DATA.projects.length - PROJECT_PREVIEW_COUNT
 
-  // Fetch only the 3 most recent posts for the Writing preview section.
+  // Fetch only the most recent posts for the Writing preview section.
   useEffect(() => {
     api
       .getPosts()
-      .then((posts) => setBlogPosts(posts.slice(0, 3)))
+      .then((posts) => setBlogPosts(posts.slice(0, BLOG_POSTS_PREVIEW)))
       .catch((err) => console.error('Error loading blog posts:', err))
       .finally(() => setIsLoading(false))
   }, [])
@@ -208,11 +78,11 @@ export default function Home() {
             <section>
               <SectionLabel num="02" label="Work" />
               <div>
-                {data.work.map((work, i) => (
+                {RESUME_DATA.work.map((work, i) => (
                   <div
                     key={work.company}
                     className={`flex items-start justify-between gap-6 py-5 ${
-                      i < data.work.length - 1
+                      i < RESUME_DATA.work.length - 1
                         ? 'border-b-2 border-black dark:border-white'
                         : ''
                     }`}
@@ -246,7 +116,7 @@ export default function Home() {
               <div>
                 {isLoading ? (
                   <div className="flex flex-col gap-4">
-                    {[0, 1, 2].map((i) => (
+                    {Array.from({ length: BLOG_POSTS_PREVIEW }, (_, i) => (
                       <SkeletonCard key={i} />
                     ))}
                   </div>
@@ -294,7 +164,7 @@ export default function Home() {
                 want to grab coffee and talk — reach out.
               </p>
               <div className="flex flex-wrap gap-3">
-                {data.contact.social.map((link) => (
+                {RESUME_DATA.contact.social.map((link) => (
                   <Magnetic key={link.name} intensity={0.4} range={80}>
                     <a
                       href={link.url}
