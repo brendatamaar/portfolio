@@ -7,6 +7,7 @@ services:
       - "3003:3001"
     environment:
       - PORT=3001
+      - CORS_ORIGINS=${CORS_ORIGINS}
     volumes:
       - ./server/data:/app/data
     restart: always
