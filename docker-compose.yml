@@ -9,7 +9,7 @@ services:
       - PORT=3001
       - CORS_ORIGINS=${CORS_ORIGINS}
     volumes:
-      - ./server/data:/app/data
+      - ./server/data:/app/dist/server/data
     restart: always
     deploy:
       resources:
