@@ -1,11 +1,10 @@
 import { memo } from 'react'
 import { ArrowUpRightIcon } from 'lucide-react'
 import { RESUME_DATA } from '@/data/resume-data'
+import { MAX_TECH_TAGS } from '@/lib/constants'
 
 type Project = (typeof RESUME_DATA.projects)[number]
 type ProjectWithLink = Project & { link: { href: string } }
-
-const MAX_TECH_TAGS = 3
 
 /** Memoized project card. Wrapped in an <a> only when the project has a link. */
 export const ProjectCard = memo(function ProjectCard({

@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react'
 import { parse } from '@portfolio/shared/markdown/parser.js'
+import type { PreviewProps } from '../lib/types.ts'
 
-interface Props {
-  markdown: string
-}
-
-export default function Preview({ markdown }: Props) {
+export default function Preview({ markdown }: PreviewProps) {
   const [html, setHtml] = useState('')
 
   useEffect(() => {

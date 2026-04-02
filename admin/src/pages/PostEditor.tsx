@@ -26,8 +26,7 @@ import Toolbar from '../components/Toolbar.tsx'
 import Preview from '../components/Preview.tsx'
 import ImageGallery from '../components/ImageGallery.tsx'
 import { useTheme } from '../lib/theme.ts'
-
-type Mode = 'split' | 'editor' | 'preview'
+import type { Mode } from '../lib/types.ts'
 
 export default function PostEditor() {
   const { id } = useParams<{ id?: string }>()

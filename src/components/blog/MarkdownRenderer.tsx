@@ -1,15 +1,13 @@
 import { useRef, useEffect, useState } from 'react'
-import type { Sidenote, TocItem } from '../../../shared/markdown/types.js'
+import type { MarkdownRendererProps } from '../../lib/types.js'
 import Sidenotes from './Sidenotes.js'
 import TOC from './TOC.js'
 
-interface Props {
-  html: string
-  toc: TocItem[]
-  sidenotes: Sidenote[]
-}
-
-export default function MarkdownRenderer({ html, toc, sidenotes }: Props) {
+export default function MarkdownRenderer({
+  html,
+  toc,
+  sidenotes,
+}: MarkdownRendererProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [zoomedImg, setZoomedImg] = useState<string | null>(null)
 

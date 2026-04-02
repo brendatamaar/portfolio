@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type RefObject } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   BoldIcon,
@@ -28,18 +28,8 @@ import {
   PanelRightIcon,
 } from 'lucide-react'
 
-type Mode = 'split' | 'editor' | 'preview'
-
-interface Props {
-  textareaRef: RefObject<HTMLTextAreaElement | null>
-  mode: Mode
-  onModeChange: (m: Mode) => void
-  onImageClick: () => void
-  syncScroll: boolean
-  onSyncScrollChange: (v: boolean) => void
-  metaOpen: boolean
-  onMetaToggle: () => void
-}
+import type { Mode, ToolbarProps } from '../lib/types.ts'
+import { ADMONITION_TYPES } from '../lib/constants.ts'
 
 function wrap(
   ta: HTMLTextAreaElement,
@@ -73,19 +63,6 @@ function insertBlock(ta: HTMLTextAreaElement, text: string) {
   document.execCommand('insertText', false, (needsNewline ? '\n' : '') + text)
 }
 
-const ADMONITION_TYPES = [
-  'note',
-  'warning',
-  'danger',
-  'tip',
-  'info',
-  'tldr',
-  'update',
-  'definition',
-  'ai',
-  'see-also',
-] as const
-
 export default function Toolbar({
   textareaRef,
   mode,
@@ -95,7 +72,7 @@ export default function Toolbar({
   onSyncScrollChange,
   metaOpen,
   onMetaToggle,
-}: Props) {
+}: ToolbarProps) {
   const ta = () => textareaRef.current!
 
   const [admonitionOpen, setAdmonitionOpen] = useState(false)

@@ -8,9 +8,7 @@ import MarkdownRenderer from '@/src/components/blog/MarkdownRenderer'
 import { formatDate } from '@/components/util/formatDate'
 import { ScrollProgress } from '@/components/ui/scroll-progress'
 import { BackToTop } from '@/components/ui/back-to-top'
-
-const READING_WPM = 200
-const HTML_TAG_REGEX = /<[^>]+>/g
+import { READING_WPM, HTML_TAG_REGEX } from '@/src/lib/constants'
 
 /** Estimate reading time in minutes (200 wpm, minimum 1). */
 function readingTime(html: string) {

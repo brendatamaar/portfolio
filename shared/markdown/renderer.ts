@@ -6,8 +6,9 @@ import type {
   BlockToken,
   ListItemToken,
   AdmonitionType,
-  Sidenote,
   TocItem,
+  Sidenote,
+  ParseResult,
 } from './types.js'
 import { parseInline } from './inline.js'
 import { highlight } from './highlight.js'
@@ -60,13 +61,7 @@ function renderListItem(item: ListItemToken, ordered: boolean): string {
 
 // ─── Main renderer ────────────────────────────────────────────────────────────
 
-export interface RenderResult {
-  html: string
-  toc: TocItem[]
-  sidenotes: Sidenote[]
-}
-
-export function renderBlocks(tokens: BlockToken[]): RenderResult {
+export function renderBlocks(tokens: BlockToken[]): ParseResult {
   const toc: TocItem[] = []
   const sidenotes: Sidenote[] = []
   const sidenoteMap = new Map<string, string>() // id → html (from footnote_def tokens)
