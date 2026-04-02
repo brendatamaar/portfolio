@@ -8,8 +8,11 @@ import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
+import { READING_DATA } from '@/data/reading-data'
 import { BlogPostCard } from '@/components/ui/post-card'
+import { BookCard } from '@/components/ui/book-card'
 import { Magnetic } from '@/components/ui/magnetic'
+import { NowPlaying } from '@/components/ui/now-playing'
 
 // --- Shared helpers ---
 
@@ -262,10 +265,30 @@ export default function Home() {
             </section>
           </Reveal>
 
-          {/* 04 — Connect */}
+          {/* 04 — Reading */}
           <Reveal delay={0.05}>
             <section>
-              <SectionLabel num="04" label="Connect" />
+              <SectionLabel num="04" label="Reading" />
+              <div className="grid grid-cols-2 gap-4">
+                {READING_DATA.map((book) => (
+                  <BookCard key={book.isbn} book={book} />
+                ))}
+              </div>
+            </section>
+          </Reveal>
+
+          {/* 05 — Listening */}
+          <Reveal delay={0.05}>
+            <section>
+              <SectionLabel num="05" label="Listening" />
+              <NowPlaying />
+            </section>
+          </Reveal>
+
+          {/* 06 — Connect */}
+          <Reveal delay={0.05}>
+            <section>
+              <SectionLabel num="06" label="Connect" />
               <p className="mb-8 text-base leading-relaxed text-black/60 dark:text-white/60">
                 If you need help building software, designing products, or just
                 want to grab coffee and talk — reach out.
