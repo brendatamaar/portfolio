@@ -1,4 +1,5 @@
 import type { TocItem, Sidenote } from '../../shared/markdown/types.js'
+import { logger } from './logger.js'
 
 // Falls back to localhost in development; set VITE_API_URL in production.
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
@@ -30,9 +31,23 @@ export interface PostDetail {
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`)
-  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`)
-  return res.json() as Promise<T>
+  const url = `${BASE}${path}`
+  const start = performance.now()
+  logger.debug('→', path)
+  try {
+    const res = await fetch(url)
+    const ms = Math.round(performance.now() - start)
+    if (!res.ok) {
+      logger.error(`${res.status} ${path} (${ms}ms)`)
+      throw new Error(`API error ${res.status}: ${path}`)
+    }
+    logger.debug(`← ${res.status} ${path} (${ms}ms)`)
+    return res.json() as Promise<T>
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('API error')) throw err
+    logger.error(`Network error: ${path}`, err)
+    throw err
+  }
 }
 
 export const api = {

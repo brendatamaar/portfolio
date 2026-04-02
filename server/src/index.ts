@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.js'
 import postsRoutes from './routes/posts.js'
 import adminRoutes from './routes/admin.js'
 import { authMiddleware } from './middleware/auth.js'
+import { requestLogger } from './middleware/requestLogger.js'
+import { logger } from './lib/logger.js'
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -17,6 +19,8 @@ await initJwtSecret()
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 const app = new Hono()
+
+app.use('*', requestLogger)
 
 app.use(
   '*',
@@ -52,5 +56,5 @@ app.get('/api/health', (c) => c.json({ ok: true }))
 const PORT = Number(process.env.PORT ?? 3001)
 
 serve({ fetch: app.fetch, port: PORT }, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
+  logger.info(`Server running on http://localhost:${PORT}`)
 })
