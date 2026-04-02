@@ -4,20 +4,8 @@ import type { PostSummary } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { BlogPostCard } from '@/components/ui/post-card'
-
-function SkeletonCard() {
-  return (
-    <div className="animate-pulse border-2 border-black p-5 shadow-[4px_4px_0px_#000] dark:border-white dark:shadow-[4px_4px_0px_#fff]">
-      <div className="mb-3 flex justify-between">
-        <div className="h-3 w-20 bg-black/10 dark:bg-white/10" />
-        <div className="h-4 w-4 bg-black/10 dark:bg-white/10" />
-      </div>
-      <div className="mb-2 h-5 w-3/4 bg-black/10 dark:bg-white/10" />
-      <div className="h-4 w-full bg-black/10 dark:bg-white/10" />
-      <div className="mt-1 h-4 w-2/3 bg-black/10 dark:bg-white/10" />
-    </div>
-  )
-}
+import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { TagButton } from '@/components/ui/tag-button'
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<PostSummary[]>([])
@@ -74,28 +62,18 @@ export default function BlogPage() {
 
         {allTagSlugs.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
-            <button
+            <TagButton
+              label="all"
+              active={activeTag === null}
               onClick={() => setActiveTag(null)}
-              className={`inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-colors dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] ${
-                activeTag === null
-                  ? 'border-black bg-[#FFE600] text-black dark:border-black'
-                  : 'bg-white text-black hover:bg-[#FFE600] hover:text-black dark:bg-black dark:text-white dark:hover:border-black dark:hover:bg-[#FFE600] dark:hover:text-black'
-              }`}
-            >
-              all
-            </button>
+            />
             {allTagSlugs.map((slug) => (
-              <button
+              <TagButton
                 key={slug}
+                label={`#${tagNames[slug] ?? slug}`}
+                active={activeTag === slug}
                 onClick={() => setActiveTag(slug === activeTag ? null : slug)}
-                className={`inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-colors dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] ${
-                  activeTag === slug
-                    ? 'border-black bg-[#FFE600] text-black dark:border-black'
-                    : 'bg-white text-black hover:bg-[#FFE600] hover:text-black dark:bg-black dark:text-white dark:hover:border-black dark:hover:bg-[#FFE600] dark:hover:text-black'
-                }`}
-              >
-                #{tagNames[slug] ?? slug}
-              </button>
+              />
             ))}
           </div>
         )}

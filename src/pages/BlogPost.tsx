@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'motion/react'
 import { api } from '@/src/lib/api'
 import type { PostDetail } from '@/src/lib/api'
 import Header from '@/components/section/Header'
@@ -8,37 +7,16 @@ import Footer from '@/components/section/Footer'
 import MarkdownRenderer from '@/src/components/blog/MarkdownRenderer'
 import { formatDate } from '@/components/util/formatDate'
 import { ScrollProgress } from '@/components/ui/scroll-progress'
+import { BackToTop } from '@/components/ui/back-to-top'
+
+const READING_WPM = 200
+const HTML_TAG_REGEX = /<[^>]+>/g
 
 /** Estimate reading time in minutes (200 wpm, minimum 1). */
 function readingTime(html: string) {
-  const text = html.replace(/<[^>]+>/g, '')
+  const text = html.replace(HTML_TAG_REGEX, '')
   const words = text.trim().split(/\s+/).length
-  return Math.max(1, Math.round(words / 200))
-}
-
-/** Floating button that appears after scrolling 400px down. */
-function BackToTop() {
-  const [show, setShow] = useState(false)
-  useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 400)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed right-6 bottom-6 z-50 border-2 border-black bg-white px-4 py-2 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:border-black hover:bg-[#FFE600] dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:border-[#FFE600] dark:hover:bg-[#FFE600] dark:hover:text-black"
-        >
-          ↑ top
-        </motion.button>
-      )}
-    </AnimatePresence>
-  )
+  return Math.max(1, Math.round(words / READING_WPM))
 }
 
 export default function BlogPostPage() {
@@ -147,7 +125,7 @@ export default function BlogPostPage() {
       </div>
 
       {/* 3-column article layout — wider than max-w-3xl to fit sidenotes + TOC */}
-      <div className="mx-auto px-6 pb-16" style={{ maxWidth: '72rem' }}>
+      <div className="mx-auto max-w-[72rem] px-6 pb-16">
         <MarkdownRenderer html={html} toc={toc} sidenotes={sidenotes} />
       </div>
 
