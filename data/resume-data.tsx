@@ -92,8 +92,9 @@ export const RESUME_DATA = {
   projects: [
     {
       title: 'jpeg-encoder',
-      techStack: ['side project', 'Javascript'],
-      description: 'JPEG encoder with full compression pipeline.',
+      techStack: ['side project', 'JavaScript', 'Vite'],
+      description:
+        'Complete JPEG baseline encoding pipeline implementing all 6 standard stages. Visualizes per-stage compression metrics including entropy, bitrate, and compression ratio.',
       logo: '',
       link: {
         label: 'jpeg-encoder',
@@ -103,33 +104,43 @@ export const RESUME_DATA = {
       isFeatured: true,
     },
     {
-      title: 'skenatify',
-      techStack: ['side project', 'NextJS', 'React', 'Tailwind', 'Spotify API'],
-      description: 'track recommendations based on your favorite artists.',
+      title: 'MD Editor',
+      techStack: [
+        'side project',
+        'React 19',
+        'TypeScript',
+        'Vite',
+        'Tailwind CSS',
+        'KaTeX',
+        'Mermaid',
+      ],
+      description:
+        'Offline markdown editor with split-view live preview, LaTeX math rendering, Mermaid diagram support, and synchronized scrolling.',
       logo: '',
-      link: {
-        label: 'skenatify',
-        href: 'https://skenatify.vercel.app/',
-      },
-      img: '/images/skenatify.webp',
+      img: '',
       isFeatured: true,
     },
     {
-      title: 'sewagi',
-      techStack: ['side project', 'Laravel', 'Elasticsearch', 'Google API'],
-      description: 'dashboard for managing apartment rentals and listings.',
+      title: 'Admin Barcode',
+      techStack: ['side project', 'Laravel 8', 'PostgreSQL', 'Docker'],
+      description:
+        'Inventory asset management system for generating and tracking barcodes/QR codes with bulk Excel import and streamed PDF output. Access controlled via RBAC.',
       logo: '',
-      link: {
-        label: 'sewagi-web',
-        href: 'https://sewagi-web.inspira.web.id',
-      },
-      img: '/images/sewagi.webp',
-      isFeatured: true,
+      img: '',
+      isFeatured: false,
     },
     {
       title: 'AIR Tax',
-      techStack: ['work', 'Vue', 'NodeJS', 'Spring Boot'],
-      description: 'tax calculation, reporting, and payment platform.',
+      techStack: [
+        'work',
+        'Vue 3',
+        'Spring Boot 3',
+        'Kafka',
+        'JobRunr',
+        'Docker',
+      ],
+      description:
+        'Enterprise multi-module tax SaaS integrated with the DJP tax system. Covers tax invoicing, non-tax revenue reporting, and taxpayer status confirmation.',
       logo: '',
       link: {
         label: 'air-tax',
@@ -139,9 +150,65 @@ export const RESUME_DATA = {
       isFeatured: false,
     },
     {
+      title: 'AP2T',
+      techStack: [
+        'work',
+        'Vue 3',
+        'TypeScript',
+        'Tailwind CSS',
+        'Vite Module Federation',
+      ],
+      description:
+        'Enterprise platform designed to handle all business processes in one place: revenue management, ERP, reporting, and CRM built across 40+ operational workflows via micro-frontend architecture.',
+      logo: '',
+      img: '',
+      isFeatured: false,
+    },
+    {
+      title: 'Dashboard Revenue',
+      techStack: [
+        'work',
+        'React 18',
+        'TypeScript',
+        'Go',
+        'GraphQL',
+        'PostgreSQL',
+      ],
+      description:
+        'Real-time analytics dashboard tracking OTC and recurring revenue streams with concurrent query execution for parallel aggregations.',
+      logo: '',
+      img: '',
+      isFeatured: false,
+    },
+    {
+      title: 'EMI CRM',
+      techStack: [
+        'work',
+        'Vue 3',
+        'TypeScript',
+        'Spring Boot 3',
+        'Java 21',
+        'PostgreSQL',
+      ],
+      description:
+        'CRM managing sales, procurement, stock, and automated accounting with event-driven integration triggering real-time accounting posts across 8 transaction types.',
+      logo: '',
+      img: '',
+      isFeatured: false,
+    },
+    {
       title: 'cheSKP',
-      techStack: ['work', 'Vue', 'NodeJS', 'Spring Boot', 'Kotlin'],
-      description: 'customer satisfaction survey platform.',
+      techStack: [
+        'work',
+        'Vue 3',
+        'TypeScript',
+        'Spring Boot 3',
+        'Java 21',
+        'PostgreSQL',
+        'Docker Swarm',
+      ],
+      description:
+        'Customer satisfaction survey platform with SSO auth, multi-level role-based access, and survey analytics.',
       logo: '',
       link: {
         label: 'cheskp',
@@ -151,21 +218,17 @@ export const RESUME_DATA = {
       isFeatured: false,
     },
     {
-      title: 'Virtual Cubicle',
-      techStack: ['work', 'Vue', 'NodeJS', 'Tailwind'],
-      description: 'web platform to digitalize core business operations.',
-      logo: '',
-      link: {
-        label: 'vc',
-        href: 'https://newvcubicle.plne.co.id',
-      },
-      img: '/images/vc.webp',
-      isFeatured: false,
-    },
-    {
       title: 'ESDS',
-      techStack: ['work', 'Vue', 'NodeJS', 'Kotlin'],
-      description: 'platform to facilitate electric stove data distribution.',
+      techStack: [
+        'work',
+        'Vue 3',
+        'Chart.js',
+        'Leaflet',
+        'Socket.IO',
+        'Docker',
+      ],
+      description:
+        'Electric stove conversion platform managing field surveys, installation, activation, and billing verification with real-time updates and geospatial map visualization.',
       logo: '',
       link: {
         label: 'esds',
@@ -174,87 +237,13 @@ export const RESUME_DATA = {
       img: '/images/esds.webp',
       isFeatured: false,
     },
-    {
-      title: 'Kenali Caleg',
-      techStack: ['side project', 'React', 'NextJS', 'Tailwind'],
-      description: 'info on legislative candidates for the 2024 indonesian election.',
-      logo: '',
-      link: {
-        label: 'kenali-caleg',
-        href: 'https://kenali-caleg.vercel.app/',
-      },
-      img: '/images/kenali-caleg.webp',
-      isFeatured: false,
-    },
-    {
-      title: 'datatech',
-      techStack: ['side project', 'AMP', 'Bootstrap'],
-      description: 'landing page for a software solutions company.',
-      logo: '',
-      link: {
-        label: 'datatech.id',
-        href: 'https://datatech.id/',
-      },
-      img: '/images/datatech.webp',
-      isFeatured: false,
-    },
-    {
-      title: 'CheckMATE',
-      techStack: ['work', 'Vue', 'NodeJS', 'Spring Boot'],
-      description: 'monitoring and evaluating maturity levels of company units.',
-      logo: '',
-      img: '',
-      isFeatured: false,
-    },
   ],
   books: [
     {
-      title: 'The Pragmatic Programmer',
-      author: 'David Thomas & Andrew Hunt',
+      title: 'The Count of Monte Cristo',
+      author: 'Alexandre Dumas',
       status: 'read' as const,
-      tags: ['programming', 'career'],
-    },
-    {
-      title: 'Designing Data-Intensive Applications',
-      author: 'Martin Kleppmann',
-      status: 'reading' as const,
-      tags: ['systems', 'engineering'],
-    },
-    {
-      title: 'Clean Architecture',
-      author: 'Robert C. Martin',
-      status: 'read' as const,
-      tags: ['programming', 'architecture'],
-    },
-    {
-      title: 'The Design of Everyday Things',
-      author: 'Don Norman',
-      status: 'read' as const,
-      tags: ['design', 'ux'],
-    },
-    {
-      title: 'A Philosophy of Software Design',
-      author: 'John Ousterhout',
-      status: 'read' as const,
-      tags: ['programming', 'architecture'],
-    },
-    {
-      title: 'Staff Engineer',
-      author: 'Will Larson',
-      status: 'reading' as const,
-      tags: ['career', 'leadership'],
-    },
-    {
-      title: 'Atomic Habits',
-      author: 'James Clear',
-      status: 'read' as const,
-      tags: ['productivity', 'self-improvement'],
-    },
-    {
-      title: 'The Creative Act',
-      author: 'Rick Rubin',
-      status: 'reading' as const,
-      tags: ['creativity', 'art'],
+      tags: ['fiction', 'classic'],
     },
   ],
 } as const
