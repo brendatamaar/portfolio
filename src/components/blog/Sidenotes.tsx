@@ -1,12 +1,7 @@
 import { useEffect, useRef } from 'react'
-import type { Sidenote } from '../../../shared/markdown/types.js'
+import type { SidenotesProps } from '../../lib/types.js'
 
-interface Props {
-  sidenotes: Sidenote[]
-  contentRef: React.RefObject<HTMLDivElement | null>
-}
-
-export default function Sidenotes({ sidenotes, contentRef }: Props) {
+export default function Sidenotes({ sidenotes, contentRef }: SidenotesProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

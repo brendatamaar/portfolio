@@ -240,9 +240,10 @@ export const RESUME_DATA = {
   ],
   books: [
     {
+      isbn: '9780140449266',
       title: 'The Count of Monte Cristo',
       author: 'Alexandre Dumas',
-      status: 'read' as const,
+      status: 'finished' as const,
       tags: ['fiction', 'classic'],
     },
   ],

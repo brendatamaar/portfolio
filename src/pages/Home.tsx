@@ -6,7 +6,6 @@ import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
-import { READING_DATA } from '@/data/reading-data'
 import { BlogPostCard } from '@/components/ui/post-card'
 import { BookCard } from '@/components/ui/book-card'
 import { Magnetic } from '@/components/ui/magnetic'
@@ -15,9 +14,7 @@ import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Reveal } from '@/components/ui/reveal'
 import { SectionLabel } from '@/components/ui/section-label'
 import { ProjectCard } from '@/components/ui/project-card'
-
-const PROJECT_PREVIEW_COUNT = 4
-const BLOG_POSTS_PREVIEW = 3
+import { PROJECT_PREVIEW_COUNT, BLOG_POSTS_PREVIEW } from '@/src/lib/constants'
 
 // --- Page ---
 
@@ -140,8 +137,8 @@ export default function Home() {
             <section>
               <SectionLabel num="04" label="Reading" />
               <div className="grid grid-cols-2 gap-4">
-                {READING_DATA.map((book) => (
-                  <BookCard key={book.isbn} book={book} />
+                {RESUME_DATA.books.map((book) => (
+                  <BookCard key={book.title} book={book} />
                 ))}
               </div>
             </section>

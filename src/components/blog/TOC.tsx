@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { TocItem } from '../../../shared/markdown/types.js'
+import type { TOCProps } from '../../lib/types.js'
 
-interface Props {
-  toc: TocItem[]
-}
-
-export default function TOC({ toc }: Props) {
+export default function TOC({ toc }: TOCProps) {
   const [activeId, setActiveId] = useState<string>('')
   const observerRef = useRef<IntersectionObserver | null>(null)
 

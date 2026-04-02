@@ -13,8 +13,7 @@ import {
 import { api } from '../lib/api.ts'
 import type { Post } from '../lib/api.ts'
 import { useTheme } from '../lib/theme.ts'
-
-type StatusFilter = 'all' | 'draft' | 'published'
+import type { StatusFilter } from '../lib/types.ts'
 
 function formatDate(ts: number, label: string) {
   return `${label} ${new Date(ts * 1000).toLocaleDateString('en-US', {

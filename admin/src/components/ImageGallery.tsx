@@ -2,13 +2,9 @@ import { useState, useEffect } from 'react'
 import { XIcon, Trash2Icon, UploadIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Image } from '../lib/api.ts'
+import type { ImageGalleryProps } from '../lib/types.ts'
 
-interface Props {
-  onSelect: (url: string) => void
-  onClose: () => void
-}
-
-export default function ImageGallery({ onSelect, onClose }: Props) {
+export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
   const [images, setImages] = useState<Image[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)

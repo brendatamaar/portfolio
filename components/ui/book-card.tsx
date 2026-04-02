@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import type { BookEntry } from '@/data/reading-data'
-
-const STATUS_LABEL: Record<BookEntry['status'], string> = {
-  reading: 'reading',
-  finished: 'finished',
-  'want-to-read': 'want to read',
-}
+import { STATUS_LABEL } from '@/lib/constants'
 
 export function BookCard({ book }: { book: BookEntry }) {
-  const coverUrl = `https://books.google.com/books/content?vid=ISBN${book.isbn}&printsec=frontcover&img=1&zoom=1`
-  const [imgError, setImgError] = useState(false)
+  const coverUrl = book.isbn
+    ? `https://books.google.com/books/content?vid=ISBN${book.isbn}&printsec=frontcover&img=1&zoom=1`
+    : ''
+  const [imgError, setImgError] = useState(!book.isbn)
 
   return (
     <div className="flex gap-3 border-2 border-black bg-white p-3 shadow-[4px_4px_0px_#000] transition-all duration-150 hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_#000] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]">

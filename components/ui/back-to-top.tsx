@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-
-const SCROLL_THRESHOLD = 400
+import { SCROLL_THRESHOLD } from '@/lib/constants'
 
 /** Floating button that appears after scrolling down. */
 export function BackToTop() {
