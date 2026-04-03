@@ -10,6 +10,9 @@ export const posts = sqliteTable('posts', {
   status: text('status', { enum: ['draft', 'published'] })
     .notNull()
     .default('draft'),
+  titleId: text('title_id').notNull().default(''),
+  descriptionId: text('description_id').notNull().default(''),
+  contentId: text('content_id').notNull().default(''),
   coverImageUrl: text('cover_image_url'),
   publishedAt: integer('published_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp' })

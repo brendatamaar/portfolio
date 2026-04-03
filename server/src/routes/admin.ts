@@ -35,6 +35,9 @@ const postSchema = z.object({
   slug: z.string().min(1).optional(),
   description: z.string().default(''),
   content: z.string().default(''),
+  titleId: z.string().default(''),
+  descriptionId: z.string().default(''),
+  contentId: z.string().default(''),
   status: z.enum(['draft', 'published']).default('draft'),
   coverImageUrl: z.string().nullable().optional(),
   tagIds: z.array(z.number()).optional(),
@@ -74,6 +77,9 @@ app.post('/posts', async (c) => {
       slug,
       description: data.description,
       content: data.content,
+      titleId: data.titleId,
+      descriptionId: data.descriptionId,
+      contentId: data.contentId,
       status: data.status,
       coverImageUrl: data.coverImageUrl ?? null,
       publishedAt,
@@ -116,6 +122,11 @@ app.put('/posts/:id', async (c) => {
       ...(data.slug !== undefined && { slug: data.slug }),
       ...(data.description !== undefined && { description: data.description }),
       ...(data.content !== undefined && { content: data.content }),
+      ...(data.titleId !== undefined && { titleId: data.titleId }),
+      ...(data.descriptionId !== undefined && {
+        descriptionId: data.descriptionId,
+      }),
+      ...(data.contentId !== undefined && { contentId: data.contentId }),
       ...(data.status !== undefined && { status: data.status }),
       ...(data.coverImageUrl !== undefined && {
         coverImageUrl: data.coverImageUrl,
@@ -236,6 +247,40 @@ app.delete('/tags/:id', (c) => {
   const id = Number(c.req.param('id'))
   db.delete(tags).where(eq(tags.id, id)).run()
   return c.json({ ok: true })
+})
+
+// ─── Translate ────────────────────────────────────────────────────────────────
+
+const translateSchema = z.object({
+  text: z.string(),
+  source: z.enum(['en', 'id']),
+  target: z.enum(['en', 'id']),
+})
+
+app.post('/translate', async (c) => {
+  const libreUrl = process.env.LIBRETRANSLATE_URL
+  if (!libreUrl)
+    return c.json({ error: 'LIBRETRANSLATE_URL not configured' }, 503)
+
+  const body = await c.req.json().catch(() => null)
+  const parsed = translateSchema.safeParse(body)
+  if (!parsed.success) return c.json({ error: parsed.error.issues }, 400)
+
+  const { text, source, target } = parsed.data
+
+  const res = await fetch(`${libreUrl}/translate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: text, source, target, format: 'text' }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => '')
+    return c.json({ error: `LibreTranslate error: ${err}` }, 502)
+  }
+
+  const data = (await res.json()) as { translatedText: string }
+  return c.json({ translatedText: data.translatedText })
 })
 
 export default app

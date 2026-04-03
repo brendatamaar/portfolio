@@ -1,8 +1,11 @@
 import { motion } from 'motion/react'
 import { RESUME_DATA } from '@/data/resume-data'
+import { RESUME_DATA_ID } from '@/data/resume-data-id'
+import { useLang } from '@/src/context/LanguageContext'
 
 export default function Hero() {
-  const data = RESUME_DATA
+  const { lang } = useLang()
+  const data = lang === 'id' ? RESUME_DATA_ID : RESUME_DATA
 
   return (
     <motion.section
@@ -41,7 +44,7 @@ export default function Hero() {
       {/* description */}
       <div className="border-t-2 border-black pt-6 dark:border-white">
         <p className="text-base leading-relaxed text-black/60 dark:text-white/60">
-          {data.description}
+          {data.summary}
         </p>
       </div>
     </motion.section>

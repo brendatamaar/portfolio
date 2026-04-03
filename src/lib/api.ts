@@ -1,5 +1,6 @@
 import type { TocItem, Sidenote } from '../../shared/markdown/types.js'
 import { logger } from './logger.js'
+import type { Lang } from './i18n.js'
 
 // Falls back to localhost in development; set VITE_API_URL in production.
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
@@ -51,6 +52,14 @@ async function apiFetch<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  getPosts: () => apiFetch<PostSummary[]>('/api/posts'),
-  getPost: (slug: string) => apiFetch<PostDetail>(`/api/posts/${slug}`),
+  getPosts: (lang?: Lang) =>
+    apiFetch<PostSummary[]>(
+      lang && lang !== 'en' ? `/api/posts?lang=${lang}` : '/api/posts',
+    ),
+  getPost: (slug: string, lang?: Lang) =>
+    apiFetch<PostDetail>(
+      lang && lang !== 'en'
+        ? `/api/posts/${slug}?lang=${lang}`
+        : `/api/posts/${slug}`,
+    ),
 }

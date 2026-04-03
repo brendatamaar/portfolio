@@ -6,6 +6,7 @@ import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
+import { RESUME_DATA_ID } from '@/data/resume-data-id'
 import { BlogPostCard } from '@/components/ui/post-card'
 import { BookCard } from '@/components/ui/book-card'
 import { Magnetic } from '@/components/ui/magnetic'
@@ -15,27 +16,31 @@ import { Reveal } from '@/components/ui/reveal'
 import { SectionLabel } from '@/components/ui/section-label'
 import { ProjectCard } from '@/components/ui/project-card'
 import { PROJECT_PREVIEW_COUNT, BLOG_POSTS_PREVIEW } from '@/src/lib/constants'
+import { useLang } from '@/src/context/LanguageContext'
 
 // --- Page ---
 
 export default function Home() {
+  const { lang, t } = useLang()
+  const data = lang === 'id' ? RESUME_DATA_ID : RESUME_DATA
+
   const [showAllProjects, setShowAllProjects] = useState(false)
   const [blogPosts, setBlogPosts] = useState<PostSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const visibleProjects = showAllProjects
-    ? RESUME_DATA.projects
-    : RESUME_DATA.projects.slice(0, PROJECT_PREVIEW_COUNT)
-  const remaining = RESUME_DATA.projects.length - PROJECT_PREVIEW_COUNT
+    ? data.projects
+    : data.projects.slice(0, PROJECT_PREVIEW_COUNT)
+  const remaining = data.projects.length - PROJECT_PREVIEW_COUNT
 
   // Fetch only the most recent posts for the Writing preview section.
   useEffect(() => {
     api
-      .getPosts()
+      .getPosts(lang)
       .then((posts) => setBlogPosts(posts.slice(0, BLOG_POSTS_PREVIEW)))
       .catch((err) => console.error('Error loading blog posts:', err))
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [lang])
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
@@ -47,7 +52,7 @@ export default function Home() {
           {/* 01 — Projects */}
           <Reveal>
             <section>
-              <SectionLabel num="01" label="Projects" />
+              <SectionLabel num="01" label={t('sections.projects')} />
               <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
                 {visibleProjects.map((project, i) => (
                   <ProjectCard
@@ -63,8 +68,8 @@ export default function Home() {
                   className="mt-6 border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
                 >
                   {showAllProjects
-                    ? '− show less'
-                    : `+ ${remaining} more projects`}
+                    ? t('home.showLess')
+                    : t('home.moreProjects', { n: remaining })}
                 </button>
               )}
             </section>
@@ -73,13 +78,13 @@ export default function Home() {
           {/* 02 — Work */}
           <Reveal delay={0.05}>
             <section>
-              <SectionLabel num="02" label="Work" />
+              <SectionLabel num="02" label={t('sections.work')} />
               <div>
-                {RESUME_DATA.work.map((work, i) => (
+                {data.work.map((work, i) => (
                   <div
                     key={work.company}
                     className={`flex items-start justify-between gap-6 py-5 ${
-                      i < RESUME_DATA.work.length - 1
+                      i < data.work.length - 1
                         ? 'border-b-2 border-black dark:border-white'
                         : ''
                     }`}
@@ -109,7 +114,7 @@ export default function Home() {
           {/* 03 — Writing */}
           <Reveal delay={0.05}>
             <section>
-              <SectionLabel num="03" label="Writing" />
+              <SectionLabel num="03" label={t('sections.writing')} />
               <div>
                 {isLoading ? (
                   <div className="flex flex-col gap-4">
@@ -125,7 +130,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <p className="py-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
-                    Nothing yet — soon.
+                    {t('blog.empty')}
                   </p>
                 )}
               </div>
@@ -135,7 +140,7 @@ export default function Home() {
           {/* 04 — Reading */}
           <Reveal delay={0.05}>
             <section>
-              <SectionLabel num="04" label="Reading" />
+              <SectionLabel num="04" label={t('sections.reading')} />
               <div className="grid grid-cols-2 gap-4">
                 {RESUME_DATA.books.map((book) => (
                   <BookCard key={book.title} book={book} />
@@ -147,7 +152,7 @@ export default function Home() {
           {/* 05 — Listening */}
           <Reveal delay={0.05}>
             <section>
-              <SectionLabel num="05" label="Listening" />
+              <SectionLabel num="05" label={t('sections.listening')} />
               <NowPlaying />
             </section>
           </Reveal>
@@ -155,13 +160,12 @@ export default function Home() {
           {/* 06 — Connect */}
           <Reveal delay={0.05}>
             <section>
-              <SectionLabel num="06" label="Connect" />
+              <SectionLabel num="06" label={t('sections.connect')} />
               <p className="mb-8 text-base leading-relaxed text-black/60 dark:text-white/60">
-                If you need help building software, designing products, or just
-                want to grab coffee and talk — reach out.
+                {t('home.connect')}
               </p>
               <div className="flex flex-wrap gap-3">
-                {RESUME_DATA.contact.social.map((link) => (
+                {data.contact.social.map((link) => (
                   <Magnetic key={link.name} intensity={0.4} range={80}>
                     <a
                       href={link.url}

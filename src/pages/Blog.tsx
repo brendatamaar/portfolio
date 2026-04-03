@@ -6,19 +6,22 @@ import Footer from '@/components/section/Footer'
 import { BlogPostCard } from '@/components/ui/post-card'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { TagButton } from '@/components/ui/tag-button'
+import { useLang } from '@/src/context/LanguageContext'
 
 export default function BlogPage() {
+  const { lang, t } = useLang()
   const [posts, setPosts] = useState<PostSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTag, setActiveTag] = useState<string | null>(null)
 
   useEffect(() => {
+    setLoading(true)
     api
-      .getPosts()
+      .getPosts(lang)
       .then(setPosts)
       .catch((err) => console.error('Failed to fetch posts:', err))
       .finally(() => setLoading(false))
-  }, [])
+  }, [lang])
 
   // Build a deduplicated tag list and a slug→name lookup in one pass.
   // Both are stable as long as `posts` doesn't change.
@@ -53,17 +56,17 @@ export default function BlogPage() {
 
         <div className="mb-12">
           <h1 className="mb-4 text-5xl font-black tracking-tighter text-black uppercase sm:text-7xl dark:text-white">
-            Writing
+            {t('blog.heading')}
           </h1>
           <p className="text-base leading-relaxed text-black/60 dark:text-white/60">
-            Occasional writing on what I'm learning.
+            {t('blog.subtitle')}
           </p>
         </div>
 
         {allTagSlugs.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
             <TagButton
-              label="all"
+              label={t('blog.all')}
               active={activeTag === null}
               onClick={() => setActiveTag(null)}
             />
@@ -87,7 +90,7 @@ export default function BlogPage() {
             </div>
           ) : visible.length === 0 ? (
             <p className="py-8 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
-              Nothing yet — soon.
+              {t('blog.empty')}
             </p>
           ) : (
             <div className="flex flex-col gap-4">

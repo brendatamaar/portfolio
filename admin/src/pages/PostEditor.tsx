@@ -38,10 +38,15 @@ export default function PostEditor() {
   const isSyncing = useRef(false)
   const saveRef = useRef<() => void>(() => {})
 
+  const [langTab, setLangTab] = useState<'en' | 'id'>('en')
+
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [content, setContent] = useState('')
+  const [titleId, setTitleId] = useState('')
+  const [descriptionId, setDescriptionId] = useState('')
+  const [contentId, setContentId] = useState('')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
@@ -55,6 +60,7 @@ export default function PostEditor() {
   const [showCoverGallery, setShowCoverGallery] = useState(false)
   const [showMeta, setShowMeta] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [translating, setTranslating] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [savedAgo, setSavedAgo] = useState('')
@@ -76,6 +82,9 @@ export default function PostEditor() {
           setSlug(post.slug)
           setDescription(post.description)
           setContent(post.content)
+          setTitleId(post.titleId ?? '')
+          setDescriptionId(post.descriptionId ?? '')
+          setContentId(post.contentId ?? '')
           setStatus(post.status)
           setCoverImageUrl(post.coverImageUrl ?? '')
           setSelectedTagIds(post.tags.map((t) => t.id))
@@ -222,6 +231,9 @@ export default function PostEditor() {
       slug,
       description,
       content,
+      titleId,
+      descriptionId,
+      contentId,
       status: toStatus ?? status,
       coverImageUrl: coverImageUrl || null,
       tagIds: selectedTagIds,
@@ -241,6 +253,38 @@ export default function PostEditor() {
       console.error(err)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function makeVersion(targetLang: 'en' | 'id') {
+    const sourceLang = targetLang === 'id' ? 'en' : 'id'
+    const srcTitle = sourceLang === 'en' ? title : titleId
+    const srcDescription = sourceLang === 'en' ? description : descriptionId
+    const srcContent = sourceLang === 'en' ? content : contentId
+
+    setTranslating(true)
+    setSaveMsg('')
+    try {
+      const [t, d, c] = await Promise.all([
+        api.translate(srcTitle, sourceLang, targetLang),
+        api.translate(srcDescription, sourceLang, targetLang),
+        api.translate(srcContent, sourceLang, targetLang),
+      ])
+      if (targetLang === 'id') {
+        setTitleId(t.translatedText)
+        setDescriptionId(d.translatedText)
+        setContentId(c.translatedText)
+      } else {
+        setTitle(t.translatedText)
+        setDescription(d.translatedText)
+        setContent(c.translatedText)
+      }
+      setLangTab(targetLang)
+    } catch (err) {
+      setSaveMsg('Translation failed')
+      console.error(err)
+    } finally {
+      setTranslating(false)
     }
   }
 
@@ -272,15 +316,19 @@ export default function PostEditor() {
     return () => clearInterval(id)
   }, [lastSavedAt])
 
-  // Heading outline parsed from content
+  // Active content based on lang tab
+  const activeContent = langTab === 'id' ? contentId : content
+  const setActiveContent = langTab === 'id' ? setContentId : setContent
+
+  // Heading outline parsed from active content
   const headings = useMemo(
     () =>
-      [...content.matchAll(/^(#{1,6})\s+(.+)$/gm)].map((m) => ({
+      [...activeContent.matchAll(/^(#{1,6})\s+(.+)$/gm)].map((m) => ({
         level: m[1].length,
         text: m[2].trim(),
         index: m.index ?? 0,
       })),
-    [content],
+    [activeContent],
   )
 
   function jumpToHeading(charIndex: number) {
@@ -288,8 +336,9 @@ export default function PostEditor() {
     if (!ta) return
     ta.focus()
     ta.setSelectionRange(charIndex, charIndex)
-    const linesBefore = content.slice(0, charIndex).split('\n').length - 1
-    const lineHeight = ta.scrollHeight / Math.max(content.split('\n').length, 1)
+    const linesBefore = activeContent.slice(0, charIndex).split('\n').length - 1
+    const lineHeight =
+      ta.scrollHeight / Math.max(activeContent.split('\n').length, 1)
     ta.scrollTop = linesBefore * lineHeight - ta.clientHeight / 3
   }
 
@@ -299,8 +348,8 @@ export default function PostEditor() {
   }
 
   const wordCount = useMemo(
-    () => (content.trim() ? content.trim().split(/\s+/).length : 0),
-    [content],
+    () => (activeContent.trim() ? activeContent.trim().split(/\s+/).length : 0),
+    [activeContent],
   )
 
   if (loading) {
@@ -327,11 +376,55 @@ export default function PostEditor() {
           <ArrowLeftIcon size={15} />
         </Link>
 
+        {/* Language tabs */}
+        <div className="flex shrink-0 gap-0.5 border border-black/10 dark:border-white/10">
+          {(['en', 'id'] as const).map((l) => (
+            <button
+              key={l}
+              onClick={() => setLangTab(l)}
+              className={[
+                'px-2.5 py-1 font-mono text-[9px] tracking-widest uppercase transition-colors',
+                langTab === l
+                  ? 'bg-black text-white dark:bg-white dark:text-black'
+                  : 'text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white',
+              ].join(' ')}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+
+        {/* Make version button */}
+        {langTab === 'en' && title && (
+          <button
+            onClick={() => makeVersion('id')}
+            disabled={translating}
+            className="flex shrink-0 items-center gap-1 bg-[#FFE600] px-2.5 py-1 font-mono text-[9px] font-bold tracking-widest text-black uppercase transition-colors hover:bg-yellow-300 disabled:opacity-50"
+          >
+            {translating ? '...' : 'Make ID →'}
+          </button>
+        )}
+        {langTab === 'id' && titleId && (
+          <button
+            onClick={() => makeVersion('en')}
+            disabled={translating}
+            className="flex shrink-0 items-center gap-1 bg-[#FFE600] px-2.5 py-1 font-mono text-[9px] font-bold tracking-widest text-black uppercase transition-colors hover:bg-yellow-300 disabled:opacity-50"
+          >
+            {translating ? '...' : 'Make EN →'}
+          </button>
+        )}
+
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Post title..."
+            value={langTab === 'id' ? titleId : title}
+            onChange={(e) =>
+              langTab === 'id'
+                ? setTitleId(e.target.value)
+                : setTitle(e.target.value)
+            }
+            placeholder={
+              langTab === 'id' ? 'Judul tulisan... (ID)' : 'Post title...'
+            }
             className="min-w-0 flex-1 bg-transparent text-base font-black tracking-tight text-black uppercase placeholder-black/20 outline-none dark:text-white dark:placeholder-white/20"
           />
           {/* Status badge */}
@@ -420,14 +513,18 @@ export default function PostEditor() {
             >
               <textarea
                 ref={textareaRef}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
+                value={activeContent}
+                onChange={(e) => setActiveContent(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onDrop={handleDrop}
                 onPaste={handlePaste}
                 spellCheck={false}
                 className="editor-textarea editor-pane"
-                placeholder="Start writing in markdown..."
+                placeholder={
+                  langTab === 'id'
+                    ? 'Mulai menulis dalam markdown... (ID)'
+                    : 'Start writing in markdown...'
+                }
               />
             </div>
           )}
@@ -437,7 +534,7 @@ export default function PostEditor() {
               ref={previewRef}
               className={`min-h-0 overflow-y-auto ${mode === 'split' ? 'w-1/2' : 'w-full'}`}
             >
-              <Preview markdown={content} />
+              <Preview markdown={activeContent} />
             </div>
           )}
         </div>
@@ -464,12 +561,20 @@ export default function PostEditor() {
               {/* Description */}
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">
-                  Description
+                  Description {langTab === 'id' ? '(ID)' : '(EN)'}
                 </label>
                 <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Short description..."
+                  value={langTab === 'id' ? descriptionId : description}
+                  onChange={(e) =>
+                    langTab === 'id'
+                      ? setDescriptionId(e.target.value)
+                      : setDescription(e.target.value)
+                  }
+                  placeholder={
+                    langTab === 'id'
+                      ? 'Deskripsi singkat... (ID)'
+                      : 'Short description...'
+                  }
                   rows={3}
                   className="w-full resize-none border border-black/10 bg-transparent p-2 font-mono text-xs text-black/70 placeholder-black/20 transition-colors outline-none focus:border-black/30 dark:border-white/10 dark:text-white/70 dark:placeholder-white/20 dark:focus:border-white/30"
                 />
@@ -585,7 +690,7 @@ export default function PostEditor() {
                 {wordCount} words
               </span>
               <span className="font-mono text-[10px] tracking-widest text-black/20 uppercase dark:text-white/20">
-                {content.length} chars
+                {activeContent.length} chars
               </span>
             </div>
           </div>
@@ -599,7 +704,7 @@ export default function PostEditor() {
             {wordCount} words
           </span>
           <span className="font-mono text-[10px] tracking-widest text-black/20 uppercase dark:text-white/20">
-            {content.length} chars
+            {activeContent.length} chars
           </span>
         </div>
       )}
