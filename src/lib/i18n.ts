@@ -70,7 +70,7 @@ export const translations = {
 } as const
 
 type Translations = typeof translations
-type LangDict = Translations['en']
+type LangDict = Translations[Lang]
 
 /** Nested key resolver — supports up to 2-level dot-notation e.g. "blog.heading" */
 export function resolveKey(dict: LangDict, key: string): string {

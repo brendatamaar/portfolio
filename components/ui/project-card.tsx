@@ -1,9 +1,16 @@
 import { memo } from 'react'
 import { ArrowUpRightIcon } from 'lucide-react'
-import { RESUME_DATA } from '@/data/resume-data'
 import { MAX_TECH_TAGS } from '@/lib/constants'
 
-type Project = (typeof RESUME_DATA.projects)[number]
+type Project = {
+  readonly title: string
+  readonly techStack: readonly string[]
+  readonly description: string
+  readonly logo: string
+  readonly img?: string
+  readonly isFeatured: boolean
+  readonly link?: { readonly label: string; readonly href: string }
+}
 type ProjectWithLink = Project & { link: { href: string } }
 
 /** Memoized project card. Wrapped in an <a> only when the project has a link. */
