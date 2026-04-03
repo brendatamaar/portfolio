@@ -42,6 +42,9 @@ export interface Post {
   slug: string
   description: string
   content: string
+  titleId: string
+  descriptionId: string
+  contentId: string
   status: 'draft' | 'published'
   coverImageUrl: string | null
   publishedAt: number | null
@@ -77,6 +80,13 @@ export const api = {
     create: (name: string) => req<Tag>('POST', '/admin/tags', { name }),
     delete: (id: number) => req<{ ok: boolean }>('DELETE', `/admin/tags/${id}`),
   },
+
+  translate: (text: string, source: 'en' | 'id', target: 'en' | 'id') =>
+    req<{ translatedText: string }>('POST', '/admin/translate', {
+      text,
+      source,
+      target,
+    }),
 
   images: {
     list: () => req<Image[]>('GET', '/admin/images'),

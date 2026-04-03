@@ -9,6 +9,7 @@ import { formatDate } from '@/components/util/formatDate'
 import { ScrollProgress } from '@/components/ui/scroll-progress'
 import { BackToTop } from '@/components/ui/back-to-top'
 import { READING_WPM, HTML_TAG_REGEX } from '@/src/lib/constants'
+import { useLang } from '@/src/context/LanguageContext'
 
 /** Estimate reading time in minutes (200 wpm, minimum 1). */
 function readingTime(html: string) {
@@ -19,18 +20,21 @@ function readingTime(html: string) {
 
 export default function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>()
+  const { lang, t } = useLang()
   const [data, setData] = useState<PostDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     if (!slug) return
+    setLoading(true)
+    setNotFound(false)
     api
-      .getPost(slug)
+      .getPost(slug, lang)
       .then(setData)
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
-  }, [slug])
+  }, [slug, lang])
 
   if (loading) {
     return (
@@ -38,7 +42,7 @@ export default function BlogPostPage() {
         <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
           <Header />
           <p className="font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
-            loading...
+            {t('blog.loading')}
           </p>
         </div>
       </div>
@@ -51,13 +55,13 @@ export default function BlogPostPage() {
         <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
           <Header />
           <p className="mb-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
-            Post not found.
+            {t('blog.notFound')}
           </p>
           <Link
             to="/blog"
             className="font-mono text-[11px] tracking-widest text-black uppercase hover:underline dark:text-white"
           >
-            ← back to writing
+            {t('blog.back')}
           </Link>
         </div>
       </div>
@@ -82,7 +86,7 @@ export default function BlogPostPage() {
             to="/blog"
             className="mb-8 inline-block font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
           >
-            ← writing
+            {t('blog.back')}
           </Link>
 
           {post.tags.length > 0 && (
@@ -116,7 +120,7 @@ export default function BlogPostPage() {
               ·
             </span>
             <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
-              {readingTime(html)} min read
+              {readingTime(html)} {t('post.minRead')}
             </span>
           </div>
         </div>
@@ -134,7 +138,7 @@ export default function BlogPostPage() {
             to="/blog"
             className="font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
           >
-            ← all posts
+            {t('blog.backAll')}
           </Link>
         </div>
         <Footer />

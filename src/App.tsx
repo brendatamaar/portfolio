@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from 'next-themes'
+import { LanguageProvider } from './context/LanguageContext'
 
 // Lazy-load pages so each route is a separate chunk
 const Home = lazy(() => import('./pages/Home'))
@@ -15,16 +16,18 @@ export default function App() {
       storageKey="theme"
       defaultTheme="system"
     >
-      <BrowserRouter>
-        {/* Suspense is required by React.lazy; null fallback keeps the layout shift minimal */}
-        <Suspense fallback={null}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+      <LanguageProvider>
+        <BrowserRouter>
+          {/* Suspense is required by React.lazy; null fallback keeps the layout shift minimal */}
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </LanguageProvider>
     </ThemeProvider>
   )
 }

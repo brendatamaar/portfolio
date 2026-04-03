@@ -1,9 +1,12 @@
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import { useTheme } from 'next-themes'
 import { Link } from 'react-router-dom'
+import { useLang } from '@/src/context/LanguageContext'
+import { LanguageSwitcher } from '@/src/components/ui/LanguageSwitcher'
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
+  const { t } = useLang()
 
   const toggleTheme = () => {
     if (document.startViewTransition) {
@@ -21,7 +24,7 @@ export default function Header() {
         to="/"
         className="font-mono text-xs font-bold tracking-widest text-black uppercase dark:text-white"
       >
-        home
+        {t('nav.home')}
       </Link>
 
       <div className="flex items-center gap-5">
@@ -29,8 +32,9 @@ export default function Header() {
           to="/blog"
           className="font-mono text-xs tracking-widest text-black uppercase hover:underline dark:text-white"
         >
-          writing
+          {t('nav.writing')}
         </Link>
+        <LanguageSwitcher />
         <button
           onClick={toggleTheme}
           className="border-2 border-black p-1.5 text-black transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black"

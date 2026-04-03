@@ -54,4 +54,17 @@ export function runMigrations(): void {
       created_at    INTEGER NOT NULL DEFAULT (unixepoch())
     );
   `)
+
+  // Add i18n columns to existing posts table (SQLite has no IF NOT EXISTS for ALTER TABLE)
+  for (const col of [
+    "title_id TEXT NOT NULL DEFAULT ''",
+    "description_id TEXT NOT NULL DEFAULT ''",
+    "content_id TEXT NOT NULL DEFAULT ''",
+  ]) {
+    try {
+      sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
+    } catch {
+      // Column already exists — safe to ignore
+    }
+  }
 }

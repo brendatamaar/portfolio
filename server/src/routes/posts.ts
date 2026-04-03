@@ -11,12 +11,16 @@ import { parse } from '../../../shared/markdown/parser.js'
 const app = new Hono()
 
 app.get('/', (c) => {
+  const lang = c.req.query('lang')
+
   const rows = db
     .select({
       id: posts.id,
       title: posts.title,
       slug: posts.slug,
       description: posts.description,
+      titleId: posts.titleId,
+      descriptionId: posts.descriptionId,
       coverImageUrl: posts.coverImageUrl,
       publishedAt: posts.publishedAt,
       createdAt: posts.createdAt,
@@ -26,7 +30,7 @@ app.get('/', (c) => {
     .orderBy(desc(posts.publishedAt))
     .all()
 
-  // Attach tags to each post
+  // Attach tags and apply i18n fallback
   const result = rows.map((post) => {
     const postTagRows = db
       .select({ name: tags.name, slug: tags.slug })
@@ -34,7 +38,19 @@ app.get('/', (c) => {
       .innerJoin(tags, eq(postTags.tagId, tags.id))
       .where(eq(postTags.postId, post.id))
       .all()
-    return { ...post, tags: postTagRows }
+
+    const useId = lang === 'id'
+    return {
+      id: post.id,
+      title: useId && post.titleId ? post.titleId : post.title,
+      slug: post.slug,
+      description:
+        useId && post.descriptionId ? post.descriptionId : post.description,
+      coverImageUrl: post.coverImageUrl,
+      publishedAt: post.publishedAt,
+      createdAt: post.createdAt,
+      tags: postTagRows,
+    }
   })
 
   return c.json(result)
@@ -42,6 +58,7 @@ app.get('/', (c) => {
 
 app.get('/:slug', (c) => {
   const slug = c.req.param('slug')
+  const lang = c.req.query('lang')
 
   const post = db
     .select()
@@ -58,14 +75,17 @@ app.get('/:slug', (c) => {
     .where(eq(postTags.postId, post.id))
     .all()
 
-  const { html, toc, sidenotes } = parse(post.content)
+  const useId = lang === 'id'
+  const contentSrc = useId && post.contentId ? post.contentId : post.content
+  const { html, toc, sidenotes } = parse(contentSrc)
 
   return c.json({
     post: {
       id: post.id,
-      title: post.title,
+      title: useId && post.titleId ? post.titleId : post.title,
       slug: post.slug,
-      description: post.description,
+      description:
+        useId && post.descriptionId ? post.descriptionId : post.description,
       coverImageUrl: post.coverImageUrl,
       publishedAt: post.publishedAt,
       createdAt: post.createdAt,
