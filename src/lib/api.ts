@@ -54,12 +54,12 @@ async function apiFetch<T>(path: string): Promise<T> {
 export const api = {
   getPosts: (lang?: Lang) =>
     apiFetch<PostSummary[]>(
-      lang && lang !== 'en' ? `/api/posts?lang=${lang}` : '/api/posts',
+      lang && lang !== 'en' ? `/posts?lang=${lang}` : '/posts',
     ),
   getPost: (slug: string, lang?: Lang) =>
     apiFetch<PostDetail>(
       lang && lang !== 'en'
-        ? `/api/posts/${slug}?lang=${lang}`
-        : `/api/posts/${slug}`,
+        ? `/posts/${slug}?lang=${lang}`
+        : `/posts/${slug}`,
     ),
 }
