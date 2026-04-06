@@ -8,6 +8,7 @@ services:
     environment:
       - PORT=3001
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - LIBRETRANSLATE_URL=${LIBRETRANSLATE_URL}
     volumes:
       - ./server/data:/app/dist/server/data
     restart: always
