@@ -16,10 +16,10 @@ export interface PostSummary {
   slug: string
   description: string
   coverImageUrl: string | null
-  /** Unix timestamp (seconds). Null if the post was never explicitly published. */
-  publishedAt: number | null
-  /** Unix timestamp (seconds) of row creation. */
-  createdAt: number
+  /** ISO date string. Null if the post was never explicitly published. */
+  publishedAt: string | null
+  /** ISO date string of row creation. */
+  createdAt: string
   tags: PostTag[]
 }
 
@@ -58,8 +58,6 @@ export const api = {
     ),
   getPost: (slug: string, lang?: Lang) =>
     apiFetch<PostDetail>(
-      lang && lang !== 'en'
-        ? `/posts/${slug}?lang=${lang}`
-        : `/posts/${slug}`,
+      lang && lang !== 'en' ? `/posts/${slug}?lang=${lang}` : `/posts/${slug}`,
     ),
 }

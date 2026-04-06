@@ -9,9 +9,7 @@ export const BlogPostCard = memo(function BlogPostCard({
 }: {
   post: PostSummary
 }) {
-  const date = post.publishedAt
-    ? new Date(post.publishedAt * 1000)
-    : new Date(post.createdAt * 1000)
+  const date = new Date(post.publishedAt ?? post.createdAt)
 
   return (
     <Link
