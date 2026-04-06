@@ -53,6 +53,9 @@ export default function PostEditor() {
   const [descriptionId, setDescriptionId] = useState('')
   const [contentId, setContentId] = useState('')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
+  const [publishedAt, setPublishedAt] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  )
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [allTags, setAllTags] = useState<Tag[]>([])
@@ -91,6 +94,11 @@ export default function PostEditor() {
           setDescriptionId(post.descriptionId ?? '')
           setContentId(post.contentId ?? '')
           setStatus(post.status)
+          setPublishedAt(
+            post.publishedAt
+              ? new Date(post.publishedAt * 1000).toISOString().slice(0, 10)
+              : new Date().toISOString().slice(0, 10),
+          )
           setCoverImageUrl(post.coverImageUrl ?? '')
           setSelectedTagIds(post.tags.map((t) => t.id))
         })
@@ -242,6 +250,7 @@ export default function PostEditor() {
       status: toStatus ?? status,
       coverImageUrl: coverImageUrl || null,
       tagIds: selectedTagIds,
+      publishedAt: publishedAt ? new Date(publishedAt).toISOString() : null,
     }
     try {
       if (isNew) {
@@ -597,6 +606,19 @@ export default function PostEditor() {
                     slugTouched.current = true
                     setSlug(e.target.value)
                   }}
+                  className="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 transition-colors outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40"
+                />
+              </div>
+
+              {/* Published at */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">
+                  Published at
+                </label>
+                <input
+                  type="date"
+                  value={publishedAt}
+                  onChange={(e) => setPublishedAt(e.target.value)}
                   className="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 transition-colors outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40"
                 />
               </div>
