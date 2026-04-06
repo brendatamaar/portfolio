@@ -5,8 +5,8 @@ import {
   LogOutIcon,
   Trash2Icon,
   EditIcon,
-  GlobeIcon,
-  EyeOffIcon,
+  SendIcon,
+  ArchiveIcon,
   SunIcon,
   MoonIcon,
 } from 'lucide-react'
@@ -15,8 +15,8 @@ import type { Post } from '../lib/api.ts'
 import { useTheme } from '../lib/theme.ts'
 import type { StatusFilter } from '../lib/types.ts'
 
-function formatDate(ts: number, label: string) {
-  return `${label} ${new Date(ts * 1000).toLocaleDateString('en-US', {
+function formatDate(ts: string, label: string) {
+  return `${label} ${new Date(ts).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -199,7 +199,7 @@ export default function PostList() {
                   )}
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     onClick={() => toggleStatus(post)}
                     disabled={togglingId === post.id}
@@ -207,28 +207,28 @@ export default function PostList() {
                       post.status === 'published' ? 'Unpublish' : 'Publish'
                     }
                     className={[
-                      'p-1.5 transition-colors disabled:opacity-40',
+                      'p-1.5 transition-all disabled:opacity-40',
                       post.status === 'published'
-                        ? 'text-green-600/60 hover:text-black/60 dark:text-green-400/60 dark:hover:text-white/60'
-                        : 'text-black/20 hover:text-[#FFE600] dark:text-white/20',
+                        ? 'text-green-600/50 hover:bg-black/10 hover:text-black dark:text-green-400/50 dark:hover:bg-white/10 dark:hover:text-white'
+                        : 'text-black/25 hover:bg-[#FFE600] hover:text-black dark:text-white/25 dark:hover:bg-[#FFE600] dark:hover:text-black',
                     ].join(' ')}
                   >
                     {post.status === 'published' ? (
-                      <EyeOffIcon size={14} />
+                      <ArchiveIcon size={14} />
                     ) : (
-                      <GlobeIcon size={14} />
+                      <SendIcon size={14} />
                     )}
                   </button>
                   <Link
                     to={`/posts/${post.id}`}
-                    className="p-1.5 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+                    className="p-1.5 text-black/30 transition-all hover:bg-black hover:text-white dark:text-white/30 dark:hover:bg-white dark:hover:text-black"
                     title="Edit"
                   >
                     <EditIcon size={14} />
                   </Link>
                   <button
                     onClick={() => deletePost(post.id, post.title)}
-                    className="p-1.5 text-black/40 transition-colors hover:text-red-500 dark:text-white/40 dark:hover:text-red-400"
+                    className="p-1.5 text-black/30 transition-all hover:bg-red-500 hover:text-white dark:text-white/30 dark:hover:bg-red-500 dark:hover:text-white"
                     title="Delete"
                   >
                     <Trash2Icon size={14} />
