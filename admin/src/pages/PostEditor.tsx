@@ -250,7 +250,9 @@ export default function PostEditor() {
       status: toStatus ?? status,
       coverImageUrl: coverImageUrl || null,
       tagIds: selectedTagIds,
-      publishedAt: publishedAt ? new Date(publishedAt).toISOString() : null,
+      publishedAt: publishedAt
+        ? Math.floor(new Date(publishedAt).getTime() / 1000)
+        : null,
     }
     try {
       if (isNew) {
