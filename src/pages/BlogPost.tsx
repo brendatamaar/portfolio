@@ -69,8 +69,7 @@ export default function BlogPostPage() {
   }
 
   const { post, html, toc, sidenotes } = data
-  // Server stores timestamps as Unix seconds; prefer publishedAt if available.
-  const date = new Date((post.publishedAt ?? post.createdAt) * 1000)
+  const date = new Date(post.publishedAt ?? post.createdAt)
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
