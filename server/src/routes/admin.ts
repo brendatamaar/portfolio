@@ -41,6 +41,7 @@ const postSchema = z.object({
   status: z.enum(['draft', 'published']).default('draft'),
   coverImageUrl: z.string().nullable().optional(),
   tagIds: z.array(z.number()).optional(),
+  publishedAt: z.coerce.date().nullable().optional(),
 })
 
 app.get('/posts', (c) => {
@@ -68,7 +69,12 @@ app.post('/posts', async (c) => {
   const slug = data.slug ?? slugify(data.title)
 
   const now = new Date()
-  const publishedAt = data.status === 'published' ? now : null
+  const publishedAt =
+    data.publishedAt !== undefined
+      ? data.publishedAt
+      : data.status === 'published'
+        ? now
+        : null
 
   const result = db
     .insert(posts)
@@ -109,9 +115,11 @@ app.put('/posts/:id', async (c) => {
   const data = parsed.data
   const now = new Date()
 
-  // Set publishedAt only when transitioning to published for the first time
+  // Use explicit publishedAt if provided, otherwise auto-set on first publish
   let publishedAt = existing.publishedAt
-  if (data.status === 'published' && !publishedAt) {
+  if (data.publishedAt !== undefined) {
+    publishedAt = data.publishedAt
+  } else if (data.status === 'published' && !publishedAt) {
     publishedAt = now
   }
 
