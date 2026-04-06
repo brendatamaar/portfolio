@@ -47,9 +47,9 @@ export interface Post {
   contentId: string
   status: 'draft' | 'published'
   coverImageUrl: string | null
-  publishedAt: number | null
-  createdAt: number
-  updatedAt: number
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
   tags: Tag[]
 }
 export interface Image {
@@ -59,7 +59,7 @@ export interface Image {
   mimeType: string
   sizeBytes: number
   url: string
-  createdAt: number
+  createdAt: string
 }
 
 export const api = {

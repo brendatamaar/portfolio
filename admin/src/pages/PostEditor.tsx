@@ -96,7 +96,7 @@ export default function PostEditor() {
           setStatus(post.status)
           setPublishedAt(
             post.publishedAt
-              ? new Date(post.publishedAt * 1000).toISOString().slice(0, 10)
+              ? new Date(post.publishedAt).toISOString().slice(0, 10)
               : new Date().toISOString().slice(0, 10),
           )
           setCoverImageUrl(post.coverImageUrl ?? '')
