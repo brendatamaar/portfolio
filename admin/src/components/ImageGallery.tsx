@@ -30,7 +30,7 @@ export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
             mimeType: file.type,
             sizeBytes: file.size,
             url: result.url,
-            createdAt: Date.now() / 1000,
+            createdAt: new Date().toISOString(),
           },
           ...prev,
         ])
