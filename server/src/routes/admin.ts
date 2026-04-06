@@ -251,8 +251,38 @@ app.delete('/tags/:id', (c) => {
 
 // ─── Translate ────────────────────────────────────────────────────────────────
 
-const translateSchema = z.object({
-  text: z.string(),
+/**
+ * Extract fenced code blocks and inline code from markdown text, replacing
+ * them with numeric placeholders `[[0]]`, `[[1]]` etc. that LibreTranslate
+ * will pass through untouched.  Call `restoreCode` with the returned slots
+ * to put them back after translation.
+ */
+function extractCode(text: string): { text: string; slots: string[] } {
+  const slots: string[] = []
+  let out = text
+  // Fenced code blocks (``` ... ```) — must come before inline to avoid
+  // matching the opening fence as inline code
+  out = out.replace(/```[\s\S]*?```/g, (m) => {
+    slots.push(m)
+    return `[[${slots.length - 1}]]`
+  })
+  // Inline code (`...`)
+  out = out.replace(/`[^`\n]+`/g, (m) => {
+    slots.push(m)
+    return `[[${slots.length - 1}]]`
+  })
+  return { text: out, slots }
+}
+
+function restoreCode(text: string, slots: string[]): string {
+  return text.replace(
+    /\[\[(\d+)\]\]/g,
+    (_, i) => slots[Number(i)] ?? `[[${i}]]`,
+  )
+}
+
+const translateBatchSchema = z.object({
+  texts: z.array(z.string()).min(1),
   source: z.enum(['en', 'id']),
   target: z.enum(['en', 'id']),
 })
@@ -263,24 +293,78 @@ app.post('/translate', async (c) => {
     return c.json({ error: 'LIBRETRANSLATE_URL not configured' }, 503)
 
   const body = await c.req.json().catch(() => null)
-  const parsed = translateSchema.safeParse(body)
+  const parsed = translateBatchSchema.safeParse(body)
   if (!parsed.success) return c.json({ error: parsed.error.issues }, 400)
 
-  const { text, source, target } = parsed.data
+  const { texts, source, target } = parsed.data
 
-  const res = await fetch(`${libreUrl}/translate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ q: text, source, target, format: 'text' }),
-  })
+  // Protect code blocks and filter out empty strings before sending to LibreTranslate
+  const protected_ = texts.map(extractCode)
+  const nonEmpty = protected_
+    .map((p, i) => ({ i, text: p.text }))
+    .filter(({ text }) => text.trim().length > 0)
+
+  // If everything is empty, return early with empty strings
+  if (nonEmpty.length === 0) {
+    return c.json({ translatedTexts: texts.map(() => '') })
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
+
+  let res: Response
+  try {
+    res = await fetch(`${libreUrl}/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        q: nonEmpty.map(({ text }) => text),
+        source,
+        target,
+        format: 'text',
+      }),
+      signal: controller.signal,
+    })
+  } catch (err: unknown) {
+    const isAbort = err instanceof Error && err.name === 'AbortError'
+    return c.json(
+      {
+        error: isAbort
+          ? 'Translation timed out'
+          : 'Failed to reach LibreTranslate',
+      },
+      502,
+    )
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!res.ok) {
     const err = await res.text().catch(() => '')
     return c.json({ error: `LibreTranslate error: ${err}` }, 502)
   }
 
-  const data = (await res.json()) as { translatedText: string }
-  return c.json({ translatedText: data.translatedText })
+  const data = (await res.json()) as unknown
+  if (
+    typeof data !== 'object' ||
+    data === null ||
+    !Array.isArray((data as { translatedText?: unknown }).translatedText) ||
+    (data as { translatedText: unknown[] }).translatedText.length !==
+      nonEmpty.length
+  ) {
+    return c.json({ error: 'Unexpected response from LibreTranslate' }, 502)
+  }
+
+  const translated = (data as { translatedText: string[] }).translatedText
+
+  // Re-map results back to original positions and restore code blocks
+  const translatedTexts = texts.map((_, idx) => {
+    const slot = nonEmpty.findIndex(({ i }) => i === idx)
+    if (slot === -1) return ''
+    return restoreCode(translated[slot], protected_[idx].slots)
+  })
+
+  return c.json({ translatedTexts })
 })
 
 export default app

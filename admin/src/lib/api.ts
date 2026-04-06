@@ -81,9 +81,9 @@ export const api = {
     delete: (id: number) => req<{ ok: boolean }>('DELETE', `/admin/tags/${id}`),
   },
 
-  translate: (text: string, source: 'en' | 'id', target: 'en' | 'id') =>
-    req<{ translatedText: string }>('POST', '/admin/translate', {
-      text,
+  translate: (texts: string[], source: 'en' | 'id', target: 'en' | 'id') =>
+    req<{ translatedTexts: string[] }>('POST', '/admin/translate', {
+      texts,
       source,
       target,
     }),
