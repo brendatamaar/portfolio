@@ -40,6 +40,11 @@ export default function PostEditor() {
 
   const [langTab, setLangTab] = useState<'en' | 'id'>('en')
 
+  // Fingerprint of source content at the time of last translation.
+  // Used to detect when source has changed since translation ("stale" indicator).
+  const [idTranslatedFrom, setIdTranslatedFrom] = useState<string | null>(null)
+  const [enTranslatedFrom, setEnTranslatedFrom] = useState<string | null>(null)
+
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
@@ -262,22 +267,36 @@ export default function PostEditor() {
     const srcDescription = sourceLang === 'en' ? description : descriptionId
     const srcContent = sourceLang === 'en' ? content : contentId
 
+    // Warn before silently overwriting an existing translation
+    const targetHasContent =
+      targetLang === 'id' ? !!(titleId || contentId) : !!(title || content)
+    if (
+      targetHasContent &&
+      !confirm(
+        `This will overwrite the existing ${targetLang.toUpperCase()} version. Continue?`,
+      )
+    )
+      return
+
     setTranslating(true)
     setSaveMsg('')
     try {
-      const [t, d, c] = await Promise.all([
-        api.translate(srcTitle, sourceLang, targetLang),
-        api.translate(srcDescription, sourceLang, targetLang),
-        api.translate(srcContent, sourceLang, targetLang),
-      ])
+      const { translatedTexts } = await api.translate(
+        [srcTitle, srcDescription, srcContent],
+        sourceLang,
+        targetLang,
+      )
+      const [t, d, c] = translatedTexts
       if (targetLang === 'id') {
-        setTitleId(t.translatedText)
-        setDescriptionId(d.translatedText)
-        setContentId(c.translatedText)
+        setTitleId(t)
+        setDescriptionId(d)
+        setContentId(c)
+        setIdTranslatedFrom(srcTitle + srcDescription + srcContent)
       } else {
-        setTitle(t.translatedText)
-        setDescription(d.translatedText)
-        setContent(c.translatedText)
+        setTitle(t)
+        setDescription(d)
+        setContent(c)
+        setEnTranslatedFrom(srcTitle + srcDescription + srcContent)
       }
       setLangTab(targetLang)
     } catch (err) {
@@ -395,24 +414,48 @@ export default function PostEditor() {
         </div>
 
         {/* Make version button */}
-        {langTab === 'en' && title && (
-          <button
-            onClick={() => makeVersion('id')}
-            disabled={translating}
-            className="flex shrink-0 items-center gap-1 bg-[#FFE600] px-2.5 py-1 font-mono text-[9px] font-bold tracking-widest text-black uppercase transition-colors hover:bg-yellow-300 disabled:opacity-50"
-          >
-            {translating ? '...' : 'Make ID →'}
-          </button>
-        )}
-        {langTab === 'id' && titleId && (
-          <button
-            onClick={() => makeVersion('en')}
-            disabled={translating}
-            className="flex shrink-0 items-center gap-1 bg-[#FFE600] px-2.5 py-1 font-mono text-[9px] font-bold tracking-widest text-black uppercase transition-colors hover:bg-yellow-300 disabled:opacity-50"
-          >
-            {translating ? '...' : 'Make EN →'}
-          </button>
-        )}
+        {langTab === 'en' &&
+          title &&
+          (() => {
+            const enSource = title + description + content
+            const stale =
+              idTranslatedFrom !== null && idTranslatedFrom !== enSource
+            return (
+              <button
+                onClick={() => makeVersion('id')}
+                disabled={translating}
+                title={
+                  stale
+                    ? 'EN content changed since last translation'
+                    : undefined
+                }
+                className="flex shrink-0 items-center gap-1 bg-[#FFE600] px-2.5 py-1 font-mono text-[9px] font-bold tracking-widest text-black uppercase transition-colors hover:bg-yellow-300 disabled:opacity-50"
+              >
+                {translating ? '...' : stale ? '⚠ Make ID →' : 'Make ID →'}
+              </button>
+            )
+          })()}
+        {langTab === 'id' &&
+          titleId &&
+          (() => {
+            const idSource = titleId + descriptionId + contentId
+            const stale =
+              enTranslatedFrom !== null && enTranslatedFrom !== idSource
+            return (
+              <button
+                onClick={() => makeVersion('en')}
+                disabled={translating}
+                title={
+                  stale
+                    ? 'ID content changed since last translation'
+                    : undefined
+                }
+                className="flex shrink-0 items-center gap-1 bg-[#FFE600] px-2.5 py-1 font-mono text-[9px] font-bold tracking-widest text-black uppercase transition-colors hover:bg-yellow-300 disabled:opacity-50"
+              >
+                {translating ? '...' : stale ? '⚠ Make EN →' : 'Make EN →'}
+              </button>
+            )
+          })()}
 
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <input
