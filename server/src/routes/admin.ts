@@ -76,7 +76,7 @@ app.post('/posts', async (c) => {
         ? now
         : null
 
-  const result = db
+  const inserted = db
     .insert(posts)
     .values({
       title: data.title,
@@ -91,15 +91,16 @@ app.post('/posts', async (c) => {
       publishedAt,
       updatedAt: now,
     })
-    .returning()
+    .returning({ id: posts.id })
     .get()
 
   if (data.tagIds?.length) {
     db.insert(postTags)
-      .values(data.tagIds.map((tagId) => ({ postId: result.id, tagId })))
+      .values(data.tagIds.map((tagId) => ({ postId: inserted.id, tagId })))
       .run()
   }
 
+  const result = db.select().from(posts).where(eq(posts.id, inserted.id)).get()!
   return c.json(result, 201)
 })
 
