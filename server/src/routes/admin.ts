@@ -124,8 +124,7 @@ app.put('/posts/:id', async (c) => {
     publishedAt = now
   }
 
-  const updated = db
-    .update(posts)
+  db.update(posts)
     .set({
       ...(data.title !== undefined && { title: data.title }),
       ...(data.slug !== undefined && { slug: data.slug }),
@@ -144,8 +143,7 @@ app.put('/posts/:id', async (c) => {
       updatedAt: now,
     })
     .where(eq(posts.id, id))
-    .returning()
-    .get()
+    .run()
 
   if (data.tagIds !== undefined) {
     db.delete(postTags).where(eq(postTags.postId, id)).run()
@@ -156,6 +154,7 @@ app.put('/posts/:id', async (c) => {
     }
   }
 
+  const updated = db.select().from(posts).where(eq(posts.id, id)).get()!
   return c.json(updated)
 })
 
