@@ -742,6 +742,32 @@
   }
 }
 
+/* Cassette reel spin animation */
+
+@keyframes reel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.reel-animate {
+  animation: reel-spin 2s linear infinite;
+  animation-play-state: paused;
+}
+
+.group:hover .reel-animate {
+  animation-play-state: running;
+}
+
+.vinyl-spin {
+  animation: reel-spin 3s linear infinite;
+  animation-play-state: paused;
+}
+
+.group:hover .vinyl-spin {
+  animation-play-state: running;
+}
+
 /* Print */
 
 @media print {

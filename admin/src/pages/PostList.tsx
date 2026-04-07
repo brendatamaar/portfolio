@@ -88,6 +88,12 @@ export default function PostList() {
         </span>
         <div className="flex items-center gap-3">
           <Link
+            to="/collection"
+            className="font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+          >
+            Collection
+          </Link>
+          <Link
             to="/posts/new"
             className="flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
           >

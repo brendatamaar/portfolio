@@ -36,6 +36,25 @@ export interface PostDetail {
   bibliography: BibliographyEntry[]
 }
 
+export interface BookItem {
+  id: number
+  title: string
+  author: string
+  status: 'reading' | 'finished' | 'want'
+  year: number | null
+  coverUrl: string | null
+  createdAt: string
+}
+
+export interface AlbumItem {
+  id: number
+  title: string
+  artist: string
+  year: number | null
+  coverUrl: string | null
+  createdAt: string
+}
+
 async function apiFetch<T>(path: string): Promise<T> {
   const url = `${BASE}${path}`
   const start = performance.now()
@@ -65,4 +84,6 @@ export const api = {
     apiFetch<PostDetail>(
       lang && lang !== 'en' ? `/posts/${slug}?lang=${lang}` : `/posts/${slug}`,
     ),
+  getBooks: () => apiFetch<BookItem[]>('/books'),
+  getAlbums: () => apiFetch<AlbumItem[]>('/albums'),
 }

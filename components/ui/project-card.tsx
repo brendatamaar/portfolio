@@ -54,7 +54,7 @@ export const ProjectCard = memo(function ProjectCard({
         />
       </div>
 
-      <p className="line-clamp-2 text-sm leading-relaxed font-medium text-black/60 dark:text-white/60">
+      <p className="text-sm leading-relaxed font-medium text-black/60 dark:text-white/60">
         {project.description}
       </p>
 

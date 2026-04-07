@@ -63,3 +63,28 @@ export const adminUsers = sqliteTable('admin_users', {
     .notNull()
     .default(sql`(unixepoch())`),
 })
+
+export const books = sqliteTable('books', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  author: text('author').notNull(),
+  status: text('status', { enum: ['reading', 'finished', 'want'] })
+    .notNull()
+    .default('finished'),
+  year: integer('year'),
+  coverUrl: text('cover_url'),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+})
+
+export const albums = sqliteTable('albums', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  artist: text('artist').notNull(),
+  year: integer('year'),
+  coverUrl: text('cover_url'),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+})

@@ -7,6 +7,7 @@ import { LanguageProvider } from './context/LanguageContext'
 const Home = lazy(() => import('./pages/Home'))
 const Blog = lazy(() => import('./pages/Blog'))
 const BlogPost = lazy(() => import('./pages/BlogPost'))
+const Collection = lazy(() => import('./pages/Collection'))
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/collection" element={<Collection />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

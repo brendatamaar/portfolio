@@ -62,6 +62,39 @@ export interface Image {
   createdAt: string
 }
 
+export interface BookItem {
+  id: number
+  title: string
+  author: string
+  status: 'reading' | 'finished' | 'want'
+  year: number | null
+  coverUrl: string | null
+  createdAt: string
+}
+
+export interface AlbumItem {
+  id: number
+  title: string
+  artist: string
+  year: number | null
+  coverUrl: string | null
+  createdAt: string
+}
+
+export interface BookSearchResult {
+  title: string
+  author: string
+  year: number | null
+  coverUrl: string | null
+}
+
+export interface AlbumSearchResult {
+  title: string
+  artist: string
+  year: number | null
+  coverUrl: string | null
+}
+
 export const api = {
   login: (username: string, password: string) =>
     req<{ token: string }>('POST', '/auth/login', { username, password }),
@@ -79,6 +112,41 @@ export const api = {
     list: () => req<Tag[]>('GET', '/admin/tags'),
     create: (name: string) => req<Tag>('POST', '/admin/tags', { name }),
     delete: (id: number) => req<{ ok: boolean }>('DELETE', `/admin/tags/${id}`),
+  },
+
+  books: {
+    list: () => req<BookItem[]>('GET', '/admin/books'),
+    search: (q: string) =>
+      req<BookSearchResult[]>(
+        'GET',
+        `/admin/books/search?q=${encodeURIComponent(q)}`,
+      ),
+    create: (d: {
+      title: string
+      author: string
+      status: 'reading' | 'finished' | 'want'
+      coverUrl?: string | null
+      year?: number | null
+    }) => req<BookItem>('POST', '/admin/books', d),
+    delete: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/books/${id}`),
+  },
+
+  albums: {
+    list: () => req<AlbumItem[]>('GET', '/admin/albums'),
+    search: (q: string) =>
+      req<AlbumSearchResult[]>(
+        'GET',
+        `/admin/albums/search?q=${encodeURIComponent(q)}`,
+      ),
+    create: (d: {
+      title: string
+      artist: string
+      coverUrl?: string | null
+      year?: number | null
+    }) => req<AlbumItem>('POST', '/admin/albums', d),
+    delete: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/albums/${id}`),
   },
 
   translate: (texts: string[], source: 'en' | 'id', target: 'en' | 'id') =>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '@/src/lib/api'
-import type { PostSummary } from '@/src/lib/api'
+import type { PostSummary, BookItem, AlbumItem } from '@/src/lib/api'
 
 import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
@@ -8,14 +9,18 @@ import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
 import { RESUME_DATA_ID } from '@/data/resume-data-id'
 import { BlogPostCard } from '@/components/ui/post-card'
-import { BookCard } from '@/components/ui/book-card'
+import { BookCollectionCard } from '@/components/ui/book-collection-card'
+import { AlbumCard } from '@/components/ui/album-card'
 import { Magnetic } from '@/components/ui/magnetic'
-import { NowPlaying } from '@/components/ui/now-playing'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Reveal } from '@/components/ui/reveal'
 import { SectionLabel } from '@/components/ui/section-label'
 import { ProjectCard } from '@/components/ui/project-card'
-import { PROJECT_PREVIEW_COUNT, BLOG_POSTS_PREVIEW } from '@/src/lib/constants'
+import {
+  PROJECT_PREVIEW_COUNT,
+  BLOG_POSTS_PREVIEW,
+  COLLECTION_PREVIEW_COUNT,
+} from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
 
 // --- Page ---
@@ -27,6 +32,10 @@ export default function Home() {
   const [showAllProjects, setShowAllProjects] = useState(false)
   const [blogPosts, setBlogPosts] = useState<PostSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [books, setBooks] = useState<BookItem[]>([])
+  const [albums, setAlbums] = useState<AlbumItem[]>([])
+  const [loadingBooks, setLoadingBooks] = useState(true)
+  const [loadingAlbums, setLoadingAlbums] = useState(true)
 
   const visibleProjects = showAllProjects
     ? data.projects
@@ -41,6 +50,19 @@ export default function Home() {
       .catch((err) => console.error('Error loading blog posts:', err))
       .finally(() => setIsLoading(false))
   }, [lang])
+
+  useEffect(() => {
+    api
+      .getBooks()
+      .then((b) => setBooks(b.slice(0, COLLECTION_PREVIEW_COUNT)))
+      .catch(console.error)
+      .finally(() => setLoadingBooks(false))
+    api
+      .getAlbums()
+      .then((a) => setAlbums(a.slice(0, COLLECTION_PREVIEW_COUNT)))
+      .catch(console.error)
+      .finally(() => setLoadingAlbums(false))
+  }, [])
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
@@ -141,11 +163,31 @@ export default function Home() {
           <Reveal delay={0.05}>
             <section>
               <SectionLabel num="04" label={t('sections.reading')} />
-              <div className="grid grid-cols-2 gap-4">
-                {RESUME_DATA.books.map((book) => (
-                  <BookCard key={book.title} book={book} />
-                ))}
-              </div>
+              {loadingBooks ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {Array.from({ length: COLLECTION_PREVIEW_COUNT }, (_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
+                </div>
+              ) : books.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {books.map((b) => (
+                      <BookCollectionCard key={b.id} book={b} />
+                    ))}
+                  </div>
+                  <Link
+                    to="/collection#books"
+                    className="mt-6 inline-block border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
+                  >
+                    {t('collection.seeAll')}
+                  </Link>
+                </>
+              ) : (
+                <p className="py-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
+                  {t('collection.empty')}
+                </p>
+              )}
             </section>
           </Reveal>
 
@@ -153,7 +195,31 @@ export default function Home() {
           <Reveal delay={0.05}>
             <section>
               <SectionLabel num="05" label={t('sections.listening')} />
-              <NowPlaying />
+              {loadingAlbums ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {Array.from({ length: COLLECTION_PREVIEW_COUNT }, (_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
+                </div>
+              ) : albums.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {albums.map((a) => (
+                      <AlbumCard key={a.id} album={a} />
+                    ))}
+                  </div>
+                  <Link
+                    to="/collection#albums"
+                    className="mt-6 inline-block border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
+                  >
+                    {t('collection.seeAll')}
+                  </Link>
+                </>
+              ) : (
+                <p className="py-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
+                  {t('collection.empty')}
+                </p>
+              )}
             </section>
           </Reveal>
 
