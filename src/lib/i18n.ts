@@ -5,6 +5,7 @@ export const translations = {
     nav: {
       home: 'home',
       writing: 'writing',
+      collection: 'collection',
     },
     sections: {
       projects: 'Projects',
@@ -33,11 +34,20 @@ export const translations = {
     post: {
       minRead: 'min read',
     },
+    collection: {
+      heading: 'Collection',
+      subtitle: 'A personal archive of things I genuinely like.',
+      books: 'Bookshelf',
+      albums: 'Record Crate',
+      seeAll: 'see all →',
+      empty: 'Nothing yet.',
+    },
   },
   id: {
     nav: {
       home: 'beranda',
       writing: 'tulisan',
+      collection: 'koleksi',
     },
     sections: {
       projects: 'Proyek',
@@ -65,6 +75,14 @@ export const translations = {
     },
     post: {
       minRead: 'menit baca',
+    },
+    collection: {
+      heading: 'Koleksi',
+      subtitle: 'Arsip pribadi hal-hal yang benar-benar saya sukai.',
+      books: 'Rak Buku',
+      albums: 'Koleksi Album',
+      seeAll: 'lihat semua →',
+      empty: 'Belum ada.',
     },
   },
 } as const

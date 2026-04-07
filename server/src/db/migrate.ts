@@ -53,6 +53,22 @@ export function runMigrations(): void {
       url           TEXT NOT NULL,
       created_at    INTEGER NOT NULL DEFAULT (unixepoch())
     );
+
+    CREATE TABLE IF NOT EXISTS books (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      title      TEXT NOT NULL,
+      author     TEXT NOT NULL,
+      cover_url  TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE TABLE IF NOT EXISTS albums (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      title      TEXT NOT NULL,
+      artist     TEXT NOT NULL,
+      cover_url  TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
   `)
 
   // Add i18n columns to existing posts table (SQLite has no IF NOT EXISTS for ALTER TABLE)
@@ -63,6 +79,19 @@ export function runMigrations(): void {
   ]) {
     try {
       sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
+    } catch {
+      // Column already exists — safe to ignore
+    }
+  }
+
+  // Add status + year to books, year to albums
+  for (const stmt of [
+    `ALTER TABLE books ADD COLUMN status TEXT NOT NULL DEFAULT 'finished'`,
+    `ALTER TABLE books ADD COLUMN year INTEGER`,
+    `ALTER TABLE albums ADD COLUMN year INTEGER`,
+  ]) {
+    try {
+      sqlite.exec(stmt)
     } catch {
       // Column already exists — safe to ignore
     }

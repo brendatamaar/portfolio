@@ -91,10 +91,23 @@ export const RESUME_DATA = {
   ],
   projects: [
     {
+      title: 'poker-hand-calculator',
+      techStack: ['side project', 'JavaScript', 'Vite'],
+      description:
+        'Hand winning probability calculator in poker using Monte Carlo simulation.',
+      logo: '',
+      link: {
+        label: 'poker-hand-calculator',
+        href: 'https://github.com/brendatamaar/poker-hand-calculator',
+      },
+      img: '',
+      isFeatured: true,
+    },
+    {
       title: 'jpeg-encoder',
       techStack: ['side project', 'JavaScript', 'Vite'],
       description:
-        'Complete JPEG baseline encoding pipeline implementing all 6 standard stages. Visualizes per-stage compression metrics including entropy, bitrate, and compression ratio.',
+        'Complete JPEG encoding pipeline implementing all 6 standard stages including entropy, bitrate, and compression ratio.',
       logo: '',
       link: {
         label: 'jpeg-encoder',
@@ -115,7 +128,7 @@ export const RESUME_DATA = {
         'Mermaid',
       ],
       description:
-        'Offline markdown editor with split-view live preview, LaTeX math rendering, Mermaid diagram support, and synchronized scrolling.',
+        'Markdown editor with split-view live preview, LaTeX math rendering, and Mermaid diagram support.',
       logo: '',
       img: '',
       isFeatured: true,
@@ -124,7 +137,7 @@ export const RESUME_DATA = {
       title: 'Admin Barcode',
       techStack: ['side project', 'Laravel 8', 'PostgreSQL', 'Docker'],
       description:
-        'Inventory asset management system for generating and tracking barcodes/QR codes with bulk Excel import and streamed PDF output. Access controlled via RBAC.',
+        'Inventory asset management system for generating and tracking barcodes/QR codes.',
       logo: '',
       img: '',
       isFeatured: false,
@@ -140,7 +153,7 @@ export const RESUME_DATA = {
         'Docker',
       ],
       description:
-        'Enterprise multi-module tax SaaS integrated with the DJP tax system. Covers tax invoicing, non-tax revenue reporting, and taxpayer status confirmation.',
+        'Enterprise tax saas integrated with DJP. Covers tax invoicing, non-tax revenue reporting, and taxpayer status confirmation.',
       logo: '',
       link: {
         label: 'air-tax',
@@ -159,7 +172,7 @@ export const RESUME_DATA = {
         'Vite Module Federation',
       ],
       description:
-        'Enterprise platform designed to handle all business processes in one place: revenue management, ERP, reporting, and CRM built across 40+ operational workflows via micro-frontend architecture.',
+        'Platform designed to handle all business processes: revenue management, ERP, reporting, and CRM.',
       logo: '',
       img: '',
       isFeatured: false,
@@ -175,7 +188,7 @@ export const RESUME_DATA = {
         'PostgreSQL',
       ],
       description:
-        'Real-time analytics dashboard tracking OTC and recurring revenue streams with concurrent query execution for parallel aggregations.',
+        'Real-time analytics dashboard tracking OTC and recurring revenue streams.',
       logo: '',
       img: '',
       isFeatured: false,
@@ -191,7 +204,7 @@ export const RESUME_DATA = {
         'PostgreSQL',
       ],
       description:
-        'CRM managing sales, procurement, stock, and automated accounting with event-driven integration triggering real-time accounting posts across 8 transaction types.',
+        'CRM managing sales, procurement, stock, and automated accounting integration.',
       logo: '',
       img: '',
       isFeatured: false,
@@ -207,8 +220,7 @@ export const RESUME_DATA = {
         'PostgreSQL',
         'Docker Swarm',
       ],
-      description:
-        'Customer satisfaction survey platform with SSO auth, multi-level role-based access, and survey analytics.',
+      description: 'Customer satisfaction survey platform.',
       logo: '',
       link: {
         label: 'cheskp',
@@ -227,8 +239,7 @@ export const RESUME_DATA = {
         'Socket.IO',
         'Docker',
       ],
-      description:
-        'Electric stove conversion platform managing field surveys, installation, activation, and billing verification with real-time updates and geospatial map visualization.',
+      description: 'Electric stove conversion platform.',
       logo: '',
       link: {
         label: 'esds',

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login.tsx'
 import PostList from './pages/PostList.tsx'
 import PostEditor from './pages/PostEditor.tsx'
+import CollectionManager from './pages/CollectionManager.tsx'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('admin_token')
@@ -34,6 +35,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <PostEditor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/collection"
+          element={
+            <ProtectedRoute>
+              <CollectionManager />
             </ProtectedRoute>
           }
         />
