@@ -34,6 +34,43 @@ export default function MarkdownRenderer({
     })
   }, [html])
 
+  // Footnote ref click — on desktop, highlight the sidenote instead of jumping to #fn-*
+  useEffect(() => {
+    const content = contentRef.current
+    if (!content) return
+
+    const handleClick = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest(
+        'a[data-sidenote-id]',
+      ) as HTMLAnchorElement | null
+      if (!link || window.innerWidth < 1024) return
+
+      e.preventDefault()
+      const id = link.dataset.sidenoteId
+      if (!id) return
+
+      const noteEl = document.querySelector(
+        `[data-sidenote="${id}"]`,
+      ) as HTMLElement | null
+      if (!noteEl) return
+
+      noteEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+
+      // Restart animation if already running
+      noteEl.classList.remove('sidenote-highlighted')
+      void noteEl.offsetWidth
+      noteEl.classList.add('sidenote-highlighted')
+      noteEl.addEventListener(
+        'animationend',
+        () => noteEl.classList.remove('sidenote-highlighted'),
+        { once: true },
+      )
+    }
+
+    content.addEventListener('click', handleClick)
+    return () => content.removeEventListener('click', handleClick)
+  }, [html])
+
   // Image zoom — click any <img> outside a code block to enlarge it.
   useEffect(() => {
     const imgs =

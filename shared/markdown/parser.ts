@@ -12,4 +12,9 @@ export function parse(md: string): ParseResult {
   return { html, toc, sidenotes }
 }
 
-export type { ParseResult, TocItem, Sidenote } from './types.js'
+export type {
+  ParseResult,
+  TocItem,
+  Sidenote,
+  BibliographyEntry,
+} from './types.js'

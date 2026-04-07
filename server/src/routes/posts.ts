@@ -77,7 +77,7 @@ app.get('/:slug', (c) => {
 
   const useId = lang === 'id'
   const contentSrc = useId && post.contentId ? post.contentId : post.content
-  const { html, toc, sidenotes } = parse(contentSrc)
+  const { html, toc, sidenotes, bibliography } = parse(contentSrc)
 
   return c.json({
     post: {
@@ -94,6 +94,7 @@ app.get('/:slug', (c) => {
     html,
     toc,
     sidenotes,
+    bibliography,
   })
 })
 
