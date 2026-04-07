@@ -28,7 +28,7 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-// ─── Language rule sets ───────────────────────────────────────────────────────
+// Language rule sets
 
 const JS_KEYWORDS =
   /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|in|of|import|export|default|from|class|extends|super|this|null|undefined|true|false|try|catch|finally|throw|async|await|yield|static|get|set|void)\b/
@@ -165,7 +165,7 @@ rules['shell'] = rules['bash']
 rules['py'] = rules['python']
 rules['rs'] = rules['rust']
 
-// ─── Tokenizer ────────────────────────────────────────────────────────────────
+// Tokenizer
 
 interface Span {
   start: number

@@ -1,4 +1,8 @@
-import type { TocItem, Sidenote } from '../../shared/markdown/types.js'
+import type {
+  TocItem,
+  Sidenote,
+  BibliographyEntry,
+} from '../../shared/markdown/types.js'
 import { logger } from './logger.js'
 import type { Lang } from './i18n.js'
 
@@ -29,6 +33,7 @@ export interface PostDetail {
   html: string
   toc: TocItem[]
   sidenotes: Sidenote[]
+  bibliography: BibliographyEntry[]
 }
 
 async function apiFetch<T>(path: string): Promise<T> {

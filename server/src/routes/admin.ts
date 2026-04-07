@@ -18,7 +18,7 @@ mkdirSync(UPLOADS_DIR, { recursive: true })
 
 const app = new Hono()
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
+// Helper
 
 function slugify(text: string): string {
   return text
@@ -28,7 +28,7 @@ function slugify(text: string): string {
     .replace(/\s+/g, '-')
 }
 
-// ─── Posts ────────────────────────────────────────────────────────────────────
+// Posts
 
 const postSchema = z.object({
   title: z.string().min(1),
@@ -166,7 +166,7 @@ app.delete('/posts/:id', (c) => {
   return c.json({ ok: true })
 })
 
-// ─── Images ───────────────────────────────────────────────────────────────────
+// Images
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
@@ -229,7 +229,7 @@ app.delete('/images/:id', (c) => {
   return c.json({ ok: true })
 })
 
-// ─── Tags ─────────────────────────────────────────────────────────────────────
+// Tags
 
 const tagSchema = z.object({ name: z.string().min(1) })
 
@@ -257,7 +257,7 @@ app.delete('/tags/:id', (c) => {
   return c.json({ ok: true })
 })
 
-// ─── Translate ────────────────────────────────────────────────────────────────
+// Translate
 
 /**
  * Extract fenced code blocks and inline code from markdown text, replacing

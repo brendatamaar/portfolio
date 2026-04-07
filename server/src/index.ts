@@ -11,12 +11,12 @@ import { authMiddleware } from './middleware/auth.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { logger } from './lib/logger.js'
 
-// ─── Bootstrap ────────────────────────────────────────────────────────────────
+// Bootstrap
 
 runMigrations()
 await initJwtSecret()
 
-// ─── App ──────────────────────────────────────────────────────────────────────
+// App
 
 const app = new Hono()
 
@@ -51,7 +51,7 @@ app.route('/api/admin', adminRoutes)
 // Health check
 app.get('/api/health', (c) => c.json({ ok: true }))
 
-// ─── Server ───────────────────────────────────────────────────────────────────
+// Server
 
 const PORT = Number(process.env.PORT ?? 3001)
 

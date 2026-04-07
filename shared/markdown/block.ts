@@ -21,7 +21,7 @@ function stripInlineMarkers(text: string): string {
   return text.replace(/[*_`~\[\]]/g, '')
 }
 
-// ─── List parsing ────────────────────────────────────────────────────────────
+// List parsing
 
 function parseListItems(lines: string[], ordered: boolean): ListItemToken[] {
   const items: ListItemToken[] = []
@@ -61,7 +61,7 @@ function buildListItem(
   }
 }
 
-// ─── Table parsing ───────────────────────────────────────────────────────────
+// Table parsing
 
 function parseTableRow(line: string): string[] {
   return line
@@ -81,7 +81,7 @@ function parseTableAlign(
   })
 }
 
-// ─── Main tokenizer ───────────────────────────────────────────────────────────
+// Main tokenizer
 
 export function tokenizeBlocks(markdown: string): BlockToken[] {
   const lines = markdown.split('\n')
@@ -131,6 +131,28 @@ export function tokenizeBlocks(markdown: string): BlockToken[] {
         i++
       }
       i++ // closing ```
+
+      // Bibliography block — parse [key:type] text entries
+      if (lang === 'bibliography') {
+        const entries: Array<{
+          key: string
+          text: string
+          sourceType: string
+        }> = []
+        for (const line of codeLines) {
+          const m = line.trim().match(/^\[([^\]]+)\]\s+(.+)/)
+          if (m) {
+            const colonIdx = m[1].lastIndexOf(':')
+            const key = colonIdx !== -1 ? m[1].slice(0, colonIdx) : m[1]
+            const sourceType =
+              colonIdx !== -1 ? m[1].slice(colonIdx + 1) : 'other'
+            entries.push({ key, text: m[2], sourceType })
+          }
+        }
+        tokens.push({ type: 'bibliography', entries })
+        continue
+      }
+
       tokens.push({ type: 'code', lang, text: codeLines.join('\n') })
       continue
     }
@@ -223,7 +245,7 @@ export function tokenizeBlocks(markdown: string): BlockToken[] {
     // Definition list: "term\n: definition" pattern
     // Matches a plain line immediately followed by a line starting with ": "
     if (
-      !trimmed.match(/^[#>`*+\-:]/) &&
+      !trimmed.match(/^[#>*+\-:]/) &&
       !trimmed.match(/^\d+\./) &&
       !trimmed.match(/^\[\^/) &&
       !trimmed.match(/^```/) &&
