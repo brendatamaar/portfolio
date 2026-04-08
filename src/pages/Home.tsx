@@ -22,12 +22,15 @@ import {
   COLLECTION_PREVIEW_COUNT,
 } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
+import { useSEO } from '@/src/hooks/useSEO'
 
-// --- Page ---
+// Page
 
 export default function Home() {
   const { lang, t } = useLang()
   const data = lang === 'id' ? RESUME_DATA_ID : RESUME_DATA
+
+  useSEO({ url: '/' })
 
   const [showAllProjects, setShowAllProjects] = useState(false)
   const [blogPosts, setBlogPosts] = useState<PostSummary[]>([])
