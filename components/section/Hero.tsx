@@ -1,4 +1,3 @@
-import { motion } from 'motion/react'
 import { RESUME_DATA } from '@/data/resume-data'
 import { RESUME_DATA_ID } from '@/data/resume-data-id'
 import { useLang } from '@/src/context/LanguageContext'
@@ -8,12 +7,7 @@ export default function Hero() {
   const data = lang === 'id' ? RESUME_DATA_ID : RESUME_DATA
 
   return (
-    <motion.section
-      className="mb-20"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-    >
+    <section className="mb-20">
       {/* name + info card */}
       <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start">
         <h1 className="flex-1 text-4xl leading-[0.92] font-black tracking-tighter text-black uppercase sm:text-5xl lg:text-6xl dark:text-white">
@@ -47,6 +41,6 @@ export default function Hero() {
           {data.summary}
         </p>
       </div>
-    </motion.section>
+    </section>
   )
 }
