@@ -10,4 +10,15 @@ export default defineConfig({
       '@portfolio/shared': path.resolve(__dirname, 'shared'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-motion': ['motion/react'],
+          'vendor-router': ['react-router-dom'],
+        },
+      },
+    },
+  },
 })
