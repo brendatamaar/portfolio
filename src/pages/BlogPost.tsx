@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Share2, Link2, Twitter, Linkedin, Facebook } from 'lucide-react'
 import { api } from '@/src/lib/api'
 import type { PostDetail } from '@/src/lib/api'
 import Header from '@/components/section/Header'
@@ -11,6 +12,103 @@ import { BackToTop } from '@/components/ui/back-to-top'
 import { READING_WPM, HTML_TAG_REGEX } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
 import { useSEO } from '@/src/hooks/useSEO'
+
+function ShareButton({ title }: { title: string }) {
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const url = window.location.href
+  const hasNativeShare = !!navigator.share
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setOpen(false)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const openWindow = (shareUrl: string) => {
+    window.open(shareUrl, '_blank', 'noopener,noreferrer')
+    setOpen(false)
+  }
+
+  const shareNative = async () => {
+    try {
+      await navigator.share({ title, url })
+    } catch {
+      /* cancelled */
+    }
+    setOpen(false)
+  }
+
+  const itemClass =
+    'flex w-full items-center gap-2 px-3 py-2 font-mono text-[10px] font-bold tracking-wide uppercase text-black transition-colors hover:bg-[#FFE600] dark:text-white dark:hover:bg-[#FFE600] dark:hover:text-black'
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+        aria-label="Share post"
+      >
+        <Share2 size={12} />
+        {copied ? 'COPIED!' : 'SHARE'}
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 z-50 mt-2 min-w-[168px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+          <button onClick={copyLink} className={itemClass}>
+            <Link2 size={11} /> COPY LINK
+          </button>
+          <button
+            onClick={() =>
+              openWindow(
+                `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+              )
+            }
+            className={itemClass}
+          >
+            <Twitter size={11} /> TWITTER / X
+          </button>
+          <button
+            onClick={() =>
+              openWindow(
+                `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+              )
+            }
+            className={itemClass}
+          >
+            <Linkedin size={11} /> LINKEDIN
+          </button>
+          <button
+            onClick={() =>
+              openWindow(
+                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+              )
+            }
+            className={itemClass}
+          >
+            <Facebook size={11} /> FACEBOOK
+          </button>
+          {hasNativeShare && (
+            <button onClick={shareNative} className={itemClass}>
+              <Share2 size={11} /> MORE
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 /** Estimate reading time in minutes (200 wpm, minimum 1). */
 function readingTime(html: string) {
@@ -129,6 +227,10 @@ export default function BlogPostPage() {
             <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
               {readingTime(html)} {t('post.minRead')}
             </span>
+            <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
+              ·
+            </span>
+            <ShareButton title={post.title} />
           </div>
         </div>
       </div>
