@@ -7,12 +7,19 @@ import { BlogPostCard } from '@/components/ui/post-card'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { TagButton } from '@/components/ui/tag-button'
 import { useLang } from '@/src/context/LanguageContext'
+import { useSEO } from '@/src/hooks/useSEO'
 
 export default function BlogPage() {
   const { lang, t } = useLang()
   const [posts, setPosts] = useState<PostSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTag, setActiveTag] = useState<string | null>(null)
+
+  useSEO({
+    title: 'Blog',
+    description: 'Writing on software, design, and the web.',
+    url: '/blog',
+  })
 
   useEffect(() => {
     setLoading(true)

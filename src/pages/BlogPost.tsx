@@ -10,6 +10,7 @@ import { ScrollProgress } from '@/components/ui/scroll-progress'
 import { BackToTop } from '@/components/ui/back-to-top'
 import { READING_WPM, HTML_TAG_REGEX } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
+import { useSEO } from '@/src/hooks/useSEO'
 
 /** Estimate reading time in minutes (200 wpm, minimum 1). */
 function readingTime(html: string) {
@@ -35,6 +36,13 @@ export default function BlogPostPage() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [slug, lang])
+
+  useSEO({
+    title: data?.post.title,
+    description: data?.post.description || undefined,
+    url: data ? `/blog/${data.post.slug}` : undefined,
+    type: 'article',
+  })
 
   if (loading) {
     return (
