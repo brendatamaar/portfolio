@@ -2,7 +2,7 @@
 export function SectionLabel({ num, label }: { num: string; label: string }) {
   return (
     <div className="mb-8 flex items-center gap-4 border-b-2 border-black pb-4 dark:border-white">
-      <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
+      <span className="font-mono text-[11px] text-black/60 dark:text-white/60">
         {num}
       </span>
       <h2 className="text-xs font-black tracking-widest text-black uppercase dark:text-white">

@@ -32,11 +32,11 @@ export const ProjectCard = memo(function ProjectCard({
     <div className="group flex h-full flex-col border-2 border-black bg-white p-5 shadow-[4px_4px_0px_#000] transition-all duration-150 hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_#000] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]">
       <div className="mb-5 flex items-center justify-between">
         <span
-          className={`${color} inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-widest text-white uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)]`}
+          className={`${color} inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-widest text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)]`}
         >
           {type}
         </span>
-        <span className="font-mono text-[11px] font-bold text-black/25 dark:text-white/25">
+        <span className="font-mono text-[11px] font-bold text-black/60 dark:text-white/60">
           {num}
         </span>
       </div>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
-const SITE_NAME = 'Brenda Tama'
-const DEFAULT_DESCRIPTION = 'Brendatama - Web Software Developer'
+const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
+const DEFAULT_DESCRIPTION = 'Brendatama Akbar - Web Software Developer'
 const DEFAULT_IMAGE = 'https://www.brendatama.xyz/images/meta_img.webp'
 const SITE_URL = 'https://www.brendatama.xyz'
 const TWITTER_HANDLE = '@berkelomang'
