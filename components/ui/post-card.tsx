@@ -17,7 +17,7 @@ export const BlogPostCard = memo(function BlogPostCard({
       className="group block border-2 border-black bg-white p-5 shadow-[4px_4px_0px_#000] transition-all duration-150 hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_#000] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]"
     >
       <div className="mb-3 flex items-start justify-between gap-4">
-        <span className="font-mono text-[11px] font-bold text-black/40 tabular-nums dark:text-white/40">
+        <span className="font-mono text-[11px] font-bold text-black/60 tabular-nums dark:text-white/60">
           {formatDate(date)}
         </span>
         <ArrowUpRightIcon className="h-4 w-4 shrink-0 text-black transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-white" />
