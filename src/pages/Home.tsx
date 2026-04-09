@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '@/src/lib/api'
 import type { PostSummary, BookItem, AlbumItem } from '@/src/lib/api'
@@ -11,7 +11,9 @@ import { RESUME_DATA_ID } from '@/data/resume-data-id'
 import { BlogPostCard } from '@/components/ui/post-card'
 import { BookCollectionCard } from '@/components/ui/book-collection-card'
 import { AlbumCard } from '@/components/ui/album-card'
-import { Magnetic } from '@/components/ui/magnetic'
+const Magnetic = lazy(() =>
+  import('@/components/ui/magnetic').then((m) => ({ default: m.Magnetic })),
+)
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Reveal } from '@/components/ui/reveal'
 import { SectionLabel } from '@/components/ui/section-label'
@@ -234,18 +236,20 @@ export default function Home() {
                 {t('home.connect')}
               </p>
               <div className="flex flex-wrap gap-3">
-                {data.contact.social.map((link) => (
-                  <Magnetic key={link.name} intensity={0.4} range={80}>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:border-black hover:bg-[#FFE600] dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:border-[#FFE600] dark:hover:bg-[#FFE600] dark:hover:text-black"
-                    >
-                      {link.name} ↗
-                    </a>
-                  </Magnetic>
-                ))}
+                <Suspense fallback={null}>
+                  {data.contact.social.map((link) => (
+                    <Magnetic key={link.name} intensity={0.4} range={80}>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:border-black hover:bg-[#FFE600] dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:border-[#FFE600] dark:hover:bg-[#FFE600] dark:hover:text-black"
+                      >
+                        {link.name} ↗
+                      </a>
+                    </Magnetic>
+                  ))}
+                </Suspense>
               </div>
             </section>
           </Reveal>
