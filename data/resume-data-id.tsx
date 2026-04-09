@@ -92,6 +92,19 @@ export const RESUME_DATA_ID = {
   ],
   projects: [
     {
+      title: 'skenatify',
+      techStack: ['side project'],
+      description:
+        'Aplikasi penemuan musik yang merekomendasikan lagu berdasarkan artis favoritmu menggunakan filter fitur audio Spotify.',
+      logo: '',
+      link: {
+        label: 'skenatify',
+        href: 'https://github.com/brendatamaar/skenatify',
+      },
+      img: '',
+      isFeatured: true,
+    },
+    {
       title: 'jpeg-encoder',
       techStack: ['side project', 'JavaScript', 'Vite'],
       description:

@@ -91,6 +91,19 @@ export const RESUME_DATA = {
   ],
   projects: [
     {
+      title: 'skenatify',
+      techStack: ['side project'],
+      description:
+        'Music discovery app that recommends tracks based on your favorite artists using Spotify audio feature filters.',
+      logo: '',
+      link: {
+        label: 'skenatify',
+        href: 'https://github.com/brendatamaar/skenatify',
+      },
+      img: '',
+      isFeatured: true,
+    },
+    {
       title: 'poker-hand-calculator',
       techStack: ['side project', 'JavaScript', 'Vite'],
       description:
