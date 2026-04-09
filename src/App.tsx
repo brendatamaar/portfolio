@@ -2,9 +2,9 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from 'next-themes'
 import { LanguageProvider } from './context/LanguageContext'
+import Home from './pages/Home'
 
-// Lazy-load pages so each route is a separate chunk
-const Home = lazy(() => import('./pages/Home'))
+// Lazy-load non-landing pages so each route is a separate chunk
 const Blog = lazy(() => import('./pages/Blog'))
 const BlogPost = lazy(() => import('./pages/BlogPost'))
 const Collection = lazy(() => import('./pages/Collection'))
