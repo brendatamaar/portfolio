@@ -1,3 +1,4 @@
+import '@/src/styles/blog.css'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Share2, Link2, Twitter, Linkedin, Facebook } from 'lucide-react'
