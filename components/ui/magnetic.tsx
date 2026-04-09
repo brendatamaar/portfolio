@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   motion,
   useMotionValue,
@@ -33,34 +33,39 @@ export function Magnetic({
   const springX = useSpring(x, springOptions)
   const springY = useSpring(y, springOptions)
 
-  useEffect(() => {
-    const calculateDistance = (e: MouseEvent) => {
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect()
-        const centerX = rect.left + rect.width / 2
-        const centerY = rect.top + rect.height / 2
-        const distanceX = e.clientX - centerX
-        const distanceY = e.clientY - centerY
+  const calculateDistance = useCallback(
+    (e: MouseEvent) => {
+      if (!ref.current) return
+      const rect = ref.current.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+      const distanceX = e.clientX - centerX
+      const distanceY = e.clientY - centerY
+      const absoluteDistance = Math.sqrt(distanceX ** 2 + distanceY ** 2)
 
-        const absoluteDistance = Math.sqrt(distanceX ** 2 + distanceY ** 2)
-
-        if (isHovered && absoluteDistance <= range) {
-          const scale = 1 - absoluteDistance / range
-          x.set(distanceX * intensity * scale)
-          y.set(distanceY * intensity * scale)
-        } else {
-          x.set(0)
-          y.set(0)
-        }
+      if (absoluteDistance <= range) {
+        const scale = 1 - absoluteDistance / range
+        x.set(distanceX * intensity * scale)
+        y.set(distanceY * intensity * scale)
+      } else {
+        x.set(0)
+        y.set(0)
       }
-    }
+    },
+    [intensity, range, x, y],
+  )
+
+  // Only attach mousemove listener when hovered
+  useEffect(() => {
+    if (!isHovered) return
 
     document.addEventListener('mousemove', calculateDistance)
-
     return () => {
       document.removeEventListener('mousemove', calculateDistance)
+      x.set(0)
+      y.set(0)
     }
-  }, [ref, isHovered, intensity, range])
+  }, [isHovered, calculateDistance, x, y])
 
   useEffect(() => {
     if (actionArea === 'parent' && ref.current?.parentElement) {
