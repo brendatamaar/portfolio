@@ -1,34 +1,39 @@
-import { useState, useEffect } from 'react'
-import { api } from '@/src/lib/api'
+import { createFileRoute } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import type { BookItem, AlbumItem } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { SectionLabel } from '@/components/ui/section-label'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Reveal } from '@/components/ui/reveal'
 import { BookShelf } from '@/components/ui/book-shelf'
 import { VinylShelf } from '@/components/ui/vinyl-shelf'
 import { useLang } from '@/src/context/LanguageContext'
 
-export default function Collection() {
+export const Route = createFileRoute('/collection')({
+  loader: async () => {
+    const [books, albums] = await Promise.all([
+      api.getBooks().catch(() => [] as BookItem[]),
+      api.getAlbums().catch(() => [] as AlbumItem[]),
+    ])
+    return { books, albums }
+  },
+  component: CollectionPage,
+})
+
+function CollectionPage() {
+  const { books, albums } = Route.useLoaderData() as {
+    books: BookItem[]
+    albums: AlbumItem[]
+  }
   const { t } = useLang()
 
-  const [books, setBooks] = useState<BookItem[]>([])
-  const [albums, setAlbums] = useState<AlbumItem[]>([])
-  const [loadingBooks, setLoadingBooks] = useState(true)
-  const [loadingAlbums, setLoadingAlbums] = useState(true)
-
+  // Handle hash navigation for anchor links from home page
   useEffect(() => {
-    api
-      .getBooks()
-      .then(setBooks)
-      .catch(console.error)
-      .finally(() => setLoadingBooks(false))
-    api
-      .getAlbums()
-      .then(setAlbums)
-      .catch(console.error)
-      .finally(() => setLoadingAlbums(false))
+    const hash = window.location.hash
+    if (hash) {
+      const el = document.querySelector(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [])
 
   return (
@@ -46,17 +51,10 @@ export default function Collection() {
         </div>
 
         <main className="space-y-20">
-          {/* 01 — Bookshelf */}
           <Reveal>
             <section id="books">
               <SectionLabel num="01" label={t('collection.books')} />
-              {loadingBooks ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {Array.from({ length: 3 }, (_, i) => (
-                    <SkeletonCard key={i} />
-                  ))}
-                </div>
-              ) : books.length > 0 ? (
+              {books.length > 0 ? (
                 <BookShelf books={books} />
               ) : (
                 <p className="py-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
@@ -66,17 +64,10 @@ export default function Collection() {
             </section>
           </Reveal>
 
-          {/* 02 — Record Crate */}
           <Reveal delay={0.05}>
             <section id="albums">
               <SectionLabel num="02" label={t('collection.albums')} />
-              {loadingAlbums ? (
-                <div className="flex flex-col gap-3">
-                  {Array.from({ length: 2 }, (_, i) => (
-                    <SkeletonCard key={i} />
-                  ))}
-                </div>
-              ) : albums.length > 0 ? (
+              {albums.length > 0 ? (
                 <VinylShelf albums={albums} />
               ) : (
                 <p className="py-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">

@@ -1,5 +1,12 @@
-import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react'
-import { Link } from 'react-router-dom'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  lazy,
+  Suspense,
+} from 'react'
 import { api } from '@/src/lib/api'
 import type { PostSummary, BookItem, AlbumItem } from '@/src/lib/api'
 
@@ -19,29 +26,58 @@ import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Reveal } from '@/components/ui/reveal'
 import { SectionLabel } from '@/components/ui/section-label'
 import { ProjectCard } from '@/components/ui/project-card'
-import {
-  PROJECT_PREVIEW_COUNT,
-  BLOG_POSTS_PREVIEW,
-} from '@/src/lib/constants'
+import { PROJECT_PREVIEW_COUNT, BLOG_POSTS_PREVIEW } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
-import { useSEO } from '@/src/hooks/useSEO'
 
-// Page
+const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
 
-export default function Home() {
+export const Route = createFileRoute('/')({
+  loader: async () => {
+    const [posts, book, album] = await Promise.all([
+      api.getPosts('en').then((p) => p.slice(0, BLOG_POSTS_PREVIEW)),
+      api.getFeaturedBook().catch(() => null),
+      api.getFeaturedAlbum().catch(() => null),
+    ])
+    return { posts, book, album }
+  },
+  head: () => ({
+    meta: [
+      { title: SITE_NAME },
+      {
+        name: 'description',
+        content: 'Brendatama Akbar - Web Software Developer',
+      },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:title', content: SITE_NAME },
+      {
+        property: 'og:description',
+        content: 'Brendatama Akbar - Web Software Developer',
+      },
+      { property: 'og:url', content: 'https://www.brendatama.xyz' },
+      { property: 'og:site_name', content: SITE_NAME },
+      { name: 'twitter:title', content: SITE_NAME },
+      {
+        name: 'twitter:description',
+        content: 'Brendatama Akbar - Web Software Developer',
+      },
+    ],
+  }),
+  component: HomePage,
+})
+
+function HomePage() {
+  const {
+    posts: initialPosts,
+    book: featuredBook,
+    album: featuredAlbum,
+  } = Route.useLoaderData()
   const { lang, t } = useLang()
   const data = lang === 'id' ? RESUME_DATA_ID : RESUME_DATA
 
-  useSEO({ url: '/' })
-
   const [showAllProjects, setShowAllProjects] = useState(false)
   const [expandedWork, setExpandedWork] = useState<Record<string, boolean>>({})
-  const [blogPosts, setBlogPosts] = useState<PostSummary[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [featuredBook, setFeaturedBook] = useState<BookItem | null>(null)
-  const [featuredAlbum, setFeaturedAlbum] = useState<AlbumItem | null>(null)
-  const [loadingBooks, setLoadingBooks] = useState(true)
-  const [loadingAlbums, setLoadingAlbums] = useState(true)
+  const [blogPosts, setBlogPosts] = useState<PostSummary[]>(initialPosts)
+  const [isLoading, setIsLoading] = useState(false)
 
   const sideProjects = useMemo(
     () => data.projects.filter((p) => p.techStack[0] !== 'work'),
@@ -68,27 +104,15 @@ export default function Home() {
     : sideProjects.slice(0, PROJECT_PREVIEW_COUNT)
   const remaining = sideProjects.length - PROJECT_PREVIEW_COUNT
 
-  // Fetch only the most recent posts for the Writing preview section.
+  // Re-fetch posts when lang changes client-side
   useEffect(() => {
+    setIsLoading(true)
     api
       .getPosts(lang)
       .then((posts) => setBlogPosts(posts.slice(0, BLOG_POSTS_PREVIEW)))
       .catch((err) => console.error('Error loading blog posts:', err))
       .finally(() => setIsLoading(false))
   }, [lang])
-
-  useEffect(() => {
-    api
-      .getFeaturedBook()
-      .then(setFeaturedBook)
-      .catch(console.error)
-      .finally(() => setLoadingBooks(false))
-    api
-      .getFeaturedAlbum()
-      .then(setFeaturedAlbum)
-      .catch(console.error)
-      .finally(() => setLoadingAlbums(false))
-  }, [])
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
@@ -229,13 +253,12 @@ export default function Home() {
           <Reveal delay={0.05}>
             <section>
               <SectionLabel num="04" label={t('sections.reading')} />
-              {loadingBooks ? (
-                <SkeletonCard />
-              ) : featuredBook ? (
+              {featuredBook ? (
                 <>
-                  <FeaturedCard type="book" item={featuredBook} />
+                  <FeaturedCard type="book" item={featuredBook as BookItem} />
                   <Link
-                    to="/collection#books"
+                    to="/collection"
+                    hash="books"
                     className="mt-6 inline-block border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
                   >
                     {t('collection.seeAll')}
@@ -253,13 +276,15 @@ export default function Home() {
           <Reveal delay={0.05}>
             <section>
               <SectionLabel num="05" label={t('sections.listening')} />
-              {loadingAlbums ? (
-                <SkeletonCard />
-              ) : featuredAlbum ? (
+              {featuredAlbum ? (
                 <>
-                  <FeaturedCard type="album" item={featuredAlbum} />
+                  <FeaturedCard
+                    type="album"
+                    item={featuredAlbum as AlbumItem}
+                  />
                   <Link
-                    to="/collection#albums"
+                    to="/collection"
+                    hash="albums"
                     className="mt-6 inline-block border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
                   >
                     {t('collection.seeAll')}

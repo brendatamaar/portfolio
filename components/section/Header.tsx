@@ -1,6 +1,6 @@
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import { useTheme } from 'next-themes'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 import { useLang } from '@/src/context/LanguageContext'
 import { LanguageSwitcher } from '@/src/components/ui/LanguageSwitcher'
 

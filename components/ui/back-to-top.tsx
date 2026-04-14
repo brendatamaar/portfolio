@@ -6,9 +6,18 @@ import { SCROLL_THRESHOLD } from '@/lib/constants'
 export function BackToTop() {
   const [show, setShow] = useState(false)
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > SCROLL_THRESHOLD)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
+    let rafId: number
+    const onScroll = () => {
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() =>
+        setShow(window.scrollY > SCROLL_THRESHOLD),
+      )
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(rafId)
+    }
   }, [])
   return (
     <AnimatePresence>

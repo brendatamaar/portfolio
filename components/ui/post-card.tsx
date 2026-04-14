@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 import { ArrowUpRightIcon } from 'lucide-react'
 import type { PostSummary } from '@/src/lib/api'
 import { formatDate } from '@/components/util/formatDate'

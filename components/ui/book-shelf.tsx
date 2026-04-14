@@ -1,18 +1,10 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { BookItem } from '@/src/lib/api'
+import { BOOK_STATUS_LABEL, BOOK_STATUS_BADGE } from '@/src/lib/constants'
 
-const STATUS_LABEL: Record<BookItem['status'], string> = {
-  reading: 'reading',
-  finished: 'read',
-  want: 'want',
-}
-
-const STATUS_BADGE: Record<BookItem['status'], string> = {
-  reading: 'bg-blue-500 text-white',
-  finished: 'bg-[#FFE600] text-black',
-  want: 'bg-black/10 text-black dark:bg-white/10 dark:text-white',
-}
+const STATUS_LABEL = BOOK_STATUS_LABEL
+const STATUS_BADGE = BOOK_STATUS_BADGE
 
 const DARK_SPINES = [
   '#1a1a1a',

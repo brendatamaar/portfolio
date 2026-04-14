@@ -1,6 +1,6 @@
 import '@/src/styles/blog.css'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
 import { Share2, Link2, Twitter, Linkedin, Facebook } from 'lucide-react'
 import { api } from '@/src/lib/api'
 import type { PostDetail } from '@/src/lib/api'
@@ -12,14 +12,13 @@ import { ScrollProgress } from '@/components/ui/scroll-progress'
 import { BackToTop } from '@/components/ui/back-to-top'
 import { READING_WPM, HTML_TAG_REGEX } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
-import { useSEO } from '@/src/hooks/useSEO'
 
 function ShareButton({ title }: { title: string }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const url = window.location.href
-  const hasNativeShare = !!navigator.share
+  // Guard for SSR — window not available on server
+  const hasNativeShare = typeof navigator !== 'undefined' && !!navigator.share
 
   useEffect(() => {
     if (!open) return
@@ -31,7 +30,8 @@ function ShareButton({ title }: { title: string }) {
   }, [open])
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(url)
+    // window.location.href moved into handler — safe for SSR
+    await navigator.clipboard.writeText(window.location.href)
     setCopied(true)
     setOpen(false)
     setTimeout(() => setCopied(false), 2000)
@@ -44,7 +44,7 @@ function ShareButton({ title }: { title: string }) {
 
   const shareNative = async () => {
     try {
-      await navigator.share({ title, url })
+      await navigator.share({ title, url: window.location.href })
     } catch {
       /* cancelled */
     }
@@ -71,31 +71,34 @@ function ShareButton({ title }: { title: string }) {
             <Link2 size={11} /> COPY LINK
           </button>
           <button
-            onClick={() =>
+            onClick={() => {
+              const url = window.location.href
               openWindow(
                 `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
               )
-            }
+            }}
             className={itemClass}
           >
             <Twitter size={11} /> TWITTER
           </button>
           <button
-            onClick={() =>
+            onClick={() => {
+              const url = window.location.href
               openWindow(
                 `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
               )
-            }
+            }}
             className={itemClass}
           >
             <Linkedin size={11} /> LINKEDIN
           </button>
           <button
-            onClick={() =>
+            onClick={() => {
+              const url = window.location.href
               openWindow(
                 `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
               )
-            }
+            }}
             className={itemClass}
           >
             <Facebook size={11} /> FACEBOOK
@@ -111,52 +114,47 @@ function ShareButton({ title }: { title: string }) {
   )
 }
 
-/** Estimate reading time in minutes (200 wpm, minimum 1). */
 function readingTime(html: string) {
   const text = html.replace(HTML_TAG_REGEX, '')
   const words = text.trim().split(/\s+/).length
   return Math.max(1, Math.round(words / READING_WPM))
 }
 
-export default function BlogPostPage() {
-  const { slug } = useParams<{ slug: string }>()
+export const Route = createFileRoute('/blog/$slug')({
+  loader: async ({ params }) => {
+    try {
+      return await api.getPost(params.slug, 'en')
+    } catch {
+      return null
+    }
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData) return {}
+    const { post } = loaderData as PostDetail
+    const title = `${post.title} | Brendatama Akbar`
+    const description = post.description ?? 'Read on brendatama.xyz'
+    const url = `https://www.brendatama.xyz/blog/${post.slug}`
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { property: 'og:type', content: 'article' },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:url', content: url },
+        { name: 'twitter:title', content: title },
+        { name: 'twitter:description', content: description },
+      ],
+    }
+  },
+  component: BlogPostPage,
+})
+
+function BlogPostPage() {
+  const initialData = Route.useLoaderData() as PostDetail | null
   const { lang, t } = useLang()
-  const [data, setData] = useState<PostDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
 
-  useEffect(() => {
-    if (!slug) return
-    setLoading(true)
-    setNotFound(false)
-    api
-      .getPost(slug, lang)
-      .then(setData)
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false))
-  }, [slug, lang])
-
-  useSEO({
-    title: data?.post.title,
-    description: data?.post.description || undefined,
-    url: data ? `/blog/${data.post.slug}` : undefined,
-    type: 'article',
-  })
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-black">
-        <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
-          <Header />
-          <p className="font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
-            {t('blog.loading')}
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  if (notFound || !data) {
+  if (!initialData) {
     return (
       <div className="min-h-screen bg-white dark:bg-black">
         <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
@@ -175,15 +173,44 @@ export default function BlogPostPage() {
     )
   }
 
+  const [data, setData] = useState<PostDetail>(initialData)
+  const [loading, setLoading] = useState(false)
+
+  // Re-fetch when lang changes client-side
+  useEffect(() => {
+    if (lang === 'en') {
+      setData(initialData)
+      return
+    }
+    setLoading(true)
+    api
+      .getPost(initialData.post.slug, lang)
+      .then(setData)
+      .catch(() => setData(initialData))
+      .finally(() => setLoading(false))
+  }, [lang, initialData])
+
   const { post, html, toc, sidenotes } = data
   const date = new Date(post.publishedAt ?? post.createdAt)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black">
+        <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
+          <Header />
+          <p className="font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
+            {t('blog.loading')}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       <ScrollProgress className="fixed z-50 border-b-2 border-black bg-[#FFE600] dark:border-white" />
       <BackToTop />
 
-      {/* Narrow header / post meta zone */}
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
         <Header />
 
@@ -236,12 +263,10 @@ export default function BlogPostPage() {
         </div>
       </div>
 
-      {/* 3-column article layout — wider than max-w-3xl to fit sidenotes + TOC */}
       <div className="mx-auto max-w-[72rem] px-6 pb-16">
         <MarkdownRenderer html={html} toc={toc} sidenotes={sidenotes} />
       </div>
 
-      {/* Narrow footer zone */}
       <div className="mx-auto max-w-3xl px-6 pb-16">
         <div className="flex items-center justify-between border-t-2 border-black pt-6 dark:border-white">
           <Link
