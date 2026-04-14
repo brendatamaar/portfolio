@@ -78,7 +78,7 @@ function ShareButton({ title }: { title: string }) {
             }
             className={itemClass}
           >
-            <Twitter size={11} /> TWITTER / X
+            <Twitter size={11} /> TWITTER
           </button>
           <button
             onClick={() =>

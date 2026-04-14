@@ -92,7 +92,7 @@ export const RESUME_DATA = {
   projects: [
     {
       title: 'skenatify',
-      techStack: ['side project'],
+      techStack: ['side project', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Spotify API'],
       description:
         'Music discovery app that recommends tracks based on your favorite artists using Spotify audio feature filters.',
       logo: '',
@@ -124,7 +124,7 @@ export const RESUME_DATA = {
       logo: '',
       link: {
         label: 'jpeg-encoder',
-        href: 'https://jpeg-encoder.vercel.app/',
+        href: 'https://github.com/brendatamaar/jpeg-encoder',
       },
       img: '/images/jpeg-encoder.webp',
       isFeatured: true,
@@ -133,7 +133,7 @@ export const RESUME_DATA = {
       title: 'MD Editor',
       techStack: [
         'side project',
-        'React 19',
+        'React',
         'TypeScript',
         'Vite',
         'Tailwind CSS',
@@ -143,24 +143,33 @@ export const RESUME_DATA = {
       description:
         'Markdown editor with split-view live preview, LaTeX math rendering, and Mermaid diagram support.',
       logo: '',
+      link: {
+        label: 'md-editor',
+        href: 'https://github.com/brendatamaar/md-editor',
+      },
       img: '',
       isFeatured: true,
     },
     {
       title: 'Admin Barcode',
-      techStack: ['side project', 'Laravel 8', 'PostgreSQL', 'Docker'],
+      techStack: ['side project', 'Laravel', 'PostgreSQL', 'Docker'],
       description:
-        'Inventory asset management system for generating and tracking barcodes/QR codes.',
+        'Inventory asset management system for generating and tracking QR codes.',
       logo: '',
+      link: {
+        label: 'admin-barcode',
+        href: 'https://github.com/brendatamaar/admin-barcode',
+      },
       img: '',
       isFeatured: false,
     },
     {
       title: 'AIR Tax',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
-        'Spring Boot 3',
+        'Spring Boot',
         'Kafka',
         'JobRunr',
         'Docker',
