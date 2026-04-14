@@ -4,6 +4,7 @@ import { MAX_TECH_TAGS } from '@/lib/constants'
 
 type Project = {
   readonly title: string
+  readonly company?: string
   readonly techStack: readonly string[]
   readonly description: string
   readonly logo: string

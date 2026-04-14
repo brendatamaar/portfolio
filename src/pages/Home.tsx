@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '@/src/lib/api'
 import type { PostSummary, BookItem, AlbumItem } from '@/src/lib/api'
@@ -9,11 +9,12 @@ import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
 import { RESUME_DATA_ID } from '@/data/resume-data-id'
 import { BlogPostCard } from '@/components/ui/post-card'
-import { BookCollectionCard } from '@/components/ui/book-collection-card'
-import { AlbumCard } from '@/components/ui/album-card'
+import { FeaturedCard } from '@/components/ui/featured-card'
 const Magnetic = lazy(() =>
   import('@/components/ui/magnetic').then((m) => ({ default: m.Magnetic })),
 )
+import { motion, AnimatePresence } from 'motion/react'
+import { ChevronDownIcon } from 'lucide-react'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { Reveal } from '@/components/ui/reveal'
 import { SectionLabel } from '@/components/ui/section-label'
@@ -21,7 +22,6 @@ import { ProjectCard } from '@/components/ui/project-card'
 import {
   PROJECT_PREVIEW_COUNT,
   BLOG_POSTS_PREVIEW,
-  COLLECTION_PREVIEW_COUNT,
 } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
 import { useSEO } from '@/src/hooks/useSEO'
@@ -35,17 +35,38 @@ export default function Home() {
   useSEO({ url: '/' })
 
   const [showAllProjects, setShowAllProjects] = useState(false)
+  const [expandedWork, setExpandedWork] = useState<Record<string, boolean>>({})
   const [blogPosts, setBlogPosts] = useState<PostSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [books, setBooks] = useState<BookItem[]>([])
-  const [albums, setAlbums] = useState<AlbumItem[]>([])
+  const [featuredBook, setFeaturedBook] = useState<BookItem | null>(null)
+  const [featuredAlbum, setFeaturedAlbum] = useState<AlbumItem | null>(null)
   const [loadingBooks, setLoadingBooks] = useState(true)
   const [loadingAlbums, setLoadingAlbums] = useState(true)
 
+  const sideProjects = useMemo(
+    () => data.projects.filter((p) => p.techStack[0] !== 'work'),
+    [data.projects],
+  )
+  const workProjectsByCompany = useMemo(() => {
+    const map: Record<string, (typeof data.projects)[number][]> = {}
+    for (const p of data.projects) {
+      if (p.techStack[0] === 'work' && 'company' in p && p.company) {
+        const key = p.company as string
+        if (!map[key]) map[key] = []
+        map[key].push(p)
+      }
+    }
+    return map
+  }, [data.projects])
+
+  const toggleWork = useCallback((company: string) => {
+    setExpandedWork((prev) => ({ ...prev, [company]: !prev[company] }))
+  }, [])
+
   const visibleProjects = showAllProjects
-    ? data.projects
-    : data.projects.slice(0, PROJECT_PREVIEW_COUNT)
-  const remaining = data.projects.length - PROJECT_PREVIEW_COUNT
+    ? sideProjects
+    : sideProjects.slice(0, PROJECT_PREVIEW_COUNT)
+  const remaining = sideProjects.length - PROJECT_PREVIEW_COUNT
 
   // Fetch only the most recent posts for the Writing preview section.
   useEffect(() => {
@@ -107,33 +128,73 @@ export default function Home() {
             <section>
               <SectionLabel num="02" label={t('sections.work')} />
               <div>
-                {data.work.map((work, i) => (
-                  <div
-                    key={work.company}
-                    className={`flex items-start justify-between gap-6 py-5 ${
-                      i < data.work.length - 1
-                        ? 'border-b-2 border-black dark:border-white'
-                        : ''
-                    }`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-baseline gap-3">
-                        <span className="text-sm font-black tracking-tight text-black uppercase dark:text-white">
-                          {work.company}
-                        </span>
-                        <span className="font-mono text-[10px] font-bold tracking-widest text-black/40 uppercase dark:text-white/40">
-                          {work.title}
+                {data.work.map((work, i) => {
+                  const companyProjects = workProjectsByCompany[work.company]
+                  const isExpanded = expandedWork[work.company]
+
+                  return (
+                    <div
+                      key={work.company}
+                      className={
+                        i < data.work.length - 1
+                          ? 'border-b-2 border-black dark:border-white'
+                          : ''
+                      }
+                    >
+                      <div className="flex items-start justify-between gap-6 py-5">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-baseline gap-3">
+                            <span className="text-sm font-black tracking-tight text-black uppercase dark:text-white">
+                              {work.company}
+                            </span>
+                            <span className="font-mono text-[10px] font-bold tracking-widest text-black/40 uppercase dark:text-white/40">
+                              {work.title}
+                            </span>
+                          </div>
+                          <p className="text-sm text-black/60 dark:text-white/60">
+                            {work.description}
+                          </p>
+                          {companyProjects && (
+                            <button
+                              onClick={() => toggleWork(work.company)}
+                              className="mt-2 inline-flex items-center gap-1 font-mono text-[11px] font-bold tracking-widest text-black/50 uppercase transition-colors hover:text-black dark:text-white/50 dark:hover:text-white"
+                            >
+                              {isExpanded ? 'hide projects' : 'see projects'}
+                              <ChevronDownIcon
+                                className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                              />
+                            </button>
+                          )}
+                        </div>
+                        <span className="shrink-0 font-mono text-[11px] text-black/50 tabular-nums dark:text-white/50">
+                          {work.start}–{work.end}
                         </span>
                       </div>
-                      <p className="text-sm text-black/60 dark:text-white/60">
-                        {work.description}
-                      </p>
+
+                      <AnimatePresence initial={false}>
+                        {companyProjects && isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="grid grid-cols-1 items-stretch gap-4 pb-5 sm:grid-cols-2">
+                              {companyProjects.map((project, j) => (
+                                <ProjectCard
+                                  key={project.title}
+                                  project={project}
+                                  index={j}
+                                />
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <span className="shrink-0 font-mono text-[11px] text-black/50 tabular-nums dark:text-white/50">
-                      {work.start}–{work.end}
-                    </span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </section>
           </Reveal>
