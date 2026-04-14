@@ -43,6 +43,7 @@ export interface BookItem {
   status: 'reading' | 'finished' | 'want'
   year: number | null
   coverUrl: string | null
+  featured: boolean
   createdAt: string
 }
 
@@ -52,6 +53,7 @@ export interface AlbumItem {
   artist: string
   year: number | null
   coverUrl: string | null
+  featured: boolean
   createdAt: string
 }
 
@@ -86,4 +88,8 @@ export const api = {
     ),
   getBooks: () => apiFetch<BookItem[]>('/books'),
   getAlbums: () => apiFetch<AlbumItem[]>('/albums'),
+  getFeaturedBook: () =>
+    apiFetch<BookItem[]>('/books?featured=true').then((a) => a[0] ?? null),
+  getFeaturedAlbum: () =>
+    apiFetch<AlbumItem[]>('/albums?featured=true').then((a) => a[0] ?? null),
 }
