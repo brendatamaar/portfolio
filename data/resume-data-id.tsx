@@ -145,6 +145,7 @@ export const RESUME_DATA_ID = {
     },
     {
       title: 'AIR Tax',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
@@ -165,6 +166,7 @@ export const RESUME_DATA_ID = {
     },
     {
       title: 'AP2T',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
@@ -180,6 +182,7 @@ export const RESUME_DATA_ID = {
     },
     {
       title: 'Dashboard Revenue',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'React 18',
@@ -196,6 +199,7 @@ export const RESUME_DATA_ID = {
     },
     {
       title: 'EMI CRM',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
@@ -212,6 +216,7 @@ export const RESUME_DATA_ID = {
     },
     {
       title: 'cheSKP',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
@@ -233,6 +238,7 @@ export const RESUME_DATA_ID = {
     },
     {
       title: 'ESDS',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',

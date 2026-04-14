@@ -177,6 +177,7 @@ export const RESUME_DATA = {
     },
     {
       title: 'AP2T',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
@@ -192,9 +193,10 @@ export const RESUME_DATA = {
     },
     {
       title: 'Dashboard Revenue',
+      company: 'Icon Plus',
       techStack: [
         'work',
-        'React 18',
+        'React',
         'TypeScript',
         'Go',
         'GraphQL',
@@ -208,12 +210,12 @@ export const RESUME_DATA = {
     },
     {
       title: 'EMI CRM',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
         'TypeScript',
-        'Spring Boot 3',
-        'Java 21',
+        'Spring Boot',
         'PostgreSQL',
       ],
       description:
@@ -224,14 +226,13 @@ export const RESUME_DATA = {
     },
     {
       title: 'cheSKP',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
         'TypeScript',
-        'Spring Boot 3',
-        'Java 21',
+        'Spring Boot',
         'PostgreSQL',
-        'Docker Swarm',
       ],
       description: 'Customer satisfaction survey platform.',
       logo: '',
@@ -244,6 +245,7 @@ export const RESUME_DATA = {
     },
     {
       title: 'ESDS',
+      company: 'Icon Plus',
       techStack: [
         'work',
         'Vue 3',
