@@ -100,4 +100,8 @@ export async function render(url: string, template: string): Promise<string> {
   return template
     .replace('<!--meta-placeholder-->', metaHtml)
     .replace('<!--app-->', appHtml)
+    .replace(
+      '<html lang="en">',
+      '<html lang="en" suppressHydrationWarning="true">',
+    )
 }
