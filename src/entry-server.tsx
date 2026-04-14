@@ -97,6 +97,8 @@ export async function render(url: string, template: string): Promise<string> {
 
   const metaHtml = buildMetaTags(metas.length ? metas : DEFAULT_META_TAGS)
 
+  const dehydratedState = JSON.stringify(router.dehydrate())
+
   return template
     .replace('<!--meta-placeholder-->', metaHtml)
     .replace('<!--app-->', appHtml)
@@ -104,4 +106,5 @@ export async function render(url: string, template: string): Promise<string> {
       '<html lang="en">',
       '<html lang="en" suppressHydrationWarning="true">',
     )
+    .replace('</body>', `<script>window.__TANSTACK_ROUTER_STATE__ = ${dehydratedState}</script></body>`)
 }
