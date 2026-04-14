@@ -6,8 +6,12 @@ import type {
 import { logger } from './logger.js'
 import type { Lang } from './i18n.js'
 
-// Falls back to localhost in development; set VITE_API_URL in production.
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
+// Server-side SSR uses VITE_API_INTERNAL_URL (e.g. http://localhost:3001) to avoid
+// going through the public domain. Client-side uses VITE_API_URL (public URL).
+const BASE =
+  typeof window === 'undefined'
+    ? (import.meta.env.VITE_API_INTERNAL_URL ?? 'http://localhost:3001')
+    : (import.meta.env.VITE_API_URL ?? 'http://localhost:3001')
 
 export interface PostTag {
   name: string

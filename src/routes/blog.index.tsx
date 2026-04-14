@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { useState, useMemo, useEffect } from 'react'
 import { api } from '@/src/lib/api'
 import type { PostSummary } from '@/src/lib/api'
 import Header from '@/components/section/Header'
@@ -7,20 +8,41 @@ import { BlogPostCard } from '@/components/ui/post-card'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { TagButton } from '@/components/ui/tag-button'
 import { useLang } from '@/src/context/LanguageContext'
-import { useSEO } from '@/src/hooks/useSEO'
 
-export default function BlogPage() {
+export const Route = createFileRoute('/blog/')({
+  loader: () => api.getPosts('en'),
+  head: () => ({
+    meta: [
+      { title: 'Writing | Brendatama Akbar' },
+      {
+        name: 'description',
+        content: 'Writing on software, design, and the web.',
+      },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:title', content: 'Writing | Brendatama Akbar' },
+      {
+        property: 'og:description',
+        content: 'Writing on software, design, and the web.',
+      },
+      { property: 'og:url', content: 'https://www.brendatama.xyz/blog' },
+      { name: 'twitter:title', content: 'Writing | Brendatama Akbar' },
+      {
+        name: 'twitter:description',
+        content: 'Writing on software, design, and the web.',
+      },
+    ],
+  }),
+  component: BlogPage,
+})
+
+function BlogPage() {
+  const initialPosts = Route.useLoaderData()
   const { lang, t } = useLang()
-  const [posts, setPosts] = useState<PostSummary[]>([])
-  const [loading, setLoading] = useState(true)
+  const [posts, setPosts] = useState<PostSummary[]>(initialPosts)
+  const [loading, setLoading] = useState(false)
   const [activeTag, setActiveTag] = useState<string | null>(null)
 
-  useSEO({
-    title: 'Blog',
-    description: 'Writing on software, design, and the web.',
-    url: '/blog',
-  })
-
+  // Re-fetch when lang changes client-side
   useEffect(() => {
     setLoading(true)
     api
@@ -30,8 +52,6 @@ export default function BlogPage() {
       .finally(() => setLoading(false))
   }, [lang])
 
-  // Build a deduplicated tag list and a slug→name lookup in one pass.
-  // Both are stable as long as `posts` doesn't change.
   const { allTagSlugs, tagNames } = useMemo(() => {
     const names: Record<string, string> = {}
     const seen = new Set<string>()

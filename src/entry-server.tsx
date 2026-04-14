@@ -1,0 +1,103 @@
+import { StrictMode } from 'react'
+import { renderToString } from 'react-dom/server'
+import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
+import { createRouter } from './router'
+
+const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
+const SITE_URL = 'https://www.brendatama.xyz'
+const DEFAULT_IMAGE = `${SITE_URL}/images/meta_img.webp`
+const TWITTER_HANDLE = '@berkelomang'
+
+const DEFAULT_META_TAGS: Array<Record<string, string>> = [
+  { title: SITE_NAME },
+  { name: 'description', content: 'Brendatama Akbar - Web Software Developer' },
+  { property: 'og:type', content: 'website' },
+  { property: 'og:title', content: SITE_NAME },
+  {
+    property: 'og:description',
+    content: 'Brendatama Akbar - Web Software Developer',
+  },
+  { property: 'og:image', content: DEFAULT_IMAGE },
+  { property: 'og:url', content: SITE_URL },
+  { property: 'og:site_name', content: SITE_NAME },
+  { name: 'twitter:card', content: 'summary_large_image' },
+  { name: 'twitter:title', content: SITE_NAME },
+  {
+    name: 'twitter:description',
+    content: 'Brendatama Akbar - Web Software Developer',
+  },
+  { name: 'twitter:image', content: DEFAULT_IMAGE },
+  { name: 'twitter:creator', content: TWITTER_HANDLE },
+  { name: 'twitter:site', content: TWITTER_HANDLE },
+]
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+interface RouteWithHead {
+  options?: {
+    head?: (ctx: {
+      loaderData: unknown
+      params: Record<string, string>
+      context: unknown
+    }) => { meta?: Array<Record<string, string>> } | void
+  }
+}
+
+function buildMetaTags(metas: Array<Record<string, string>>): string {
+  const tags = metas.map((tag) => {
+    if ('title' in tag) return `<title>${escapeHtml(tag.title)}</title>`
+    const attrs = Object.entries(tag)
+      .map(([k, v]) => `${escapeHtml(k)}="${escapeHtml(v)}"`)
+      .join(' ')
+    return `<meta ${attrs} />`
+  })
+
+  // Ensure og:image and twitter:card always present as fallback
+  const hasOgImage = metas.some((m) => m.property === 'og:image')
+  const hasTwitterCard = metas.some((m) => m.name === 'twitter:card')
+  if (!hasOgImage)
+    tags.push(`<meta property="og:image" content="${DEFAULT_IMAGE}" />`)
+  if (!hasTwitterCard)
+    tags.push(`<meta name="twitter:card" content="summary_large_image" />`)
+
+  return tags.join('\n    ')
+}
+
+export async function render(url: string, template: string): Promise<string> {
+  const router = createRouter()
+  const memoryHistory = createMemoryHistory({ initialEntries: [url] })
+  router.update({ history: memoryHistory })
+
+  await router.load()
+
+  const appHtml = renderToString(
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>,
+  )
+
+  // Extract head data from matched routes by calling each route's head() function
+  const routesById = router.routesById as Record<string, RouteWithHead>
+  const metas = router.state.matches.flatMap((match) => {
+    const route = routesById[match.routeId]
+    if (!route?.options?.head) return []
+    const result = route.options.head({
+      loaderData: match.loaderData,
+      params: match.params as Record<string, string>,
+      context: match.context ?? {},
+    })
+    return result?.meta ?? []
+  })
+
+  const metaHtml = buildMetaTags(metas.length ? metas : DEFAULT_META_TAGS)
+
+  return template
+    .replace('<!--meta-placeholder-->', metaHtml)
+    .replace('<!--app-->', appHtml)
+}

@@ -17,6 +17,7 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null)
 
 function detectLang(): Lang {
+  if (typeof window === 'undefined') return 'en'
   const stored = localStorage.getItem('lang')
   if (stored === 'en' || stored === 'id') return stored
   const browser = navigator.language.toLowerCase()
@@ -24,7 +25,9 @@ function detectLang(): Lang {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(detectLang)
+  const [lang, setLangState] = useState<Lang>(
+    typeof window === 'undefined' ? 'en' : detectLang,
+  )
 
   const setLang = useCallback((next: Lang) => {
     localStorage.setItem('lang', next)
