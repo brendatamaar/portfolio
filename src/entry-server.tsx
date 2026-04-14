@@ -1,7 +1,7 @@
-import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
-import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
+import { RouterServer } from '@tanstack/react-router/ssr/server'
 import { createRouter } from './router'
+import { createMemoryHistory } from '@tanstack/react-router'
 
 const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
 const SITE_URL = 'https://www.brendatama.xyz'
@@ -76,11 +76,7 @@ export async function render(url: string, template: string): Promise<string> {
 
   await router.load()
 
-  const appHtml = renderToString(
-    <StrictMode>
-      <RouterProvider router={router} />
-    </StrictMode>,
-  )
+  const appHtml = renderToString(<RouterServer router={router} />)
 
   // Extract head data from matched routes by calling each route's head() function
   const routesById = router.routesById as Record<string, RouteWithHead>
