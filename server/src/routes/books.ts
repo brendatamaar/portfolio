@@ -76,6 +76,7 @@ function toResponse(row: typeof books.$inferSelect) {
     status: row.status,
     year: row.year,
     coverUrl: row.coverUrl,
+    featured: row.featured === 1,
     createdAt: row.createdAt,
   }
 }
@@ -85,7 +86,12 @@ function toResponse(row: typeof books.$inferSelect) {
 export const booksPublic = new Hono()
 
 booksPublic.get('/', (c) => {
-  const rows = db.select().from(books).orderBy(desc(books.createdAt)).all()
+  const featured = c.req.query('featured')
+  let query = db.select().from(books)
+  if (featured === 'true') {
+    query = query.where(eq(books.featured, 1)) as typeof query
+  }
+  const rows = query.orderBy(desc(books.createdAt)).all()
   return c.json(rows.map(toResponse))
 })
 
@@ -149,6 +155,19 @@ booksAdmin.post('/', async (c) => {
     .returning()
     .get()
   return c.json(toResponse(result), 201)
+})
+
+booksAdmin.patch('/:id/feature', (c) => {
+  const id = Number(c.req.param('id'))
+  db.update(books).set({ featured: 0 }).run()
+  const result = db
+    .update(books)
+    .set({ featured: 1 })
+    .where(eq(books.id, id))
+    .returning()
+    .get()
+  if (!result) return c.json({ error: 'Not found' }, 404)
+  return c.json(toResponse(result))
 })
 
 booksAdmin.delete('/:id', (c) => {

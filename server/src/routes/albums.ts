@@ -49,6 +49,7 @@ function toResponse(row: typeof albums.$inferSelect) {
     artist: row.artist,
     year: row.year,
     coverUrl: row.coverUrl,
+    featured: row.featured === 1,
     createdAt: row.createdAt,
   }
 }
@@ -58,7 +59,12 @@ function toResponse(row: typeof albums.$inferSelect) {
 export const albumsPublic = new Hono()
 
 albumsPublic.get('/', (c) => {
-  const rows = db.select().from(albums).orderBy(desc(albums.createdAt)).all()
+  const featured = c.req.query('featured')
+  let query = db.select().from(albums)
+  if (featured === 'true') {
+    query = query.where(eq(albums.featured, 1)) as typeof query
+  }
+  const rows = query.orderBy(desc(albums.createdAt)).all()
   return c.json(rows.map(toResponse))
 })
 
@@ -122,6 +128,19 @@ albumsAdmin.post('/', async (c) => {
     .returning()
     .get()
   return c.json(toResponse(result), 201)
+})
+
+albumsAdmin.patch('/:id/feature', (c) => {
+  const id = Number(c.req.param('id'))
+  db.update(albums).set({ featured: 0 }).run()
+  const result = db
+    .update(albums)
+    .set({ featured: 1 })
+    .where(eq(albums.id, id))
+    .returning()
+    .get()
+  if (!result) return c.json({ error: 'Not found' }, 404)
+  return c.json(toResponse(result))
 })
 
 albumsAdmin.delete('/:id', (c) => {
