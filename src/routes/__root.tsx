@@ -14,6 +14,7 @@ function RootLayout() {
       attribute="class"
       storageKey="theme"
       defaultTheme="system"
+      disableTransitionOnChange
     >
       <LanguageProvider>
         <Outlet />
