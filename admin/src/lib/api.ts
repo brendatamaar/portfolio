@@ -69,6 +69,7 @@ export interface BookItem {
   status: 'reading' | 'finished' | 'want'
   year: number | null
   coverUrl: string | null
+  featured: boolean
   createdAt: string
 }
 
@@ -78,6 +79,7 @@ export interface AlbumItem {
   artist: string
   year: number | null
   coverUrl: string | null
+  featured: boolean
   createdAt: string
 }
 
@@ -130,6 +132,8 @@ export const api = {
     }) => req<BookItem>('POST', '/admin/books', d),
     delete: (id: number) =>
       req<{ ok: boolean }>('DELETE', `/admin/books/${id}`),
+    feature: (id: number) =>
+      req<BookItem>('PATCH', `/admin/books/${id}/feature`),
   },
 
   albums: {
@@ -147,6 +151,8 @@ export const api = {
     }) => req<AlbumItem>('POST', '/admin/albums', d),
     delete: (id: number) =>
       req<{ ok: boolean }>('DELETE', `/admin/albums/${id}`),
+    feature: (id: number) =>
+      req<AlbumItem>('PATCH', `/admin/albums/${id}/feature`),
   },
 
   translate: (texts: string[], source: 'en' | 'id', target: 'en' | 'id') =>
