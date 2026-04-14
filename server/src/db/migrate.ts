@@ -84,11 +84,13 @@ export function runMigrations(): void {
     }
   }
 
-  // Add status + year to books, year to albums
+  // Add status + year to books, year to albums, featured to both
   for (const stmt of [
     `ALTER TABLE books ADD COLUMN status TEXT NOT NULL DEFAULT 'finished'`,
     `ALTER TABLE books ADD COLUMN year INTEGER`,
     `ALTER TABLE albums ADD COLUMN year INTEGER`,
+    `ALTER TABLE books ADD COLUMN featured INTEGER NOT NULL DEFAULT 0`,
+    `ALTER TABLE albums ADD COLUMN featured INTEGER NOT NULL DEFAULT 0`,
   ]) {
     try {
       sqlite.exec(stmt)

@@ -73,6 +73,7 @@ export const books = sqliteTable('books', {
     .default('finished'),
   year: integer('year'),
   coverUrl: text('cover_url'),
+  featured: integer('featured').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -84,6 +85,7 @@ export const albums = sqliteTable('albums', {
   artist: text('artist').notNull(),
   year: integer('year'),
   coverUrl: text('cover_url'),
+  featured: integer('featured').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
