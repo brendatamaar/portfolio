@@ -318,18 +318,18 @@ This is a note.
 
 **Available types:**
 
-| Type            | Icon | Label      |
-| --------------- | ---- | ---------- |
-| `:::note`       | ℹ   | Note       |
-| `:::warning`    | ⚠   | Warning    |
-| `:::danger`     | 🔴   | Danger     |
-| `:::tip`        | 💡   | Tip        |
-| `:::info`       | 📘   | Info       |
-| `:::tldr`       | ⚡   | TL;DR      |
-| `:::update`     | 📅   | Update     |
-| `:::definition` | 📖   | Definition |
-| `:::ai`         | 🤖   | Ask AI     |
-| `:::see-also`   | →    | See Also   |
+| Type            | Icon | Label      | Purpose                                                                 |
+| --------------- | ---- | ---------- | ----------------------------------------------------------------------- |
+| `:::note`       | ℹ   | Note       | General supplementary information the reader should be aware of         |
+| `:::warning`    | ⚠   | Warning    | Potential pitfalls, common mistakes, or things that could go wrong      |
+| `:::danger`     | 🔴   | Danger     | Critical risks or important things to avoid                            |
+| `:::tip`        | 💡   | Tip        | Helpful advice, best practices, or useful shortcuts                     |
+| `:::info`       | 📘   | Info       | Background context or explanatory detail that supports the main content |
+| `:::tldr`       | ⚡   | TL;DR      | Brief summary of a longer section for readers who want the quick take   |
+| `:::update`     | 📅   | Update     | Post-publication corrections, additions, or status changes              |
+| `:::definition` | 📖   | Definition | Defines a specific term or concept not covered in its own section        |
+| `:::ai`         | 🤖   | Ask AI     | AI prompts the reader can copy and use in their preferred AI tool       |
+| `:::see-also`   | →    | See Also   | Links to related posts, resources, or further reading                   |
 
 Admonitions can contain any block-level markdown (paragraphs, lists, code blocks, etc.).
 
