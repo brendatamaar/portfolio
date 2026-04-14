@@ -1,6 +1,7 @@
 import { StrictMode, Component, type ReactNode } from 'react'
 import { hydrateRoot } from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'
+import { hydrate } from '@tanstack/react-router/ssr/client'
 import { createRouter } from './router'
 import '@fontsource-variable/inter/wght.css'
 import '@fontsource-variable/jetbrains-mono/wght.css'
@@ -32,26 +33,28 @@ class ErrorBoundary extends Component<
   }
 }
 
-const router = createRouter()
+;(async () => {
+  const router = createRouter()
+  await hydrate(router)
 
-hydrateRoot(
-  document.getElementById('root')!,
-  <StrictMode>
-    <ErrorBoundary>
-      <RouterProvider router={router} />
-    </ErrorBoundary>
-  </StrictMode>,
-  {
-    onRecoverableError(error) {
-      // Suppress TanStack Router Suspense boundary hydration mismatch
-      if (
-        error instanceof Error &&
-        (error.message.includes('Hydration failed') ||
-          error.message.includes('Invariant failed'))
-      ) {
-        return
-      }
-      console.error(error)
+  hydrateRoot(
+    document.getElementById('root')!,
+    <StrictMode>
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
+    </StrictMode>,
+    {
+      onRecoverableError(error) {
+        if (
+          error instanceof Error &&
+          (error.message.includes('Hydration failed') ||
+            error.message.includes('Invariant failed'))
+        ) {
+          return
+        }
+        console.error(error)
+      },
     },
-  },
-)
+  )
+})()

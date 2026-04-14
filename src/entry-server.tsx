@@ -82,6 +82,23 @@ export async function render(url: string, template: string): Promise<string> {
     </StrictMode>,
   )
 
+  // Dehydrate router state so the client can restore loader data without
+  // re-fetching. Without this the client starts with an empty router and
+  // renders a loading/empty tree that mismatches the SSR HTML → error #418.
+  // hydrate() on the client reads window.$_TSR.router to rehydrate matches.
+  const dehydratedMatches = router.state.matches.map((match) => ({
+    i: match.id,
+    s: match.status,
+    l: match.loaderData ?? {},
+  }))
+  const tsrState = JSON.stringify({
+    router: {
+      matches: dehydratedMatches,
+      lastMatchId: router.state.matches.at(-1)?.id ?? '',
+    },
+  })
+  const ssrScript = `<script>window.$_TSR=${tsrState}</script>`
+
   // Extract head data from matched routes by calling each route's head() function
   const routesById = router.routesById as Record<string, RouteWithHead>
   const metas = router.state.matches.flatMap((match) => {
@@ -100,6 +117,7 @@ export async function render(url: string, template: string): Promise<string> {
   return template
     .replace('<!--meta-placeholder-->', metaHtml)
     .replace('<!--app-->', appHtml)
+    .replace('</body>', `${ssrScript}</body>`)
     .replace(
       '<html lang="en">',
       '<html lang="en" suppressHydrationWarning="true">',
