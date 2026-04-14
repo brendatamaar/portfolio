@@ -6,12 +6,6 @@ import '@fontsource-variable/inter/wght.css'
 import '@fontsource-variable/jetbrains-mono/wght.css'
 import './globals.css'
 
-declare global {
-  interface Window {
-    __TANSTACK_ROUTER_STATE__: any
-  }
-}
-
 class ErrorBoundary extends Component<
   { children: ReactNode },
   { error: Error | null }
@@ -39,10 +33,6 @@ class ErrorBoundary extends Component<
 }
 
 const router = createRouter()
-
-if (window.__TANSTACK_ROUTER_STATE__) {
-  router.hydrate(window.__TANSTACK_ROUTER_STATE__)
-}
 
 hydrateRoot(
   document.getElementById('root')!,
