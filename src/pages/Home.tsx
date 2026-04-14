@@ -79,13 +79,13 @@ export default function Home() {
 
   useEffect(() => {
     api
-      .getBooks()
-      .then((b) => setBooks(b.slice(0, COLLECTION_PREVIEW_COUNT)))
+      .getFeaturedBook()
+      .then(setFeaturedBook)
       .catch(console.error)
       .finally(() => setLoadingBooks(false))
     api
-      .getAlbums()
-      .then((a) => setAlbums(a.slice(0, COLLECTION_PREVIEW_COUNT)))
+      .getFeaturedAlbum()
+      .then(setFeaturedAlbum)
       .catch(console.error)
       .finally(() => setLoadingAlbums(false))
   }, [])
@@ -230,18 +230,10 @@ export default function Home() {
             <section>
               <SectionLabel num="04" label={t('sections.reading')} />
               {loadingBooks ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {Array.from({ length: COLLECTION_PREVIEW_COUNT }, (_, i) => (
-                    <SkeletonCard key={i} />
-                  ))}
-                </div>
-              ) : books.length > 0 ? (
+                <SkeletonCard />
+              ) : featuredBook ? (
                 <>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {books.map((b) => (
-                      <BookCollectionCard key={b.id} book={b} />
-                    ))}
-                  </div>
+                  <FeaturedCard type="book" item={featuredBook} />
                   <Link
                     to="/collection#books"
                     className="mt-6 inline-block border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
@@ -262,18 +254,10 @@ export default function Home() {
             <section>
               <SectionLabel num="05" label={t('sections.listening')} />
               {loadingAlbums ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {Array.from({ length: COLLECTION_PREVIEW_COUNT }, (_, i) => (
-                    <SkeletonCard key={i} />
-                  ))}
-                </div>
-              ) : albums.length > 0 ? (
+                <SkeletonCard />
+              ) : featuredAlbum ? (
                 <>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {albums.map((a) => (
-                      <AlbumCard key={a.id} album={a} />
-                    ))}
-                  </div>
+                  <FeaturedCard type="album" item={featuredAlbum} />
                   <Link
                     to="/collection#albums"
                     className="mt-6 inline-block border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
