@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Trash2Icon, PlusIcon, LoaderIcon, SearchIcon } from 'lucide-react'
+import { Trash2Icon, PlusIcon, LoaderIcon, SearchIcon, StarIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type {
   BookItem,
@@ -133,6 +133,17 @@ function BooksTab() {
       console.error(err)
     } finally {
       setAdding(false)
+    }
+  }
+
+  async function handleFeature(id: number) {
+    try {
+      await api.books.feature(id)
+      setItems((p) =>
+        p.map((x) => ({ ...x, featured: x.id === id })),
+      )
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -330,6 +341,17 @@ function BooksTab() {
                 {item.status === 'finished' ? 'read' : item.status}
               </span>
               <button
+                onClick={() => handleFeature(item.id)}
+                className={`p-1.5 transition-all ${
+                  item.featured
+                    ? 'text-[#FFE600]'
+                    : 'text-black/20 hover:text-[#FFE600] dark:text-white/20'
+                }`}
+                title={item.featured ? 'Featured' : 'Set as featured'}
+              >
+                <StarIcon size={14} fill={item.featured ? 'currentColor' : 'none'} />
+              </button>
+              <button
                 onClick={() => handleDelete(item.id, item.title)}
                 className="p-1.5 text-black/30 transition-all hover:bg-red-500 hover:text-white dark:text-white/30"
                 title="Delete"
@@ -412,6 +434,17 @@ function AlbumsTab() {
       console.error(err)
     } finally {
       setAdding(false)
+    }
+  }
+
+  async function handleFeature(id: number) {
+    try {
+      await api.albums.feature(id)
+      setItems((p) =>
+        p.map((x) => ({ ...x, featured: x.id === id })),
+      )
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -578,6 +611,17 @@ function AlbumsTab() {
                   {item.year && <span className="ml-1.5">{item.year}</span>}
                 </p>
               </div>
+              <button
+                onClick={() => handleFeature(item.id)}
+                className={`p-1.5 transition-all ${
+                  item.featured
+                    ? 'text-[#FFE600]'
+                    : 'text-black/20 hover:text-[#FFE600] dark:text-white/20'
+                }`}
+                title={item.featured ? 'Featured' : 'Set as featured'}
+              >
+                <StarIcon size={14} fill={item.featured ? 'currentColor' : 'none'} />
+              </button>
               <button
                 onClick={() => handleDelete(item.id, item.title)}
                 className="p-1.5 text-black/30 transition-all hover:bg-red-500 hover:text-white dark:text-white/30"
