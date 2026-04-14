@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   type ReactNode,
 } from 'react'
 import { translations, resolveKey, type Lang } from '../lib/i18n'
@@ -25,9 +26,12 @@ function detectLang(): Lang {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(
-    typeof window === 'undefined' ? 'en' : detectLang,
-  )
+  const [lang, setLangState] = useState<Lang>('en')
+
+  useEffect(() => {
+    const detected = detectLang()
+    if (detected !== 'en') setLangState(detected)
+  }, [])
 
   const setLang = useCallback((next: Lang) => {
     localStorage.setItem('lang', next)
