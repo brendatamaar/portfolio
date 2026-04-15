@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { api } from '@/src/lib/api'
 import type { BookItem, AlbumItem } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
