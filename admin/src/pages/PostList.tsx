@@ -60,6 +60,7 @@ export default function PostList() {
       )
     } catch (err) {
       console.error(err)
+      throw err
     } finally {
       setTogglingId(null)
     }

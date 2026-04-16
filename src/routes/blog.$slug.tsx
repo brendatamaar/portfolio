@@ -8,8 +8,8 @@ import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import MarkdownRenderer from '@/src/components/blog/MarkdownRenderer'
 import { formatDate } from '@/components/util/formatDate'
-import { ScrollProgress } from '@/components/ui/scroll-progress'
-import { BackToTop } from '@/components/ui/back-to-top'
+import { ScrollProgress } from '@/components/ui/layout/scroll-progress'
+import { BackToTop } from '@/components/ui/layout/back-to-top'
 import { READING_WPM, HTML_TAG_REGEX } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
 
@@ -45,8 +45,11 @@ function ShareButton({ title }: { title: string }) {
   const shareNative = async () => {
     try {
       await navigator.share({ title, url: window.location.href })
-    } catch {
-      /* cancelled */
+    } catch (err) {
+      // User cancelled or share failed — safe to ignore
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.warn('Share failed:', err)
+      }
     }
     setOpen(false)
   }
@@ -122,11 +125,7 @@ function readingTime(html: string) {
 
 export const Route = createFileRoute('/blog/$slug')({
   loader: async ({ params }) => {
-    try {
-      return await api.getPost(params.slug, 'en')
-    } catch {
-      return null
-    }
+    return await api.getPost(params.slug, 'en')
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {}
@@ -183,11 +182,18 @@ function BlogPostPage() {
       return
     }
     setLoading(true)
-    api
-      .getPost(initialData.post.slug, lang)
-      .then(setData)
-      .catch(() => setData(initialData))
-      .finally(() => setLoading(false))
+    const fetchTranslated = async () => {
+      try {
+        const result = await api.getPost(initialData.post.slug, lang)
+        setData(result)
+      } catch (err) {
+        console.error('Failed to load translated post:', err)
+        setData(initialData)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTranslated()
   }, [lang, initialData])
 
   const { post, html, toc, sidenotes } = data

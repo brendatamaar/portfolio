@@ -4,9 +4,9 @@ import { api } from '@/src/lib/api'
 import type { PostSummary } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
-import { BlogPostCard } from '@/components/ui/post-card'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
-import { TagButton } from '@/components/ui/tag-button'
+import { BlogPostCard } from '@/components/ui/cards/post-card'
+import { SkeletonCard } from '@/components/ui/cards/skeleton-card'
+import { TagButton } from '@/components/ui/interactive/tag-button'
 import { useLang } from '@/src/context/LanguageContext'
 
 export const Route = createFileRoute('/blog/')({

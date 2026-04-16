@@ -15,17 +15,19 @@ import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import { RESUME_DATA } from '@/data/resume-data'
 import { RESUME_DATA_ID } from '@/data/resume-data-id'
-import { BlogPostCard } from '@/components/ui/post-card'
-import { FeaturedCard } from '@/components/ui/featured-card'
+import { BlogPostCard } from '@/components/ui/cards/post-card'
+import { FeaturedCard } from '@/components/ui/cards/featured-card'
 const Magnetic = lazy(() =>
-  import('@/components/ui/magnetic').then((m) => ({ default: m.Magnetic })),
+  import('@/components/ui/interactive/magnetic').then((m) => ({
+    default: m.Magnetic,
+  })),
 )
 import { motion, AnimatePresence } from 'motion/react'
 import { ChevronDownIcon } from 'lucide-react'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
-import { Reveal } from '@/components/ui/reveal'
-import { SectionLabel } from '@/components/ui/section-label'
-import { ProjectCard } from '@/components/ui/project-card'
+import { SkeletonCard } from '@/components/ui/cards/skeleton-card'
+import { Reveal } from '@/components/ui/text/reveal'
+import { SectionLabel } from '@/components/ui/layout/section-label'
+import { ProjectCard } from '@/components/ui/cards/project-card'
 import { PROJECT_PREVIEW_COUNT, BLOG_POSTS_PREVIEW } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
 

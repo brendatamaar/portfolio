@@ -37,6 +37,7 @@ export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
       }
     } catch (err) {
       console.error('Upload failed:', err)
+      throw err
     } finally {
       setUploading(false)
     }

@@ -6,10 +6,6 @@ const RED = '\x1b[31m'
 const CYAN = '\x1b[36m'
 const MAGENTA = '\x1b[35m'
 
-function ts() {
-  return new Date().toISOString()
-}
-
 function statusColor(status: number) {
   if (status < 300) return GREEN
   if (status < 400) return CYAN
@@ -19,18 +15,27 @@ function statusColor(status: number) {
 
 export const logger = {
   info: (msg: string, ...args: unknown[]) =>
-    console.log(`${DIM}${ts()}${RESET} ${CYAN}INFO${RESET}  ${msg}`, ...args),
+    console.log(
+      `${DIM}${new Date().toISOString()}${RESET} ${CYAN}INFO${RESET}  ${msg}`,
+      ...args,
+    ),
 
   warn: (msg: string, ...args: unknown[]) =>
-    console.log(`${DIM}${ts()}${RESET} ${YELLOW}WARN${RESET}  ${msg}`, ...args),
+    console.log(
+      `${DIM}${new Date().toISOString()}${RESET} ${YELLOW}WARN${RESET}  ${msg}`,
+      ...args,
+    ),
 
   error: (msg: string, ...args: unknown[]) =>
-    console.log(`${DIM}${ts()}${RESET} ${RED}ERROR${RESET} ${msg}`, ...args),
+    console.log(
+      `${DIM}${new Date().toISOString()}${RESET} ${RED}ERROR${RESET} ${msg}`,
+      ...args,
+    ),
 
   request: (method: string, path: string, status: number, ms: number) => {
     const sc = statusColor(status)
     console.log(
-      `${DIM}${ts()}${RESET} ${sc}${status}${RESET} ${MAGENTA}${method.padEnd(6)}${RESET} ${path} ${DIM}${ms}ms${RESET}`,
+      `${DIM}${new Date().toISOString()}${RESET} ${sc}${status}${RESET} ${MAGENTA}${method.padEnd(6)}${RESET} ${path} ${DIM}${ms}ms${RESET}`,
     )
   },
 }
