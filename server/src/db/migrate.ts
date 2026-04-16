@@ -79,8 +79,11 @@ export function runMigrations(): void {
   ]) {
     try {
       sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
-    } catch {
-      // Column already exists — safe to ignore
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (!message.includes('duplicate column')) {
+        console.error('Failed to add column:', col, err)
+      }
     }
   }
 
@@ -94,8 +97,11 @@ export function runMigrations(): void {
   ]) {
     try {
       sqlite.exec(stmt)
-    } catch {
-      // Column already exists — safe to ignore
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (!message.includes('duplicate column')) {
+        console.error('Failed to execute migration:', stmt, err)
+      }
     }
   }
 }
