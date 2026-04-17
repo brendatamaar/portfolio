@@ -253,6 +253,7 @@ function WorkTab() {
   const [editingId, setEditingId] = useState<number | 'new' | null>(null)
   const [draft, setDraft] = useState<WorkDraft>(EMPTY_WORK)
   const [saving, setSaving] = useState(false)
+  const [copying, setCopying] = useState(false)
 
   const load = useCallback(async (l: ResumeLocale) => {
     setLoading(true)
@@ -317,6 +318,25 @@ function WorkTab() {
     setItems((p) => p.filter((i) => i.id !== id))
   }
 
+  async function handleCopy() {
+    const from: ResumeLocale = locale === 'id' ? 'en' : 'id'
+    if (
+      !confirm(
+        `Copy all ${from.toUpperCase()} entries to ${locale.toUpperCase()}? This will overwrite existing ${locale.toUpperCase()} work entries.`,
+      )
+    )
+      return
+    setCopying(true)
+    try {
+      const copied = await api.resume.copyWork(from, locale)
+      setItems(copied)
+    } catch (err) {
+      alert(`Copy failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setCopying(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -327,9 +347,17 @@ function WorkTab() {
             setEditingId(null)
           }}
         />
-        <button onClick={startAdd} className={btnPrimary}>
-          <PlusIcon size={12} /> Add
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleCopy} disabled={copying} className={btnGhost}>
+            {copying ? (
+              <LoaderIcon size={12} className="mr-1 inline animate-spin" />
+            ) : null}
+            Copy from {locale === 'id' ? 'EN' : 'ID'}
+          </button>
+          <button onClick={startAdd} className={btnPrimary}>
+            <PlusIcon size={12} /> Add
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -789,6 +817,7 @@ function ProjectsTab() {
   const [editingId, setEditingId] = useState<number | 'new' | null>(null)
   const [draft, setDraft] = useState<ProjectDraft>(EMPTY_PROJECT)
   const [saving, setSaving] = useState(false)
+  const [copying, setCopying] = useState(false)
 
   const load = useCallback(async (l: ResumeLocale) => {
     setLoading(true)
@@ -854,6 +883,25 @@ function ProjectsTab() {
     setItems((p) => p.filter((i) => i.id !== id))
   }
 
+  async function handleCopy() {
+    const from: ResumeLocale = locale === 'id' ? 'en' : 'id'
+    if (
+      !confirm(
+        `Copy all ${from.toUpperCase()} entries to ${locale.toUpperCase()}? This will overwrite existing ${locale.toUpperCase()} project entries.`,
+      )
+    )
+      return
+    setCopying(true)
+    try {
+      const copied = await api.resume.copyProjects(from, locale)
+      setItems(copied)
+    } catch (err) {
+      alert(`Copy failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setCopying(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -864,9 +912,17 @@ function ProjectsTab() {
             setEditingId(null)
           }}
         />
-        <button onClick={startAdd} className={btnPrimary}>
-          <PlusIcon size={12} /> Add
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleCopy} disabled={copying} className={btnGhost}>
+            {copying ? (
+              <LoaderIcon size={12} className="mr-1 inline animate-spin" />
+            ) : null}
+            Copy from {locale === 'id' ? 'EN' : 'ID'}
+          </button>
+          <button onClick={startAdd} className={btnPrimary}>
+            <PlusIcon size={12} /> Add
+          </button>
+        </div>
       </div>
       {loading ? (
         <Loader />

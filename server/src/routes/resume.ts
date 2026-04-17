@@ -176,6 +176,30 @@ resumeAdmin.delete('/work/:id', (c) => {
   return c.json({ ok: true })
 })
 
+resumeAdmin.post('/work/copy', (c) => {
+  const from = parseLocale(c.req.query('from'))
+  const to = parseLocale(c.req.query('to'))
+  const source = db
+    .select()
+    .from(resumeWork)
+    .where(eq(resumeWork.locale, from))
+    .orderBy(asc(resumeWork.sortOrder))
+    .all()
+  db.delete(resumeWork).where(eq(resumeWork.locale, to)).run()
+  if (source.length > 0) {
+    db.insert(resumeWork)
+      .values(source.map(({ id: _id, ...row }) => ({ ...row, locale: to })))
+      .run()
+  }
+  const result = db
+    .select()
+    .from(resumeWork)
+    .where(eq(resumeWork.locale, to))
+    .orderBy(asc(resumeWork.sortOrder))
+    .all()
+  return c.json(result)
+})
+
 // Education
 resumeAdmin.get('/education', (c) => {
   const locale = parseLocale(c.req.query('locale'))
@@ -283,4 +307,28 @@ resumeAdmin.delete('/projects/:id', (c) => {
   const id = Number(c.req.param('id'))
   db.delete(resumeProjects).where(eq(resumeProjects.id, id)).run()
   return c.json({ ok: true })
+})
+
+resumeAdmin.post('/projects/copy', (c) => {
+  const from = parseLocale(c.req.query('from'))
+  const to = parseLocale(c.req.query('to'))
+  const source = db
+    .select()
+    .from(resumeProjects)
+    .where(eq(resumeProjects.locale, from))
+    .orderBy(asc(resumeProjects.sortOrder))
+    .all()
+  db.delete(resumeProjects).where(eq(resumeProjects.locale, to)).run()
+  if (source.length > 0) {
+    db.insert(resumeProjects)
+      .values(source.map(({ id: _id, ...row }) => ({ ...row, locale: to })))
+      .run()
+  }
+  const result = db
+    .select()
+    .from(resumeProjects)
+    .where(eq(resumeProjects.locale, to))
+    .orderBy(asc(resumeProjects.sortOrder))
+    .all()
+  return c.json(result)
 })

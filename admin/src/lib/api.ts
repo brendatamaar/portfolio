@@ -237,6 +237,11 @@ export const api = {
       req<ResumeWorkItem>('PATCH', `/admin/resume/work/${id}`, data),
     deleteWork: (id: number) =>
       req<{ ok: boolean }>('DELETE', `/admin/resume/work/${id}`),
+    copyWork: (from: ResumeLocale, to: ResumeLocale) =>
+      req<ResumeWorkItem[]>(
+        'POST',
+        `/admin/resume/work/copy?from=${from}&to=${to}`,
+      ),
 
     listEducation: (locale: ResumeLocale) =>
       req<ResumeEducationItem[]>(
@@ -267,6 +272,11 @@ export const api = {
       req<ResumeProjectItem>('PATCH', `/admin/resume/projects/${id}`, data),
     deleteProject: (id: number) =>
       req<{ ok: boolean }>('DELETE', `/admin/resume/projects/${id}`),
+    copyProjects: (from: ResumeLocale, to: ResumeLocale) =>
+      req<ResumeProjectItem[]>(
+        'POST',
+        `/admin/resume/projects/copy?from=${from}&to=${to}`,
+      ),
   },
 
   translate: (texts: string[], source: 'en' | 'id', target: 'en' | 'id') =>
