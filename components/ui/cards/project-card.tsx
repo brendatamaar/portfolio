@@ -7,7 +7,7 @@ type Project = {
   readonly company?: string
   readonly techStack: readonly string[]
   readonly description: string
-  readonly logo: string
+  readonly logo?: string
   readonly img?: string
   readonly isFeatured: boolean
   readonly link?: { readonly label: string; readonly href: string }

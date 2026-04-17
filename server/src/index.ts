@@ -9,6 +9,7 @@ import postsRoutes from './routes/posts.js'
 import adminRoutes from './routes/admin.js'
 import { booksPublic, booksAdmin } from './routes/books.js'
 import { albumsPublic, albumsAdmin } from './routes/albums.js'
+import { resumePublic, resumeAdmin } from './routes/resume.js'
 import { authMiddleware } from './middleware/auth.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { logger } from './lib/logger.js'
@@ -47,12 +48,14 @@ app.route('/api/auth', authRoutes)
 app.route('/api/posts', postsRoutes)
 app.route('/api/books', booksPublic)
 app.route('/api/albums', albumsPublic)
+app.route('/api/resume', resumePublic)
 
 // Protected admin routes
 app.use('/api/admin/*', authMiddleware)
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin/books', booksAdmin)
 app.route('/api/admin/albums', albumsAdmin)
+app.route('/api/admin/resume', resumeAdmin)
 
 // Health check
 app.get('/api/health', (c) => c.json({ ok: true }))

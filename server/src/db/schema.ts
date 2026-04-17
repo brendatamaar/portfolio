@@ -90,3 +90,67 @@ export const albums = sqliteTable('albums', {
     .notNull()
     .default(sql`(unixepoch())`),
 })
+
+// Resume tables
+
+export const profile = sqliteTable('profile', {
+  locale: text('locale', { enum: ['en', 'id'] }).primaryKey(),
+  name: text('name').notNull(),
+  initials: text('initials').notNull().default(''),
+  location: text('location').notNull().default(''),
+  locationLink: text('location_link').notNull().default(''),
+  currentJob: text('current_job').notNull().default(''),
+  description: text('description').notNull().default(''),
+  about: text('about').notNull().default(''),
+  summary: text('summary').notNull().default(''),
+  avatarUrl: text('avatar_url').notNull().default(''),
+  personalWebsiteUrl: text('personal_website_url').notNull().default(''),
+  email: text('email').notNull().default(''),
+  tel: text('tel').notNull().default(''),
+  social: text('social').notNull().default('[]'),
+})
+
+export const resumeWork = sqliteTable('resume_work', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  locale: text('locale', { enum: ['en', 'id'] }).notNull(),
+  company: text('company').notNull(),
+  link: text('link').notNull().default(''),
+  badge: text('badge').notNull().default(''),
+  title: text('title').notNull(),
+  start: text('start').notNull(),
+  end: text('end').notNull(),
+  description: text('description').notNull().default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+})
+
+export const resumeEducation = sqliteTable('resume_education', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  locale: text('locale', { enum: ['en', 'id'] }).notNull(),
+  school: text('school').notNull(),
+  degree: text('degree').notNull(),
+  start: text('start').notNull(),
+  end: text('end').notNull(),
+  desc: text('desc').notNull().default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+})
+
+export const resumeSkills = sqliteTable('resume_skills', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull().unique(),
+  sortOrder: integer('sort_order').notNull().default(0),
+})
+
+export const resumeProjects = sqliteTable('resume_projects', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  locale: text('locale', { enum: ['en', 'id'] }).notNull(),
+  title: text('title').notNull(),
+  type: text('type', { enum: ['side_project', 'work'] }).notNull(),
+  company: text('company'),
+  techStack: text('tech_stack').notNull().default('[]'),
+  description: text('description').notNull().default(''),
+  linkLabel: text('link_label'),
+  linkHref: text('link_href'),
+  img: text('img').notNull().default(''),
+  isFeatured: integer('is_featured').notNull().default(0),
+  sortOrder: integer('sort_order').notNull().default(0),
+})

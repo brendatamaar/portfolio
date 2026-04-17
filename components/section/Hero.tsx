@@ -1,17 +1,16 @@
-import { RESUME_DATA } from '@/data/resume-data'
-import { RESUME_DATA_ID } from '@/data/resume-data-id'
-import { useLang } from '@/src/context/LanguageContext'
+import type { ResumeData } from '@/src/lib/api'
 
-export default function Hero() {
-  const { lang } = useLang()
-  const data = lang === 'id' ? RESUME_DATA_ID : RESUME_DATA
+export default function Hero({ data }: { data: ResumeData }) {
+  const profile = data.profile
+
+  if (!profile) return null
 
   return (
     <section className="mb-20">
       {/* name + info card */}
       <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start">
         <h1 className="flex-1 text-4xl leading-[0.92] font-black tracking-tighter text-black uppercase sm:text-5xl lg:text-6xl dark:text-white">
-          Brendatama Akbar Ramadan
+          {profile.name}
         </h1>
 
         {/* info card */}
@@ -21,7 +20,7 @@ export default function Hero() {
               Role
             </p>
             <p className="text-xs font-black tracking-tight text-black uppercase dark:text-white">
-              {data.currentJob}
+              {profile.currentJob}
             </p>
           </div>
           <div className="px-4 py-3">
@@ -29,7 +28,7 @@ export default function Hero() {
               Location
             </p>
             <p className="text-xs font-black tracking-tight text-black uppercase dark:text-white">
-              {data.location}
+              {profile.location}
             </p>
           </div>
         </div>
@@ -38,7 +37,7 @@ export default function Hero() {
       {/* description */}
       <div className="border-t-2 border-black pt-6 dark:border-white">
         <p className="text-base leading-relaxed text-black/60 dark:text-white/60">
-          {data.summary}
+          {profile.summary}
         </p>
       </div>
     </section>
