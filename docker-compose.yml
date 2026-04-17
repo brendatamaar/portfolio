@@ -9,6 +9,7 @@ services:
       - PORT=3001
       - CORS_ORIGINS=${CORS_ORIGINS}
       - LIBRETRANSLATE_URL=${LIBRETRANSLATE_URL}
+      - DB_PATH=${DB_PATH}
     volumes:
       - ./server/data:/app/dist/server/data
     restart: always
