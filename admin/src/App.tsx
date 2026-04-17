@@ -3,6 +3,7 @@ import Login from './pages/Login.tsx'
 import PostList from './pages/PostList.tsx'
 import PostEditor from './pages/PostEditor.tsx'
 import CollectionManager from './pages/CollectionManager.tsx'
+import ResumeEditor from './pages/ResumeEditor.tsx'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('admin_token')
@@ -43,6 +44,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CollectionManager />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume"
+          element={
+            <ProtectedRoute>
+              <ResumeEditor />
             </ProtectedRoute>
           }
         />

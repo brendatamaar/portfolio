@@ -8,13 +8,16 @@ import {
   Suspense,
 } from 'react'
 import { api } from '@/src/lib/api'
-import type { PostSummary, BookItem, AlbumItem } from '@/src/lib/api'
+import type {
+  PostSummary,
+  BookItem,
+  AlbumItem,
+  ResumeData,
+} from '@/src/lib/api'
 
 import Hero from '@/components/section/Hero'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
-import { RESUME_DATA } from '@/data/resume-data'
-import { RESUME_DATA_ID } from '@/data/resume-data-id'
 import { BlogPostCard } from '@/components/ui/cards/post-card'
 import { FeaturedCard } from '@/components/ui/cards/featured-card'
 const Magnetic = lazy(() =>
@@ -35,12 +38,14 @@ const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
-    const [posts, book, album] = await Promise.all([
+    const [posts, book, album, resumeEn, resumeId] = await Promise.all([
       api.getPosts('en').then((p) => p.slice(0, BLOG_POSTS_PREVIEW)),
       api.getFeaturedBook().catch(() => null),
       api.getFeaturedAlbum().catch(() => null),
+      api.getResumeData('en'),
+      api.getResumeData('id'),
     ])
-    return { posts, book, album }
+    return { posts, book, album, resumeEn, resumeId }
   },
   head: () => ({
     meta: [
@@ -72,9 +77,11 @@ function HomePage() {
     posts: initialPosts,
     book: featuredBook,
     album: featuredAlbum,
+    resumeEn,
+    resumeId,
   } = Route.useLoaderData()
   const { lang, t } = useLang()
-  const data = lang === 'id' ? RESUME_DATA_ID : RESUME_DATA
+  const data: ResumeData = lang === 'id' ? resumeId : resumeEn
 
   const [showAllProjects, setShowAllProjects] = useState(false)
   const [expandedWork, setExpandedWork] = useState<Record<string, boolean>>({})
@@ -82,14 +89,14 @@ function HomePage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const sideProjects = useMemo(
-    () => data.projects.filter((p) => p.techStack[0] !== 'work'),
+    () => data.projects.filter((p) => p.type === 'side_project'),
     [data.projects],
   )
   const workProjectsByCompany = useMemo(() => {
     const map: Record<string, (typeof data.projects)[number][]> = {}
     for (const p of data.projects) {
-      if (p.techStack[0] === 'work' && 'company' in p && p.company) {
-        const key = p.company as string
+      if (p.type === 'work' && p.company) {
+        const key = p.company
         if (!map[key]) map[key] = []
         map[key].push(p)
       }
@@ -120,7 +127,7 @@ function HomePage() {
     <div className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
       <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
         <Header />
-        <Hero />
+        <Hero data={data} />
 
         <main className="space-y-20">
           {/* 01 — Projects */}
@@ -309,7 +316,7 @@ function HomePage() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Suspense fallback={null}>
-                  {data.contact.social.map((link) => (
+                  {(data.profile?.social ?? []).map((link) => (
                     <Magnetic key={link.name} intensity={0.4} range={80}>
                       <a
                         href={link.url}

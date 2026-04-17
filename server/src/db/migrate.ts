@@ -87,6 +87,70 @@ export function runMigrations(): void {
     }
   }
 
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS profile (
+      locale               TEXT PRIMARY KEY CHECK(locale IN ('en', 'id')),
+      name                 TEXT NOT NULL,
+      initials             TEXT NOT NULL DEFAULT '',
+      location             TEXT NOT NULL DEFAULT '',
+      location_link        TEXT NOT NULL DEFAULT '',
+      current_job          TEXT NOT NULL DEFAULT '',
+      description          TEXT NOT NULL DEFAULT '',
+      about                TEXT NOT NULL DEFAULT '',
+      summary              TEXT NOT NULL DEFAULT '',
+      avatar_url           TEXT NOT NULL DEFAULT '',
+      personal_website_url TEXT NOT NULL DEFAULT '',
+      email                TEXT NOT NULL DEFAULT '',
+      tel                  TEXT NOT NULL DEFAULT '',
+      social               TEXT NOT NULL DEFAULT '[]'
+    );
+
+    CREATE TABLE IF NOT EXISTS resume_work (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      locale      TEXT NOT NULL CHECK(locale IN ('en', 'id')),
+      company     TEXT NOT NULL,
+      link        TEXT NOT NULL DEFAULT '',
+      badge       TEXT NOT NULL DEFAULT '',
+      title       TEXT NOT NULL,
+      start       TEXT NOT NULL,
+      end         TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      sort_order  INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS resume_education (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      locale      TEXT NOT NULL CHECK(locale IN ('en', 'id')),
+      school      TEXT NOT NULL,
+      degree      TEXT NOT NULL,
+      start       TEXT NOT NULL,
+      end         TEXT NOT NULL,
+      desc        TEXT NOT NULL DEFAULT '',
+      sort_order  INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS resume_skills (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      name       TEXT NOT NULL UNIQUE,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS resume_projects (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      locale      TEXT NOT NULL CHECK(locale IN ('en', 'id')),
+      title       TEXT NOT NULL,
+      type        TEXT NOT NULL CHECK(type IN ('side_project', 'work')),
+      company     TEXT,
+      tech_stack  TEXT NOT NULL DEFAULT '[]',
+      description TEXT NOT NULL DEFAULT '',
+      link_label  TEXT,
+      link_href   TEXT,
+      img         TEXT NOT NULL DEFAULT '',
+      is_featured INTEGER NOT NULL DEFAULT 0,
+      sort_order  INTEGER NOT NULL DEFAULT 0
+    );
+  `)
+
   // Add status + year to books, year to albums, featured to both
   for (const stmt of [
     `ALTER TABLE books ADD COLUMN status TEXT NOT NULL DEFAULT 'finished'`,

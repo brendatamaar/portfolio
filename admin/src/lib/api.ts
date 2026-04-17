@@ -97,6 +97,70 @@ export interface AlbumSearchResult {
   coverUrl: string | null
 }
 
+export type ResumeLocale = 'en' | 'id'
+
+export interface ResumeProfile {
+  locale: string
+  name: string
+  initials: string
+  location: string
+  locationLink: string
+  currentJob: string
+  description: string
+  about: string
+  summary: string
+  avatarUrl: string
+  personalWebsiteUrl: string
+  email: string
+  tel: string
+  social: string
+}
+
+export interface ResumeWorkItem {
+  id: number
+  locale: string
+  company: string
+  link: string
+  badge: string
+  title: string
+  start: string
+  end: string
+  description: string
+  sortOrder: number
+}
+
+export interface ResumeEducationItem {
+  id: number
+  locale: string
+  school: string
+  degree: string
+  start: string
+  end: string
+  desc: string
+  sortOrder: number
+}
+
+export interface ResumeSkillItem {
+  id: number
+  name: string
+  sortOrder: number
+}
+
+export interface ResumeProjectItem {
+  id: number
+  locale: string
+  title: string
+  type: 'side_project' | 'work'
+  company: string | null
+  techStack: string
+  description: string
+  linkLabel: string | null
+  linkHref: string | null
+  img: string
+  isFeatured: number
+  sortOrder: number
+}
+
 export const api = {
   login: (username: string, password: string) =>
     req<{ token: string }>('POST', '/auth/login', { username, password }),
@@ -153,6 +217,56 @@ export const api = {
       req<{ ok: boolean }>('DELETE', `/admin/albums/${id}`),
     feature: (id: number) =>
       req<AlbumItem>('PATCH', `/admin/albums/${id}/feature`),
+  },
+
+  resume: {
+    getProfile: (locale: ResumeLocale) =>
+      req<ResumeProfile>('GET', `/admin/resume/profile?locale=${locale}`),
+    updateProfile: (locale: ResumeLocale, data: Partial<ResumeProfile>) =>
+      req<ResumeProfile>(
+        'PATCH',
+        `/admin/resume/profile?locale=${locale}`,
+        data,
+      ),
+
+    listWork: (locale: ResumeLocale) =>
+      req<ResumeWorkItem[]>('GET', `/admin/resume/work?locale=${locale}`),
+    createWork: (data: Omit<ResumeWorkItem, 'id'>) =>
+      req<ResumeWorkItem>('POST', '/admin/resume/work', data),
+    updateWork: (id: number, data: Partial<ResumeWorkItem>) =>
+      req<ResumeWorkItem>('PATCH', `/admin/resume/work/${id}`, data),
+    deleteWork: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/resume/work/${id}`),
+
+    listEducation: (locale: ResumeLocale) =>
+      req<ResumeEducationItem[]>(
+        'GET',
+        `/admin/resume/education?locale=${locale}`,
+      ),
+    createEducation: (data: Omit<ResumeEducationItem, 'id'>) =>
+      req<ResumeEducationItem>('POST', '/admin/resume/education', data),
+    updateEducation: (id: number, data: Partial<ResumeEducationItem>) =>
+      req<ResumeEducationItem>('PATCH', `/admin/resume/education/${id}`, data),
+    deleteEducation: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/resume/education/${id}`),
+
+    listSkills: () => req<ResumeSkillItem[]>('GET', '/admin/resume/skills'),
+    createSkill: (name: string, sortOrder: number) =>
+      req<ResumeSkillItem>('POST', '/admin/resume/skills', { name, sortOrder }),
+    deleteSkill: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/resume/skills/${id}`),
+
+    listProjects: (locale: ResumeLocale) =>
+      req<ResumeProjectItem[]>(
+        'GET',
+        `/admin/resume/projects?locale=${locale}`,
+      ),
+    createProject: (data: Omit<ResumeProjectItem, 'id'>) =>
+      req<ResumeProjectItem>('POST', '/admin/resume/projects', data),
+    updateProject: (id: number, data: Partial<ResumeProjectItem>) =>
+      req<ResumeProjectItem>('PATCH', `/admin/resume/projects/${id}`, data),
+    deleteProject: (id: number) =>
+      req<{ ok: boolean }>('DELETE', `/admin/resume/projects/${id}`),
   },
 
   translate: (texts: string[], source: 'en' | 'id', target: 'en' | 'id') =>

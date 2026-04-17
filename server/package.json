@@ -9,7 +9,8 @@
     "start": "node dist/src/index.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "setup": "tsx scripts/setup.ts"
+    "setup": "tsx scripts/setup.ts",
+    "seed:resume": "tsx scripts/seed-resume.ts"
   },
   "dependencies": {
     "better-sqlite3": "^9.4.3",
