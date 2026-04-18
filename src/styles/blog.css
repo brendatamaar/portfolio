@@ -48,9 +48,6 @@
 
   /* Lead paragraph + drop cap */
   & > p:first-of-type {
-    font-size: 1.125rem;
-    line-height: 1.8;
-
     &::first-letter {
       float: left;
       font-size: 3.6em;

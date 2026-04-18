@@ -9,6 +9,7 @@ import {
   ArchiveIcon,
   SunIcon,
   MoonIcon,
+  DownloadIcon,
 } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Post } from '../lib/api.ts'
@@ -48,6 +49,17 @@ export default function PostList() {
     if (!confirm(`Delete "${title}"?`)) return
     await api.posts.delete(id)
     setPosts((p) => p.filter((x) => x.id !== id))
+  }
+
+  function downloadPost(post: Post) {
+    const slug = post.slug
+    const blob = new Blob([post.content], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${slug}.md`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   async function toggleStatus(post: Post) {
@@ -231,6 +243,13 @@ export default function PostList() {
                     ) : (
                       <SendIcon size={14} />
                     )}
+                  </button>
+                  <button
+                    onClick={() => downloadPost(post)}
+                    className="p-1.5 text-black/30 transition-all hover:bg-black hover:text-white dark:text-white/30 dark:hover:bg-white dark:hover:text-black"
+                    title="Download as Markdown"
+                  >
+                    <DownloadIcon size={14} />
                   </button>
                   <Link
                     to={`/posts/${post.id}`}
