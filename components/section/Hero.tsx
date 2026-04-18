@@ -23,13 +23,22 @@ export default function Hero({ data }: { data: ResumeData }) {
               {profile.currentJob}
             </p>
           </div>
-          <div className="px-4 py-3">
+          <div className="border-b-2 border-black px-4 py-3 dark:border-white">
             <p className="mb-1 font-mono text-[9px] font-bold tracking-widest text-black/60 uppercase dark:text-white/60">
               Location
             </p>
             <p className="text-xs font-black tracking-tight text-black uppercase dark:text-white">
               {profile.location}
             </p>
+          </div>
+          <div className="px-4 py-3">
+            <a
+              href="/pdf/Resume Brendatama Akbar (2026) - English.pdf"
+              download
+              className="flex items-center gap-1.5 font-mono text-[9px] font-bold tracking-widest text-black uppercase transition-colors hover:text-[#FFE600] dark:text-white dark:hover:text-[#FFE600]"
+            >
+              ↓ Resume
+            </a>
           </div>
         </div>
       </div>
