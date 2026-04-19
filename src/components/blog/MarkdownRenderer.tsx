@@ -71,6 +71,16 @@ export default function MarkdownRenderer({
     return () => content.removeEventListener('click', handleClick)
   }, [html])
 
+  // Close zoom on Escape
+  useEffect(() => {
+    if (!zoomedImg) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setZoomedImg(null)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [zoomedImg])
+
   // Image zoom — click any <img> outside a code block to enlarge it.
   useEffect(() => {
     const imgs =
@@ -108,6 +118,9 @@ export default function MarkdownRenderer({
       {/* Image zoom overlay */}
       {zoomedImg && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Zoomed image"
           className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90"
           onClick={() => setZoomedImg(null)}
         >
@@ -118,6 +131,7 @@ export default function MarkdownRenderer({
             onClick={(e) => e.stopPropagation()}
           />
           <button
+            aria-label="Close zoomed image"
             className="absolute top-5 right-6 font-mono text-sm tracking-widest text-white uppercase transition-colors hover:text-[#FFE600]"
             onClick={() => setZoomedImg(null)}
           >

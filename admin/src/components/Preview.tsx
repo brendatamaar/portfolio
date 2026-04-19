@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { parse } from '@portfolio/shared/markdown/parser.js'
 import type { PreviewProps } from '../lib/types.ts'
+import { PREVIEW_DEBOUNCE_MS } from '../lib/constants.ts'
 
 export default function Preview({ markdown }: PreviewProps) {
   const [html, setHtml] = useState('')
@@ -13,7 +14,7 @@ export default function Preview({ markdown }: PreviewProps) {
       } catch {
         setHtml('<p style="color:#f87171">Parse error</p>')
       }
-    }, 150)
+    }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [markdown])
 

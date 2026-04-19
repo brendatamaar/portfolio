@@ -10,7 +10,7 @@ import { TagButton } from '@/components/ui/interactive/tag-button'
 import { useLang } from '@/src/context/LanguageContext'
 
 export const Route = createFileRoute('/blog/')({
-  loader: () => api.getPosts('en'),
+  loader: () => api.getPosts('en').then((r) => r.data),
   head: () => ({
     meta: [
       { title: 'Writing | Brendatama Akbar' },
@@ -42,14 +42,20 @@ function BlogPage() {
   const [loading, setLoading] = useState(false)
   const [activeTag, setActiveTag] = useState<string | null>(null)
 
-  // Re-fetch when lang changes client-side
+  // Re-fetch when lang changes client-side — AbortController prevents stale responses
   useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
     api
-      .getPosts(lang)
-      .then(setPosts)
-      .catch((err) => console.error('Failed to fetch posts:', err))
+      .getPosts(lang, controller.signal)
+      .then((r) => setPosts(r.data))
+      .catch((err) => {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.error('Failed to fetch posts:', err)
+        }
+      })
       .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [lang])
 
   const { allTagSlugs, tagNames } = useMemo(() => {

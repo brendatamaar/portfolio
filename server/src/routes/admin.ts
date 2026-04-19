@@ -1,22 +1,31 @@
 /**
- * Protected admin routes (all require Bearer JWT).
+ * Protected admin routes (all require httpOnly cookie JWT).
  */
 
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { db } from '../db/index.js'
 import { posts, tags, postTags, images } from '../db/schema.js'
-import { eq, desc, and } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { randomBytes } from 'crypto'
-import { writeFileSync, unlinkSync, existsSync, mkdirSync } from 'fs'
-import { join, dirname, extname } from 'path'
+import { writeFile, unlink, existsSync, mkdirSync } from 'fs'
+import { promisify } from 'util'
+import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+
+const writeFileAsync = promisify(writeFile)
+const unlinkAsync = promisify(unlink)
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const UPLOADS_DIR = join(__dirname, '../../uploads')
 mkdirSync(UPLOADS_DIR, { recursive: true })
 
 const app = new Hono()
+
+// Me endpoint — lets the admin UI verify cookie auth is valid
+app.get('/me', (c) => {
+  return c.json({ ok: true })
+})
 
 // Helper
 
@@ -45,25 +54,95 @@ const postSchema = z.object({
 })
 
 app.get('/posts', (c) => {
-  const rows = db.select().from(posts).orderBy(desc(posts.updatedAt)).all()
+  // Single LEFT JOIN — eliminates N+1 tag fetches
+  const rows = db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      slug: posts.slug,
+      description: posts.description,
+      content: posts.content,
+      titleId: posts.titleId,
+      descriptionId: posts.descriptionId,
+      contentId: posts.contentId,
+      status: posts.status,
+      coverImageUrl: posts.coverImageUrl,
+      publishedAt: posts.publishedAt,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+      tagId: tags.id,
+      tagName: tags.name,
+      tagSlug: tags.slug,
+    })
+    .from(posts)
+    .leftJoin(postTags, eq(postTags.postId, posts.id))
+    .leftJoin(tags, eq(tags.id, postTags.tagId))
+    .orderBy(desc(posts.updatedAt))
+    .all()
 
-  const result = rows.map((post) => {
-    const postTagRows = db
-      .select({ id: tags.id, name: tags.name, slug: tags.slug })
-      .from(postTags)
-      .innerJoin(tags, eq(postTags.tagId, tags.id))
-      .where(eq(postTags.postId, post.id))
-      .all()
-    return { ...post, tags: postTagRows }
-  })
+  const postMap = new Map<
+    number,
+    Record<string, unknown> & {
+      tags: { id: number; name: string; slug: string }[]
+    }
+  >()
+  for (const row of rows) {
+    if (!postMap.has(row.id)) {
+      postMap.set(row.id, {
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        description: row.description,
+        content: row.content,
+        titleId: row.titleId,
+        descriptionId: row.descriptionId,
+        contentId: row.contentId,
+        status: row.status,
+        coverImageUrl: row.coverImageUrl,
+        publishedAt: row.publishedAt,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        tags: [],
+      })
+    }
+    if (row.tagId && row.tagName && row.tagSlug) {
+      postMap
+        .get(row.id)!
+        .tags.push({ id: row.tagId, name: row.tagName, slug: row.tagSlug })
+    }
+  }
 
-  return c.json(result)
+  return c.json(Array.from(postMap.values()))
+})
+
+app.get('/posts/:id', (c) => {
+  const id = Number(c.req.param('id'))
+  const post = db.select().from(posts).where(eq(posts.id, id)).get()
+  if (!post) return c.json({ error: 'Not found' }, 404)
+  const postTagRows = db
+    .select({ id: tags.id, name: tags.name, slug: tags.slug })
+    .from(postTags)
+    .innerJoin(tags, eq(postTags.tagId, tags.id))
+    .where(eq(postTags.postId, id))
+    .all()
+  return c.json({ ...post, tags: postTagRows })
 })
 
 app.post('/posts', async (c) => {
   const body = await c.req.json().catch(() => null)
+  if (body === null) return c.json({ error: 'Malformed JSON' }, 400)
   const parsed = postSchema.safeParse(body)
-  if (!parsed.success) return c.json({ error: parsed.error.issues }, 400)
+  if (!parsed.success)
+    return c.json(
+      {
+        error: 'Validation failed',
+        issues: parsed.error.issues.map((i) => ({
+          path: i.path.join('.'),
+          message: i.message,
+        })),
+      },
+      422,
+    )
 
   const data = parsed.data
   const slug = data.slug ?? slugify(data.title)
@@ -76,39 +155,53 @@ app.post('/posts', async (c) => {
         ? now
         : null
 
-  const inserted = db
-    .insert(posts)
-    .values({
-      title: data.title,
-      slug,
-      description: data.description,
-      content: data.content,
-      titleId: data.titleId,
-      descriptionId: data.descriptionId,
-      contentId: data.contentId,
-      status: data.status,
-      coverImageUrl: data.coverImageUrl ?? null,
-      publishedAt,
-      updatedAt: now,
-    })
-    .returning({ id: posts.id })
-    .get()
+  const result = db.transaction((tx) => {
+    const inserted = tx
+      .insert(posts)
+      .values({
+        title: data.title,
+        slug,
+        description: data.description,
+        content: data.content,
+        titleId: data.titleId || null,
+        descriptionId: data.descriptionId || null,
+        contentId: data.contentId || null,
+        status: data.status,
+        coverImageUrl: data.coverImageUrl ?? null,
+        publishedAt,
+        updatedAt: now,
+      })
+      .returning({ id: posts.id })
+      .get()
 
-  if (data.tagIds?.length) {
-    db.insert(postTags)
-      .values(data.tagIds.map((tagId) => ({ postId: inserted.id, tagId })))
-      .run()
-  }
+    if (data.tagIds?.length) {
+      tx.insert(postTags)
+        .values(data.tagIds.map((tagId) => ({ postId: inserted.id, tagId })))
+        .run()
+    }
 
-  const result = db.select().from(posts).where(eq(posts.id, inserted.id)).get()!
+    return tx.select().from(posts).where(eq(posts.id, inserted.id)).get()!
+  })
+
   return c.json(result, 201)
 })
 
 app.put('/posts/:id', async (c) => {
   const id = Number(c.req.param('id'))
   const body = await c.req.json().catch(() => null)
+  if (body === null) return c.json({ error: 'Malformed JSON' }, 400)
   const parsed = postSchema.partial().safeParse(body)
-  if (!parsed.success) return c.json({ error: parsed.error.issues }, 400)
+  if (!parsed.success)
+    return c.json(
+      {
+        error: 'Validation failed',
+        issues: parsed.error.issues.map((i) => ({
+          path: i.path.join('.'),
+          message: i.message,
+        })),
+      },
+      422,
+    )
 
   const existing = db.select().from(posts).where(eq(posts.id, id)).get()
   if (!existing) return c.json({ error: 'Not found' }, 404)
@@ -116,7 +209,6 @@ app.put('/posts/:id', async (c) => {
   const data = parsed.data
   const now = new Date()
 
-  // Use explicit publishedAt if provided, otherwise auto-set on first publish
   let publishedAt = existing.publishedAt
   if (data.publishedAt !== undefined) {
     publishedAt = data.publishedAt
@@ -124,37 +216,44 @@ app.put('/posts/:id', async (c) => {
     publishedAt = now
   }
 
-  db.update(posts)
-    .set({
-      ...(data.title !== undefined && { title: data.title }),
-      ...(data.slug !== undefined && { slug: data.slug }),
-      ...(data.description !== undefined && { description: data.description }),
-      ...(data.content !== undefined && { content: data.content }),
-      ...(data.titleId !== undefined && { titleId: data.titleId }),
-      ...(data.descriptionId !== undefined && {
-        descriptionId: data.descriptionId,
-      }),
-      ...(data.contentId !== undefined && { contentId: data.contentId }),
-      ...(data.status !== undefined && { status: data.status }),
-      ...(data.coverImageUrl !== undefined && {
-        coverImageUrl: data.coverImageUrl,
-      }),
-      publishedAt,
-      updatedAt: now,
-    })
-    .where(eq(posts.id, id))
-    .run()
+  const updated = db.transaction((tx) => {
+    tx.update(posts)
+      .set({
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.slug !== undefined && { slug: data.slug }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
+        ...(data.content !== undefined && { content: data.content }),
+        ...(data.titleId !== undefined && { titleId: data.titleId || null }),
+        ...(data.descriptionId !== undefined && {
+          descriptionId: data.descriptionId || null,
+        }),
+        ...(data.contentId !== undefined && {
+          contentId: data.contentId || null,
+        }),
+        ...(data.status !== undefined && { status: data.status }),
+        ...(data.coverImageUrl !== undefined && {
+          coverImageUrl: data.coverImageUrl,
+        }),
+        publishedAt,
+        updatedAt: now,
+      })
+      .where(eq(posts.id, id))
+      .run()
 
-  if (data.tagIds !== undefined) {
-    db.delete(postTags).where(eq(postTags.postId, id)).run()
-    if (data.tagIds.length) {
-      db.insert(postTags)
-        .values(data.tagIds.map((tagId) => ({ postId: id, tagId })))
-        .run()
+    if (data.tagIds !== undefined) {
+      tx.delete(postTags).where(eq(postTags.postId, id)).run()
+      if (data.tagIds.length) {
+        tx.insert(postTags)
+          .values(data.tagIds.map((tagId) => ({ postId: id, tagId })))
+          .run()
+      }
     }
-  }
 
-  const updated = db.select().from(posts).where(eq(posts.id, id)).get()!
+    return tx.select().from(posts).where(eq(posts.id, id)).get()!
+  })
+
   return c.json(updated)
 })
 
@@ -173,9 +272,41 @@ const ALLOWED_MIME = new Set([
   'image/png',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
 ])
+
+const EXT_MAP: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+}
+
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
+
+function detectMimeType(buf: Buffer): string | null {
+  if (buf.length < 12) return null
+  // JPEG: FF D8 FF
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg'
+  // PNG: 89 50 4E 47
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47)
+    return 'image/png'
+  // GIF: 47 49 46 38
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38)
+    return 'image/gif'
+  // WebP: RIFF....WEBP
+  if (
+    buf[0] === 0x52 &&
+    buf[1] === 0x49 &&
+    buf[2] === 0x46 &&
+    buf[3] === 0x46 &&
+    buf[8] === 0x57 &&
+    buf[9] === 0x45 &&
+    buf[10] === 0x42 &&
+    buf[11] === 0x50
+  )
+    return 'image/webp'
+  return null
+}
 
 app.get('/images', (c) => {
   const rows = db.select().from(images).orderBy(desc(images.createdAt)).all()
@@ -188,17 +319,22 @@ app.post('/upload', async (c) => {
 
   const file = formData.get('file') as File | null
   if (!file) return c.json({ error: 'No file provided' }, 400)
-  if (!ALLOWED_MIME.has(file.type))
-    return c.json({ error: 'File type not allowed' }, 400)
   if (file.size > MAX_SIZE)
     return c.json({ error: 'File too large (max 10 MB)' }, 400)
 
-  const ext = extname(file.name) || '.bin'
+  const buffer = Buffer.from(await file.arrayBuffer())
+
+  // Validate actual file content via magic bytes — ignore client-supplied MIME/extension
+  const detectedMime = detectMimeType(buffer)
+  if (!detectedMime || !ALLOWED_MIME.has(detectedMime)) {
+    return c.json({ error: 'File type not allowed' }, 400)
+  }
+
+  const ext = EXT_MAP[detectedMime]
   const filename = `${Date.now()}-${randomBytes(6).toString('hex')}${ext}`
   const filepath = join(UPLOADS_DIR, filename)
 
-  const buffer = Buffer.from(await file.arrayBuffer())
-  writeFileSync(filepath, buffer)
+  await writeFileAsync(filepath, buffer)
 
   const url = `/uploads/${filename}`
 
@@ -207,7 +343,7 @@ app.post('/upload', async (c) => {
     .values({
       filename,
       originalName: file.name,
-      mimeType: file.type,
+      mimeType: detectedMime,
       sizeBytes: file.size,
       url,
     })
@@ -217,13 +353,13 @@ app.post('/upload', async (c) => {
   return c.json({ id: row.id, url, filename }, 201)
 })
 
-app.delete('/images/:id', (c) => {
+app.delete('/images/:id', async (c) => {
   const id = Number(c.req.param('id'))
   const row = db.select().from(images).where(eq(images.id, id)).get()
   if (!row) return c.json({ error: 'Not found' }, 404)
 
   const filepath = join(UPLOADS_DIR, row.filename)
-  if (existsSync(filepath)) unlinkSync(filepath)
+  if (existsSync(filepath)) await unlinkAsync(filepath)
 
   db.delete(images).where(eq(images.id, id)).run()
   return c.json({ ok: true })
@@ -239,8 +375,19 @@ app.get('/tags', (c) => {
 
 app.post('/tags', async (c) => {
   const body = await c.req.json().catch(() => null)
+  if (body === null) return c.json({ error: 'Malformed JSON' }, 400)
   const parsed = tagSchema.safeParse(body)
-  if (!parsed.success) return c.json({ error: 'Invalid request' }, 400)
+  if (!parsed.success)
+    return c.json(
+      {
+        error: 'Validation failed',
+        issues: parsed.error.issues.map((i) => ({
+          path: i.path.join('.'),
+          message: i.message,
+        })),
+      },
+      422,
+    )
 
   const slug = slugify(parsed.data.name)
   const row = db
@@ -253,28 +400,21 @@ app.post('/tags', async (c) => {
 
 app.delete('/tags/:id', (c) => {
   const id = Number(c.req.param('id'))
+  const existing = db.select().from(tags).where(eq(tags.id, id)).get()
+  if (!existing) return c.json({ error: 'Not found' }, 404)
   db.delete(tags).where(eq(tags.id, id)).run()
   return c.json({ ok: true })
 })
 
 // Translate
 
-/**
- * Extract fenced code blocks and inline code from markdown text, replacing
- * them with numeric placeholders `[[0]]`, `[[1]]` etc. that LibreTranslate
- * will pass through untouched.  Call `restoreCode` with the returned slots
- * to put them back after translation.
- */
 function extractCode(text: string): { text: string; slots: string[] } {
   const slots: string[] = []
   let out = text
-  // Fenced code blocks (``` ... ```) — must come before inline to avoid
-  // matching the opening fence as inline code
   out = out.replace(/```[\s\S]*?```/g, (m) => {
     slots.push(m)
     return `[[${slots.length - 1}]]`
   })
-  // Inline code (`...`)
   out = out.replace(/`[^`\n]+`/g, (m) => {
     slots.push(m)
     return `[[${slots.length - 1}]]`
@@ -301,18 +441,27 @@ app.post('/translate', async (c) => {
     return c.json({ error: 'LIBRETRANSLATE_URL not configured' }, 503)
 
   const body = await c.req.json().catch(() => null)
+  if (body === null) return c.json({ error: 'Malformed JSON' }, 400)
   const parsed = translateBatchSchema.safeParse(body)
-  if (!parsed.success) return c.json({ error: parsed.error.issues }, 400)
+  if (!parsed.success)
+    return c.json(
+      {
+        error: 'Validation failed',
+        issues: parsed.error.issues.map((i) => ({
+          path: i.path.join('.'),
+          message: i.message,
+        })),
+      },
+      422,
+    )
 
   const { texts, source, target } = parsed.data
 
-  // Protect code blocks and filter out empty strings before sending to LibreTranslate
   const protected_ = texts.map(extractCode)
   const nonEmpty = protected_
     .map((p, i) => ({ i, text: p.text }))
     .filter(({ text }) => text.trim().length > 0)
 
-  // If everything is empty, return early with empty strings
   if (nonEmpty.length === 0) {
     return c.json({ translatedTexts: texts.map(() => '') })
   }
@@ -365,7 +514,6 @@ app.post('/translate', async (c) => {
 
   const translated = (data as { translatedText: string[] }).translatedText
 
-  // Re-map results back to original positions and restore code blocks
   const translatedTexts = texts.map((_, idx) => {
     const slot = nonEmpty.findIndex(({ i }) => i === idx)
     if (slot === -1) return ''

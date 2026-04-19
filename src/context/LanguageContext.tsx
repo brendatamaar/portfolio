@@ -3,16 +3,20 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from 'react'
-import { translations, resolveKey, type Lang } from '../lib/i18n'
+import {
+  translations,
+  resolveKey,
+  type Lang,
+  type TranslationKey,
+} from '../lib/i18n'
 
 interface LanguageContextValue {
   lang: Lang
   setLang: (lang: Lang) => void
   /** Resolve a dot-notated translation key, with optional {n} interpolation */
-  t: (key: string, vars?: Record<string, string | number>) => string
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null)
@@ -26,12 +30,11 @@ function detectLang(): Lang {
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('en')
-
-  useEffect(() => {
-    const detected = detectLang()
-    if (detected !== 'en') setLangState(detected)
-  }, [])
+  // Lazy initializer runs synchronously on the client during hydration,
+  // eliminating the post-paint flash caused by a useEffect swap.
+  // The server always renders 'en'; the hydration mismatch (if any) is
+  // recovered before the browser paints.
+  const [lang, setLangState] = useState<Lang>(() => detectLang())
 
   const setLang = useCallback((next: Lang) => {
     localStorage.setItem('lang', next)
@@ -39,7 +42,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const t = useCallback(
-    (key: string, vars?: Record<string, string | number>) => {
+    (key: TranslationKey, vars?: Record<string, string | number>) => {
       const dict = translations[lang]
       let str = resolveKey(dict, key)
       if (vars) {

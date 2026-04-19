@@ -17,8 +17,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const { token } = await api.login(username, password)
-      localStorage.setItem('admin_token', token)
+      await api.login(username, password)
       navigate('/')
     } catch {
       setError('Invalid credentials.')

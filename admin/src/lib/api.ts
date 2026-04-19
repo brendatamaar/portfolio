@@ -1,33 +1,54 @@
 const BASE = import.meta.env.VITE_API_URL
+const REQUEST_TIMEOUT = 10_000
 
-function getToken(): string | null {
-  return localStorage.getItem('admin_token')
-}
-
-function authHeaders(): HeadersInit {
-  const token = getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
 }
 
 async function req<T>(
   method: string,
   path: string,
   body?: unknown,
+  signal?: AbortSignal,
 ): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  })
-  if (res.status === 401) {
-    localStorage.removeItem('admin_token')
-    window.location.href = '/login'
-    throw new Error('Unauthorized')
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT)
+
+  // Merge caller signal with timeout signal
+  signal?.addEventListener('abort', () => controller.abort())
+
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError(
+        0,
+        signal?.aborted ? 'Request aborted' : 'Request timed out',
+      )
+    }
+    throw err
+  } finally {
+    clearTimeout(timeout)
   }
-  if (!res.ok) throw new Error(`API error ${res.status}`)
+
+  if (res.status === 401) {
+    window.location.href = '/login'
+    throw new ApiError(401, 'Unauthorized')
+  }
+  if (!res.ok) throw new ApiError(res.status, `API error ${res.status}`)
   return res.json() as Promise<T>
 }
 
@@ -42,9 +63,9 @@ export interface Post {
   slug: string
   description: string
   content: string
-  titleId: string
-  descriptionId: string
-  contentId: string
+  titleId: string | null
+  descriptionId: string | null
+  contentId: string | null
   status: 'draft' | 'published'
   coverImageUrl: string | null
   publishedAt: string | null
@@ -163,10 +184,16 @@ export interface ResumeProjectItem {
 
 export const api = {
   login: (username: string, password: string) =>
-    req<{ token: string }>('POST', '/auth/login', { username, password }),
+    req<{ ok: boolean }>('POST', '/auth/login', { username, password }),
+
+  logout: () => req<{ ok: boolean }>('POST', '/auth/logout'),
+
+  me: () => req<{ ok: boolean }>('GET', '/admin/me'),
 
   posts: {
     list: () => req<Post[]>('GET', '/admin/posts'),
+    get: (id: number, signal?: AbortSignal) =>
+      req<Post>('GET', `/admin/posts/${id}`, undefined, signal),
     create: (data: Partial<Post>) => req<Post>('POST', '/admin/posts', data),
     update: (id: number, data: Partial<Post>) =>
       req<Post>('PUT', `/admin/posts/${id}`, data),
@@ -291,12 +318,28 @@ export const api = {
     upload: async (file: File) => {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await fetch(`${BASE}/admin/upload`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: fd,
-      })
-      if (!res.ok) throw new Error(`Upload failed ${res.status}`)
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 30_000) // longer for uploads
+      let res: Response
+      try {
+        res = await fetch(`${BASE}/admin/upload`, {
+          method: 'POST',
+          credentials: 'include',
+          body: fd,
+          signal: controller.signal,
+        })
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError')
+          throw new ApiError(0, 'Upload timed out')
+        throw err
+      } finally {
+        clearTimeout(timeout)
+      }
+      if (res.status === 401) {
+        window.location.href = '/login'
+        throw new ApiError(401, 'Unauthorized')
+      }
+      if (!res.ok) throw new ApiError(res.status, `Upload failed ${res.status}`)
       return res.json() as Promise<{
         id: number
         url: string

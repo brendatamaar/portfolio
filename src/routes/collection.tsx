@@ -51,7 +51,7 @@ function CollectionPage() {
           </p>
         </div>
 
-        <main className="space-y-20">
+        <main id="main" className="space-y-20">
           <Reveal>
             <section id="books">
               <SectionLabel num="01" label={t('collection.books')} />

@@ -1,5 +1,4 @@
 import type { SpringOptions } from 'motion/react'
-import type { BookEntry } from '@/data/reading-data'
 
 export const WEBSITE_URL = 'https://nim-fawn.vercel.app'
 
@@ -8,14 +7,6 @@ export const SCROLL_THRESHOLD = 400
 
 // project-card
 export const MAX_TECH_TAGS = 3
-
-// book-card
-export const STATUS_LABEL: Record<BookEntry['status'], string> = {
-  reading: 'reading',
-  finished: 'finished',
-  read: 'read',
-  'want-to-read': 'want to read',
-}
 
 // tag-button
 export const TAG_BUTTON_BASE =

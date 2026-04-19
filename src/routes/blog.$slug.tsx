@@ -1,6 +1,6 @@
 import '@/src/styles/blog.css'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Share2, Link2, Twitter, Linkedin, Facebook } from 'lucide-react'
 import { api } from '@/src/lib/api'
 import type { PostDetail } from '@/src/lib/api'
@@ -22,11 +22,18 @@ function ShareButton({ title }: { title: string }) {
 
   useEffect(() => {
     if (!open) return
-    const handler = (e: MouseEvent) => {
+    const onMouse = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onMouse)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onMouse)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [open])
 
   const copyLink = async () => {
@@ -63,17 +70,24 @@ function ShareButton({ title }: { title: string }) {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
         aria-label="Share post"
+        aria-haspopup="true"
+        aria-expanded={open}
       >
         <Share2 size={12} />
         {copied ? 'COPIED!' : 'SHARE'}
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 z-50 mt-2 min-w-[168px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-          <button onClick={copyLink} className={itemClass}>
+        <div
+          role="menu"
+          aria-label="Share options"
+          className="absolute top-full left-0 z-50 mt-2 min-w-[168px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+        >
+          <button role="menuitem" onClick={copyLink} className={itemClass}>
             <Link2 size={11} /> COPY LINK
           </button>
           <button
+            role="menuitem"
             onClick={() => {
               const url = window.location.href
               openWindow(
@@ -85,6 +99,7 @@ function ShareButton({ title }: { title: string }) {
             <Twitter size={11} /> TWITTER
           </button>
           <button
+            role="menuitem"
             onClick={() => {
               const url = window.location.href
               openWindow(
@@ -96,6 +111,7 @@ function ShareButton({ title }: { title: string }) {
             <Linkedin size={11} /> LINKEDIN
           </button>
           <button
+            role="menuitem"
             onClick={() => {
               const url = window.location.href
               openWindow(
@@ -107,7 +123,7 @@ function ShareButton({ title }: { title: string }) {
             <Facebook size={11} /> FACEBOOK
           </button>
           {hasNativeShare && (
-            <button onClick={shareNative} className={itemClass}>
+            <button role="menuitem" onClick={shareNative} className={itemClass}>
               <Share2 size={11} /> MORE
             </button>
           )}
@@ -153,7 +169,33 @@ function BlogPostPage() {
   const initialData = Route.useLoaderData() as PostDetail | null
   const { lang, t } = useLang()
 
-  if (!initialData) {
+  const [data, setData] = useState<PostDetail | null>(initialData)
+  const [loading, setLoading] = useState(false)
+  const mins = useMemo(() => (data ? readingTime(data.html) : 0), [data])
+
+  // Re-fetch when lang changes client-side — AbortController prevents stale responses
+  useEffect(() => {
+    if (!initialData) return
+    if (lang === 'en') {
+      setData(initialData)
+      return
+    }
+    const controller = new AbortController()
+    setLoading(true)
+    api
+      .getPost(initialData.post.slug, lang, controller.signal)
+      .then(setData)
+      .catch((err) => {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.error('Failed to load translated post:', err)
+          setData(initialData)
+        }
+      })
+      .finally(() => setLoading(false))
+    return () => controller.abort()
+  }, [lang, initialData])
+
+  if (!data) {
     return (
       <div className="min-h-screen bg-white dark:bg-black">
         <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
@@ -171,30 +213,6 @@ function BlogPostPage() {
       </div>
     )
   }
-
-  const [data, setData] = useState<PostDetail>(initialData)
-  const [loading, setLoading] = useState(false)
-
-  // Re-fetch when lang changes client-side
-  useEffect(() => {
-    if (lang === 'en') {
-      setData(initialData)
-      return
-    }
-    setLoading(true)
-    const fetchTranslated = async () => {
-      try {
-        const result = await api.getPost(initialData.post.slug, lang)
-        setData(result)
-      } catch (err) {
-        console.error('Failed to load translated post:', err)
-        setData(initialData)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTranslated()
-  }, [lang, initialData])
 
   const { post, html, toc, sidenotes } = data
   const date = new Date(post.publishedAt ?? post.createdAt)
@@ -259,7 +277,7 @@ function BlogPostPage() {
               ·
             </span>
             <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
-              {readingTime(html)} {t('post.minRead')}
+              {mins} {t('post.minRead')}
             </span>
             <span className="font-mono text-[11px] text-black/40 dark:text-white/40">
               ·
@@ -269,9 +287,9 @@ function BlogPostPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[72rem] px-6 pb-16">
+      <main id="main" className="mx-auto max-w-[72rem] px-6 pb-16">
         <MarkdownRenderer html={html} toc={toc} sidenotes={sidenotes} />
-      </div>
+      </main>
 
       <div className="mx-auto max-w-3xl px-6 pb-16">
         <div className="flex items-center justify-between border-t-2 border-black pt-6 dark:border-white">

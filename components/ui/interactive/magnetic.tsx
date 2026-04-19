@@ -9,6 +9,21 @@ import {
 } from 'motion/react'
 import { MAGNETIC_SPRING_CONFIG } from '@/lib/constants'
 
+// Singleton mousemove manager — one document listener shared across all instances
+const _handlers = new Set<(e: MouseEvent) => void>()
+function _dispatch(e: MouseEvent) {
+  _handlers.forEach((fn) => fn(e))
+}
+function _addHandler(fn: (e: MouseEvent) => void) {
+  if (_handlers.size === 0)
+    document.addEventListener('mousemove', _dispatch, { passive: true })
+  _handlers.add(fn)
+}
+function _removeHandler(fn: (e: MouseEvent) => void) {
+  _handlers.delete(fn)
+  if (_handlers.size === 0) document.removeEventListener('mousemove', _dispatch)
+}
+
 export type MagneticProps = {
   children: React.ReactNode
   intensity?: number
@@ -55,13 +70,11 @@ export function Magnetic({
     [intensity, range, x, y],
   )
 
-  // Only attach mousemove listener when hovered
   useEffect(() => {
     if (!isHovered) return
-
-    document.addEventListener('mousemove', calculateDistance)
+    _addHandler(calculateDistance)
     return () => {
-      document.removeEventListener('mousemove', calculateDistance)
+      _removeHandler(calculateDistance)
       x.set(0)
       y.set(0)
     }
@@ -70,13 +83,10 @@ export function Magnetic({
   useEffect(() => {
     if (actionArea === 'parent' && ref.current?.parentElement) {
       const parent = ref.current.parentElement
-
       const handleParentEnter = () => setIsHovered(true)
       const handleParentLeave = () => setIsHovered(false)
-
       parent.addEventListener('mouseenter', handleParentEnter)
       parent.addEventListener('mouseleave', handleParentLeave)
-
       return () => {
         parent.removeEventListener('mouseenter', handleParentEnter)
         parent.removeEventListener('mouseleave', handleParentLeave)
@@ -87,9 +97,7 @@ export function Magnetic({
   }, [actionArea])
 
   const handleMouseEnter = () => {
-    if (actionArea === 'self') {
-      setIsHovered(true)
-    }
+    if (actionArea === 'self') setIsHovered(true)
   }
 
   const handleMouseLeave = () => {
@@ -105,10 +113,7 @@ export function Magnetic({
       ref={ref}
       onMouseEnter={actionArea === 'self' ? handleMouseEnter : undefined}
       onMouseLeave={actionArea === 'self' ? handleMouseLeave : undefined}
-      style={{
-        x: springX,
-        y: springY,
-      }}
+      style={{ x: springX, y: springY }}
     >
       {children}
     </motion.div>

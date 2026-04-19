@@ -11,6 +11,13 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
 }
 
+// Block javascript: and data: URLs which can execute scripts in href/src
+export function sanitizeUrl(url: string): string {
+  const trimmed = url.trim().replace(/[\s\u0000-\u001f]/g, '')
+  if (/^(javascript|data|vbscript):/i.test(trimmed)) return '#'
+  return url
+}
+
 export interface InlineContext {
   citeMap?: Map<string, number>
 }
@@ -55,7 +62,7 @@ export function parseInline(text: string, ctx?: InlineContext): string {
         if (urlEnd !== -1) {
           const alt = text.slice(i + 2, altEnd)
           const url = text.slice(altEnd + 2, urlEnd)
-          result += `<img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" class="rounded-sm">`
+          result += `<img src="${escapeHtml(sanitizeUrl(url))}" alt="${escapeHtml(alt)}" class="rounded-sm">`
           i = urlEnd + 1
           continue
         }
@@ -74,7 +81,7 @@ export function parseInline(text: string, ctx?: InlineContext): string {
           const attrs = isExternal
             ? ' target="_blank" rel="noopener noreferrer"'
             : ''
-          result += `<a href="${escapeHtml(url)}"${attrs} class="underline underline-offset-2">${parseInline(linkText, ctx)}</a>`
+          result += `<a href="${escapeHtml(sanitizeUrl(url))}"${attrs} class="underline underline-offset-2">${parseInline(linkText, ctx)}</a>`
           i = urlEnd + 1
           continue
         }

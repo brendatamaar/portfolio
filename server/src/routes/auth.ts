@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
+import { setCookie, deleteCookie } from 'hono/cookie'
 import { db } from '../db/index.js'
 import { adminUsers } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
@@ -34,7 +35,21 @@ app.post('/login', async (c) => {
   const secret = await getJwtSecret()
   const token = jwt.sign({ sub: String(user.id) }, secret, { expiresIn: '30d' })
 
-  return c.json({ token })
+  const isProduction = process.env.NODE_ENV === 'production'
+  setCookie(c, 'admin_token', token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'Strict',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30,
+  })
+
+  return c.json({ ok: true })
+})
+
+app.post('/logout', (c) => {
+  deleteCookie(c, 'admin_token', { path: '/' })
+  return c.json({ ok: true })
 })
 
 export default app

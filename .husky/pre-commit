@@ -1,1 +1,3 @@
+npx tsc --noEmit
+npx tsc --noEmit -p admin/tsconfig.json
 npx lint-staged

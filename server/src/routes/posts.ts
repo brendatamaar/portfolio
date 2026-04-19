@@ -5,14 +5,38 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
 import { posts, tags, postTags } from '../db/schema.js'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, count, inArray } from 'drizzle-orm'
 import { parse } from '../../../shared/markdown/parser.js'
 
 const app = new Hono()
 
 app.get('/', (c) => {
   const lang = c.req.query('lang')
+  const page = Math.max(1, Number(c.req.query('page') || 1))
+  const limit = Math.min(100, Math.max(1, Number(c.req.query('limit') || 50)))
+  const offset = (page - 1) * limit
 
+  const [{ total }] = db
+    .select({ total: count() })
+    .from(posts)
+    .where(eq(posts.status, 'published'))
+    .all()
+
+  const pageIds = db
+    .select({ id: posts.id })
+    .from(posts)
+    .where(eq(posts.status, 'published'))
+    .orderBy(desc(posts.publishedAt))
+    .limit(limit)
+    .offset(offset)
+    .all()
+    .map((r) => r.id)
+
+  if (pageIds.length === 0) {
+    return c.json({ data: [], total, page, limit })
+  }
+
+  // Single LEFT JOIN on the paginated IDs — eliminates N+1 tag fetches
   const rows = db
     .select({
       id: posts.id,
@@ -24,36 +48,52 @@ app.get('/', (c) => {
       coverImageUrl: posts.coverImageUrl,
       publishedAt: posts.publishedAt,
       createdAt: posts.createdAt,
+      tagName: tags.name,
+      tagSlug: tags.slug,
     })
     .from(posts)
-    .where(eq(posts.status, 'published'))
+    .leftJoin(postTags, eq(postTags.postId, posts.id))
+    .leftJoin(tags, eq(tags.id, postTags.tagId))
+    .where(inArray(posts.id, pageIds))
     .orderBy(desc(posts.publishedAt))
     .all()
 
-  // Attach tags and apply i18n fallback
-  const result = rows.map((post) => {
-    const postTagRows = db
-      .select({ name: tags.name, slug: tags.slug })
-      .from(postTags)
-      .innerJoin(tags, eq(postTags.tagId, tags.id))
-      .where(eq(postTags.postId, post.id))
-      .all()
-
-    const useId = lang === 'id'
-    return {
-      id: post.id,
-      title: useId && post.titleId ? post.titleId : post.title,
-      slug: post.slug,
-      description:
-        useId && post.descriptionId ? post.descriptionId : post.description,
-      coverImageUrl: post.coverImageUrl,
-      publishedAt: post.publishedAt,
-      createdAt: post.createdAt,
-      tags: postTagRows,
+  // Group rows by post, collecting tags
+  const useId = lang === 'id'
+  const postMap = new Map<
+    number,
+    {
+      id: number
+      title: string
+      slug: string
+      description: string
+      coverImageUrl: string | null
+      publishedAt: Date | null
+      createdAt: Date
+      tags: { name: string; slug: string }[]
     }
-  })
+  >()
 
-  return c.json(result)
+  for (const row of rows) {
+    if (!postMap.has(row.id)) {
+      postMap.set(row.id, {
+        id: row.id,
+        title: useId && row.titleId ? row.titleId : row.title,
+        slug: row.slug,
+        description:
+          useId && row.descriptionId ? row.descriptionId : row.description,
+        coverImageUrl: row.coverImageUrl,
+        publishedAt: row.publishedAt,
+        createdAt: row.createdAt,
+        tags: [],
+      })
+    }
+    if (row.tagName && row.tagSlug) {
+      postMap.get(row.id)!.tags.push({ name: row.tagName, slug: row.tagSlug })
+    }
+  }
+
+  return c.json({ data: Array.from(postMap.values()), total, page, limit })
 })
 
 app.get('/:slug', (c) => {
@@ -71,7 +111,7 @@ app.get('/:slug', (c) => {
   const postTagRows = db
     .select({ name: tags.name, slug: tags.slug })
     .from(postTags)
-    .innerJoin(tags, eq(postTags.tagId, tags.id))
+    .innerJoin(tags, eq(tags.id, postTags.tagId))
     .where(eq(postTags.postId, post.id))
     .all()
 

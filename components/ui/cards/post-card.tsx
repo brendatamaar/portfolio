@@ -13,7 +13,9 @@ export const BlogPostCard = memo(function BlogPostCard({
 
   return (
     <Link
-      to={`/blog/${post.slug}`}
+      to="/blog/$slug"
+      params={{ slug: post.slug }}
+      preload="intent"
       className="group block border-2 border-black bg-white p-5 shadow-[4px_4px_0px_#000] transition-all duration-150 hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_#000] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]"
     >
       <div className="mb-3 flex items-start justify-between gap-4">

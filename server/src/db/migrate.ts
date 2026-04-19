@@ -40,7 +40,7 @@ export function runMigrations(): void {
 
     CREATE TABLE IF NOT EXISTS post_tags (
       post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-      tag_id  INTEGER NOT NULL REFERENCES tags(id)  ON DELETE CASCADE,
+      tag_id  INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
       PRIMARY KEY (post_id, tag_id)
     );
 
@@ -81,9 +81,7 @@ export function runMigrations(): void {
       sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      if (!message.includes('duplicate column')) {
-        console.error('Failed to add column:', col, err)
-      }
+      if (!message.includes('duplicate column')) throw err
     }
   }
 
@@ -163,9 +161,95 @@ export function runMigrations(): void {
       sqlite.exec(stmt)
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      if (!message.includes('duplicate column')) {
-        console.error('Failed to execute migration:', stmt, err)
-      }
+      if (!message.includes('duplicate column')) throw err
     }
   }
+
+  // Item 46: Make bilingual post columns nullable (NULL = no translation, '' was ambiguous)
+  // Uses a version key so this destructive recreation only runs once.
+  const bilingualMigrated = sqlite
+    .prepare(
+      "SELECT value FROM app_settings WHERE key = 'schema_posts_bilingual_nullable_v1'",
+    )
+    .get() as { value: string } | undefined
+
+  if (!bilingualMigrated) {
+    sqlite.pragma('foreign_keys = OFF')
+    sqlite.exec(`
+      BEGIN;
+      CREATE TABLE posts_new (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        title           TEXT NOT NULL,
+        slug            TEXT NOT NULL UNIQUE,
+        description     TEXT NOT NULL DEFAULT '',
+        content         TEXT NOT NULL DEFAULT '',
+        status          TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published')),
+        cover_image_url TEXT,
+        published_at    INTEGER,
+        created_at      INTEGER NOT NULL DEFAULT (unixepoch()),
+        updated_at      INTEGER NOT NULL DEFAULT (unixepoch()),
+        title_id        TEXT,
+        description_id  TEXT,
+        content_id      TEXT
+      );
+      INSERT INTO posts_new
+        SELECT id, title, slug, description, content, status, cover_image_url, published_at,
+               created_at, updated_at,
+               NULLIF(title_id, ''), NULLIF(description_id, ''), NULLIF(content_id, '')
+        FROM posts;
+      DROP TABLE posts;
+      ALTER TABLE posts_new RENAME TO posts;
+      COMMIT;
+    `)
+    sqlite.pragma('foreign_keys = ON')
+    sqlite
+      .prepare(
+        "INSERT INTO app_settings (key, value) VALUES ('schema_posts_bilingual_nullable_v1', '1')",
+      )
+      .run()
+  }
+
+  // Item 45: Add ON DELETE CASCADE to post_tags.tag_id FK (was missing in initial migration)
+  const ptCascadeMigrated = sqlite
+    .prepare(
+      "SELECT value FROM app_settings WHERE key = 'schema_post_tags_cascade_v1'",
+    )
+    .get() as { value: string } | undefined
+
+  if (!ptCascadeMigrated) {
+    sqlite.pragma('foreign_keys = OFF')
+    sqlite.exec(`
+      BEGIN;
+      CREATE TABLE post_tags_new (
+        post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+        tag_id  INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+        PRIMARY KEY (post_id, tag_id)
+      );
+      INSERT OR IGNORE INTO post_tags_new SELECT * FROM post_tags;
+      DROP TABLE post_tags;
+      ALTER TABLE post_tags_new RENAME TO post_tags;
+      COMMIT;
+    `)
+    sqlite.pragma('foreign_keys = ON')
+    sqlite
+      .prepare(
+        "INSERT INTO app_settings (key, value) VALUES ('schema_post_tags_cascade_v1', '1')",
+      )
+      .run()
+  }
+
+  // Indexes for hot filter/sort columns
+  sqlite.exec(`
+    CREATE INDEX IF NOT EXISTS idx_posts_status_published_at
+      ON posts(status, published_at DESC);
+
+    CREATE INDEX IF NOT EXISTS idx_resume_work_locale
+      ON resume_work(locale);
+
+    CREATE INDEX IF NOT EXISTS idx_resume_education_locale
+      ON resume_education(locale);
+
+    CREATE INDEX IF NOT EXISTS idx_resume_projects_locale
+      ON resume_projects(locale);
+  `)
 }
