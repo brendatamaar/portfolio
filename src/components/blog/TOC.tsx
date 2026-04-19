@@ -12,12 +12,19 @@ export default function TOC({ toc }: TOCProps) {
       .map((item) => document.getElementById(item.id))
       .filter(Boolean) as HTMLElement[]
 
+    // Track all currently-visible headings — IntersectionObserver entries are
+    // only the *changed* ones, so we maintain a Set of visible IDs ourselves.
+    const visibleIds = new Set<string>()
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-        if (visible.length) setActiveId(visible[0].target.id)
+        entries.forEach((e) => {
+          if (e.isIntersecting) visibleIds.add(e.target.id)
+          else visibleIds.delete(e.target.id)
+        })
+        // Pick the topmost visible heading by DOM order
+        const topmost = headingEls.find((el) => visibleIds.has(el.id))
+        if (topmost) setActiveId(topmost.id)
       },
       { rootMargin: '0px 0px -60% 0px', threshold: 0 },
     )

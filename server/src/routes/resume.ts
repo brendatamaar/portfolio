@@ -172,6 +172,12 @@ resumeAdmin.patch('/work/:id', async (c) => {
 
 resumeAdmin.delete('/work/:id', (c) => {
   const id = Number(c.req.param('id'))
+  const existing = db
+    .select()
+    .from(resumeWork)
+    .where(eq(resumeWork.id, id))
+    .get()
+  if (!existing) return c.json({ error: 'Not found' }, 404)
   db.delete(resumeWork).where(eq(resumeWork.id, id)).run()
   return c.json({ ok: true })
 })
@@ -233,6 +239,12 @@ resumeAdmin.patch('/education/:id', async (c) => {
 
 resumeAdmin.delete('/education/:id', (c) => {
   const id = Number(c.req.param('id'))
+  const existing = db
+    .select()
+    .from(resumeEducation)
+    .where(eq(resumeEducation.id, id))
+    .get()
+  if (!existing) return c.json({ error: 'Not found' }, 404)
   db.delete(resumeEducation).where(eq(resumeEducation.id, id)).run()
   return c.json({ ok: true })
 })
@@ -268,6 +280,12 @@ resumeAdmin.patch('/skills/:id', async (c) => {
 
 resumeAdmin.delete('/skills/:id', (c) => {
   const id = Number(c.req.param('id'))
+  const existing = db
+    .select()
+    .from(resumeSkills)
+    .where(eq(resumeSkills.id, id))
+    .get()
+  if (!existing) return c.json({ error: 'Not found' }, 404)
   db.delete(resumeSkills).where(eq(resumeSkills.id, id)).run()
   return c.json({ ok: true })
 })
@@ -305,6 +323,12 @@ resumeAdmin.patch('/projects/:id', async (c) => {
 
 resumeAdmin.delete('/projects/:id', (c) => {
   const id = Number(c.req.param('id'))
+  const existing = db
+    .select()
+    .from(resumeProjects)
+    .where(eq(resumeProjects.id, id))
+    .get()
+  if (!existing) return c.json({ error: 'Not found' }, 404)
   db.delete(resumeProjects).where(eq(resumeProjects.id, id)).run()
   return c.json({ ok: true })
 })

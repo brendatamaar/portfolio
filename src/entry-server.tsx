@@ -97,10 +97,20 @@ export async function render(url: string, template: string): Promise<string> {
       lastMatchId: router.state.matches.at(-1)?.id ?? '',
     },
   })
+    // Escape sequences that would break out of the <script> tag or cause issues
+    // in HTML parsers even before the JS engine sees them.
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
   const ssrScript = `<script>window.$_TSR=${tsrState}</script>`
 
   // Extract head data from matched routes by calling each route's head() function
-  const routesById = router.routesById as Record<string, RouteWithHead>
+  const routesById = router.routesById as unknown as Record<
+    string,
+    RouteWithHead
+  >
   const metas = router.state.matches.flatMap((match) => {
     const route = routesById[match.routeId]
     if (!route?.options?.head) return []

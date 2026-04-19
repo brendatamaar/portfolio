@@ -7,6 +7,7 @@ import {
   lazy,
   Suspense,
 } from 'react'
+import { ErrorBoundary } from '@/src/components/ui/error-boundary'
 import { api } from '@/src/lib/api'
 import type {
   PostSummary,
@@ -36,16 +37,33 @@ import { useLang } from '@/src/context/LanguageContext'
 
 const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
 
+const EMPTY_RESUME: ResumeData = {
+  profile: null,
+  work: [],
+  education: [],
+  skills: [],
+  projects: [],
+}
+
 export const Route = createFileRoute('/')({
   loader: async () => {
-    const [posts, book, album, resumeEn, resumeId] = await Promise.all([
-      api.getPosts('en').then((p) => p.slice(0, BLOG_POSTS_PREVIEW)),
-      api.getFeaturedBook().catch(() => null),
-      api.getFeaturedAlbum().catch(() => null),
-      api.getResumeData('en'),
-      api.getResumeData('id'),
-    ])
-    return { posts, book, album, resumeEn, resumeId }
+    const [postsRes, bookRes, albumRes, resumeEnRes, resumeIdRes] =
+      await Promise.allSettled([
+        api.getPosts('en').then((r) => r.data.slice(0, BLOG_POSTS_PREVIEW)),
+        api.getFeaturedBook(),
+        api.getFeaturedAlbum(),
+        api.getResumeData('en'),
+        api.getResumeData('id'),
+      ])
+    return {
+      posts: postsRes.status === 'fulfilled' ? postsRes.value : [],
+      book: bookRes.status === 'fulfilled' ? bookRes.value : null,
+      album: albumRes.status === 'fulfilled' ? albumRes.value : null,
+      resumeEn:
+        resumeEnRes.status === 'fulfilled' ? resumeEnRes.value : EMPTY_RESUME,
+      resumeId:
+        resumeIdRes.status === 'fulfilled' ? resumeIdRes.value : EMPTY_RESUME,
+    }
   },
   head: () => ({
     meta: [
@@ -118,7 +136,7 @@ function HomePage() {
     setIsLoading(true)
     api
       .getPosts(lang)
-      .then((posts) => setBlogPosts(posts.slice(0, BLOG_POSTS_PREVIEW)))
+      .then((r) => setBlogPosts(r.data.slice(0, BLOG_POSTS_PREVIEW)))
       .catch((err) => console.error('Error loading blog posts:', err))
       .finally(() => setIsLoading(false))
   }, [lang])
@@ -129,7 +147,7 @@ function HomePage() {
         <Header />
         <Hero data={data} />
 
-        <main className="space-y-20">
+        <main id="main" className="space-y-20">
           {/* 01 — Projects */}
           <Reveal>
             <section>
@@ -315,20 +333,22 @@ function HomePage() {
                 {t('home.connect')}
               </p>
               <div className="flex flex-wrap gap-3">
-                <Suspense fallback={null}>
-                  {(data.profile?.social ?? []).map((link) => (
-                    <Magnetic key={link.name} intensity={0.4} range={80}>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:border-black hover:bg-[#FFE600] dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:border-[#FFE600] dark:hover:bg-[#FFE600] dark:hover:text-black"
-                      >
-                        {link.name} ↗
-                      </a>
-                    </Magnetic>
-                  ))}
-                </Suspense>
+                <ErrorBoundary fallback={null}>
+                  <Suspense fallback={null}>
+                    {(data.profile?.social ?? []).map((link) => (
+                      <Magnetic key={link.name} intensity={0.4} range={80}>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:border-black hover:bg-[#FFE600] dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:border-[#FFE600] dark:hover:bg-[#FFE600] dark:hover:text-black"
+                        >
+                          {link.name} ↗
+                        </a>
+                      </Magnetic>
+                    ))}
+                  </Suspense>
+                </ErrorBoundary>
               </div>
             </section>
           </Reveal>

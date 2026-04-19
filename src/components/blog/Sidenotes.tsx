@@ -5,42 +5,52 @@ export default function Sidenotes({ sidenotes, contentRef }: SidenotesProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!contentRef.current || !containerRef.current) return
+    const containerEl = containerRef.current
+    const contentEl = contentRef.current
+    if (!containerEl || !contentEl) return
 
-    // Align each note's top edge to its inline reference marker.
-    // Both elements use document-relative Y via getBoundingClientRect + scrollY,
-    // then we subtract the container's own offset so the `top` value is relative
-    // to the container (which is `position: relative`).
     const position = () => {
-      sidenotes.forEach(({ id }) => {
-        const ref = contentRef.current?.querySelector(
-          `[data-sidenote-id="${id}"]`,
-        ) as HTMLElement | null
-        const noteEl = containerRef.current?.querySelector(
-          `[data-sidenote="${id}"]`,
-        ) as HTMLElement | null
-        if (!ref || !noteEl) return
+      // Phase 1: collect element pairs
+      const pairs = sidenotes
+        .map(({ id }) => ({
+          refEl: contentEl.querySelector(
+            `[data-sidenote-id="${id}"]`,
+          ) as HTMLElement | null,
+          noteEl: containerEl.querySelector(
+            `[data-sidenote="${id}"]`,
+          ) as HTMLElement | null,
+        }))
+        .filter(
+          (p): p is { refEl: HTMLElement; noteEl: HTMLElement } =>
+            p.refEl !== null && p.noteEl !== null,
+        )
 
-        const refTop = ref.getBoundingClientRect().top + window.scrollY
-        const containerTop =
-          containerRef.current!.getBoundingClientRect().top + window.scrollY
-        noteEl.style.top = `${refTop - containerTop}px`
+      // Phase 2: batch all reads (single layout recalculation)
+      const containerTop =
+        containerEl.getBoundingClientRect().top + window.scrollY
+      const refTops = pairs.map(
+        (p) => p.refEl.getBoundingClientRect().top + window.scrollY,
+      )
+
+      // Phase 3: batch all writes (no forced reflow between writes)
+      pairs.forEach(({ noteEl }, i) => {
+        noteEl.style.top = `${refTops[i] - containerTop}px`
       })
     }
 
     position()
 
-    // Debounce resize so we don't thrash layout on every pixel of resize.
-    let timer: ReturnType<typeof setTimeout>
+    // requestAnimationFrame-debounced resize — avoids thrashing during live resize
+    let rafId = 0
     const onResize = () => {
-      clearTimeout(timer)
-      timer = setTimeout(position, 50)
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(position)
     }
 
     window.addEventListener('resize', onResize)
     return () => {
       window.removeEventListener('resize', onResize)
-      clearTimeout(timer)
+      cancelAnimationFrame(rafId)
     }
   }, [sidenotes, contentRef])
 

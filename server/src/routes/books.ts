@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { z } from 'zod'
 import { db } from '../db/index.js'
 import { books } from '../db/schema.js'
 import { eq, desc } from 'drizzle-orm'
@@ -38,16 +39,50 @@ function coverFromVolume(vol: GBVolume['volumeInfo']): string | null {
   return vol?.imageLinks?.thumbnail ?? null
 }
 
+// In-memory TTL cache for Google Books search results
+type CacheEntry<T> = { value: T; expiresAt: number }
+const searchCache = new Map<string, CacheEntry<GBVolume[]>>()
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
+function getCached(key: string): GBVolume[] | undefined {
+  const entry = searchCache.get(key)
+  if (!entry) return undefined
+  if (Date.now() > entry.expiresAt) {
+    searchCache.delete(key)
+    return undefined
+  }
+  return entry.value
+}
+
+function setCached(key: string, value: GBVolume[]) {
+  searchCache.set(key, { value, expiresAt: Date.now() + CACHE_TTL })
+}
+
 async function googleBooksSearch(
   query: string,
   maxResults = 10,
 ): Promise<GBVolume[]> {
-  const res = await fetch(
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&printType=books`,
-  )
-  if (!res.ok) return []
-  const data = (await res.json()) as { items?: GBVolume[] }
-  return data.items ?? []
+  const cacheKey = `${query}:${maxResults}`
+  const cached = getCached(cacheKey)
+  if (cached) return cached
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5_000)
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&printType=books`,
+      { signal: controller.signal },
+    )
+    if (!res.ok) return []
+    const data = (await res.json()) as { items?: GBVolume[] }
+    const items = data.items ?? []
+    setCached(cacheKey, items)
+    return items
+  } catch {
+    return []
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 async function fetchBookMeta(
@@ -80,6 +115,14 @@ function toResponse(row: typeof books.$inferSelect) {
     createdAt: row.createdAt,
   }
 }
+
+const bookSchema = z.object({
+  title: z.string().min(1),
+  author: z.string().min(1),
+  status: z.enum(['reading', 'finished', 'want']).optional(),
+  coverUrl: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+})
 
 // public router
 
@@ -126,19 +169,28 @@ booksAdmin.get('/search', async (c) => {
 })
 
 booksAdmin.post('/', async (c) => {
+  const body = await c.req.json().catch(() => null)
+  if (body === null) return c.json({ error: 'Malformed JSON' }, 400)
+  const parsed = bookSchema.safeParse(body)
+  if (!parsed.success)
+    return c.json(
+      {
+        error: 'Validation failed',
+        issues: parsed.error.issues.map((i) => ({
+          path: i.path.join('.'),
+          message: i.message,
+        })),
+      },
+      422,
+    )
+
   const {
     title,
     author,
     status,
     coverUrl: providedCover,
     year: providedYear,
-  } = await c.req.json<{
-    title: string
-    author: string
-    status?: 'reading' | 'finished' | 'want'
-    coverUrl?: string | null
-    year?: number | null
-  }>()
+  } = parsed.data
 
   const needsFetch = providedCover === undefined || providedYear === undefined
   const meta = needsFetch
@@ -172,6 +224,8 @@ booksAdmin.patch('/:id/feature', (c) => {
 
 booksAdmin.delete('/:id', (c) => {
   const id = Number(c.req.param('id'))
+  const existing = db.select().from(books).where(eq(books.id, id)).get()
+  if (!existing) return c.json({ error: 'Not found' }, 404)
   db.delete(books).where(eq(books.id, id)).run()
   return c.json({ ok: true })
 })

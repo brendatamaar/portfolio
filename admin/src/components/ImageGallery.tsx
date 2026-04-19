@@ -1,13 +1,24 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { XIcon, Trash2Icon, UploadIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Image } from '../lib/api.ts'
 import type { ImageGalleryProps } from '../lib/types.ts'
+import { useImageUpload } from '../hooks/useImageUpload.ts'
 
 export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
   const [images, setImages] = useState<Image[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  // Return focus to the element that was active before this modal opened
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null
+    closeRef.current?.focus()
+    return () => {
+      prev?.focus()
+    }
+  }, [])
 
   useEffect(() => {
     api.images
@@ -16,32 +27,35 @@ export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
       .finally(() => setLoading(false))
   }, [])
 
-  async function handleUpload(files: FileList | null) {
-    if (!files?.length) return
-    setUploading(true)
-    try {
-      for (const file of Array.from(files)) {
-        const result = await api.images.upload(file)
-        setImages((prev) => [
-          {
-            id: result.id,
-            filename: result.filename,
-            originalName: file.name,
-            mimeType: file.type,
-            sizeBytes: file.size,
-            url: result.url,
-            createdAt: new Date().toISOString(),
-          },
-          ...prev,
-        ])
-      }
-    } catch (err) {
+  const { upload } = useImageUpload({
+    onSuccess: (result, file) => {
+      setImages((prev) => [
+        {
+          id: result.id,
+          filename: result.filename,
+          originalName: file.name,
+          mimeType: file.type,
+          sizeBytes: file.size,
+          url: result.url,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ])
+    },
+    onError: (_file, err) => {
       console.error('Upload failed:', err)
-      throw err
-    } finally {
+    },
+  })
+
+  const handleUpload = useCallback(
+    async (files: FileList | null) => {
+      if (!files?.length) return
+      setUploading(true)
+      await upload(Array.from(files))
       setUploading(false)
-    }
-  }
+    },
+    [upload],
+  )
 
   async function handleDelete(img: Image) {
     if (!confirm(`Delete "${img.originalName}"?`)) return
@@ -58,7 +72,9 @@ export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
             Image Gallery
           </h2>
           <button
+            ref={closeRef}
             onClick={onClose}
+            aria-label="Close image gallery"
             className="text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
           >
             <XIcon size={16} />
@@ -116,6 +132,7 @@ export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
                     type="button"
                     onClick={() => handleDelete(img)}
                     className="absolute top-1 right-1 bg-black/70 p-1 text-white/50 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
+                    aria-label={`Delete ${img.originalName}`}
                     title="Delete"
                   >
                     <Trash2Icon size={11} />

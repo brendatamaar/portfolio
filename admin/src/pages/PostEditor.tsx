@@ -4,6 +4,7 @@ import {
   useRef,
   useCallback,
   useMemo,
+  useDeferredValue,
   type KeyboardEvent,
   type DragEvent,
   type ClipboardEvent,
@@ -20,13 +21,15 @@ import {
   XIcon,
   RefreshCwIcon,
 } from 'lucide-react'
-import { api } from '../lib/api.ts'
+import { api, ApiError } from '../lib/api.ts'
 import type { Post, Tag } from '../lib/api.ts'
+import { useImageUpload } from '../hooks/useImageUpload.ts'
 import Toolbar from '../components/Toolbar.tsx'
 import Preview from '../components/Preview.tsx'
 import ImageGallery from '../components/ImageGallery.tsx'
 import { useTheme } from '../lib/theme.ts'
 import type { Mode } from '../lib/types.ts'
+import { DRAFT_AUTOSAVE_DEBOUNCE_MS } from '../lib/constants.ts'
 
 export default function PostEditor() {
   const { id } = useParams<{ id?: string }>()
@@ -76,16 +79,12 @@ export default function PostEditor() {
 
   // Load existing post
   useEffect(() => {
+    const controller = new AbortController()
     api.tags.list().then(setAllTags).catch(console.error)
     if (!isNew && id) {
       api.posts
-        .list()
-        .then((posts) => {
-          const post = posts.find((p) => p.id === Number(id))
-          if (!post) {
-            navigate('/')
-            return
-          }
+        .get(Number(id), controller.signal)
+        .then((post) => {
           setTitle(post.title)
           setSlug(post.slug)
           setDescription(post.description)
@@ -102,8 +101,13 @@ export default function PostEditor() {
           setCoverImageUrl(post.coverImageUrl ?? '')
           setSelectedTagIds(post.tags.map((t) => t.id))
         })
+        .catch((err) => {
+          if (err instanceof ApiError && err.status === 0) return
+          navigate('/')
+        })
         .finally(() => setLoading(false))
     }
+    return () => controller.abort()
   }, [id, isNew, navigate])
 
   // Auto-slug from title (only for new posts, only if user hasn't edited slug)
@@ -166,16 +170,24 @@ export default function PostEditor() {
       }
       if (e.key === 'b') {
         e.preventDefault()
-        document.execCommand('insertText', false, '****')
-        const s = ta.selectionStart
-        ta.setSelectionRange(s - 2, s - 2)
+        const start = ta.selectionStart
+        const end = ta.selectionEnd
+        const sel = ta.value.slice(start, end)
+        document.execCommand('insertText', false, `**${sel}**`)
+        sel
+          ? ta.setSelectionRange(start + 2, end + 2)
+          : ta.setSelectionRange(start + 2, start + 2)
         return
       }
       if (e.key === 'i') {
         e.preventDefault()
-        document.execCommand('insertText', false, '**')
-        const s = ta.selectionStart
-        ta.setSelectionRange(s - 1, s - 1)
+        const start = ta.selectionStart
+        const end = ta.selectionEnd
+        const sel = ta.value.slice(start, end)
+        document.execCommand('insertText', false, `*${sel}*`)
+        sel
+          ? ta.setSelectionRange(start + 1, end + 1)
+          : ta.setSelectionRange(start + 1, start + 1)
         return
       }
       if (e.key === 'k') {
@@ -199,34 +211,38 @@ export default function PostEditor() {
     }
   }, [])
 
+  const { upload: uploadImages } = useImageUpload({
+    onSuccess: ({ url }, file) => {
+      document.execCommand('insertText', false, `![${file.name}](${url})`)
+    },
+    onError: (_file, _err) => {
+      setSaveMsg('Upload failed')
+    },
+  })
+
   // Drag & drop images onto editor
-  const handleDrop = useCallback(async (e: DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault()
-    const files = Array.from(e.dataTransfer.files).filter((f) =>
-      f.type.startsWith('image/'),
-    )
-    for (const file of files) {
-      const { url } = await api.images.upload(file)
-      const md = `![${file.name}](${url})`
-      document.execCommand('insertText', false, md)
-    }
-  }, [])
+  const handleDrop = useCallback(
+    (e: DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault()
+      const files = Array.from(e.dataTransfer.files).filter((f) =>
+        f.type.startsWith('image/'),
+      )
+      void uploadImages(files)
+    },
+    [uploadImages],
+  )
 
   // Paste images
   const handlePaste = useCallback(
-    async (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    (e: ClipboardEvent<HTMLTextAreaElement>) => {
       const files = Array.from(e.clipboardData.files).filter((f) =>
         f.type.startsWith('image/'),
       )
       if (!files.length) return
       e.preventDefault()
-      for (const file of files) {
-        const { url } = await api.images.upload(file)
-        const md = `![pasted-image](${url})`
-        document.execCommand('insertText', false, md)
-      }
+      void uploadImages(files)
     },
-    [],
+    [uploadImages],
   )
 
   function insertImageUrl(url: string) {
@@ -262,6 +278,7 @@ export default function PostEditor() {
       }
       setSaveMsg('')
       setLastSavedAt(new Date())
+      localStorage.removeItem(draftKey)
     } catch (err) {
       setSaveMsg('Save failed')
       console.error(err)
@@ -348,6 +365,72 @@ export default function PostEditor() {
   const activeContent = langTab === 'id' ? contentId : content
   const setActiveContent = langTab === 'id' ? setContentId : setContent
 
+  // Deferred content for Preview — lets typing stay responsive while preview
+  // renders at lower priority in the background
+  const deferredContent = useDeferredValue(activeContent)
+
+  // Autosave draft to localStorage — debounced after last change
+  const draftKey = `postdraft-${id ?? 'new'}`
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const draft = JSON.stringify({
+        title,
+        slug,
+        description,
+        content,
+        titleId,
+        descriptionId,
+        contentId,
+        coverImageUrl,
+        selectedTagIds,
+        savedAt: new Date().toISOString(),
+      })
+      localStorage.setItem(draftKey, draft)
+    }, DRAFT_AUTOSAVE_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [
+    draftKey,
+    title,
+    slug,
+    description,
+    content,
+    titleId,
+    descriptionId,
+    contentId,
+    coverImageUrl,
+    selectedTagIds,
+  ])
+
+  // Restore draft for new posts on mount
+  useEffect(() => {
+    if (!isNew) return
+    const raw = localStorage.getItem(draftKey)
+    if (!raw) return
+    try {
+      const draft = JSON.parse(raw)
+      if (draft.title || draft.content || draft.contentId) {
+        const age = draft.savedAt
+          ? Math.round((Date.now() - new Date(draft.savedAt).getTime()) / 60000)
+          : null
+        const label = age !== null ? ` (${age}m ago)` : ''
+        if (confirm(`Restore unsaved draft${label}?`)) {
+          setTitle(draft.title ?? '')
+          setSlug(draft.slug ?? '')
+          setDescription(draft.description ?? '')
+          setContent(draft.content ?? '')
+          setTitleId(draft.titleId ?? '')
+          setDescriptionId(draft.descriptionId ?? '')
+          setContentId(draft.contentId ?? '')
+          setCoverImageUrl(draft.coverImageUrl ?? '')
+          setSelectedTagIds(draft.selectedTagIds ?? [])
+        }
+      }
+    } catch {
+      // malformed draft — ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Heading outline parsed from active content
   const headings = useMemo(
     () =>
@@ -399,6 +482,7 @@ export default function PostEditor() {
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-black/10 px-4 dark:border-white/10">
         <Link
           to="/"
+          aria-label="Back to posts list"
           className="shrink-0 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
         >
           <ArrowLeftIcon size={15} />
@@ -586,7 +670,7 @@ export default function PostEditor() {
               ref={previewRef}
               className={`min-h-0 overflow-y-auto ${mode === 'split' ? 'w-1/2' : 'w-full'}`}
             >
-              <Preview markdown={activeContent} />
+              <Preview markdown={deferredContent} />
             </div>
           )}
         </div>
@@ -597,10 +681,14 @@ export default function PostEditor() {
             <div className="flex flex-col gap-5 p-4">
               {/* Slug */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">
+                <label
+                  htmlFor="meta-slug"
+                  className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30"
+                >
                   Slug
                 </label>
                 <input
+                  id="meta-slug"
                   value={slug}
                   onChange={(e) => {
                     slugTouched.current = true
@@ -612,10 +700,14 @@ export default function PostEditor() {
 
               {/* Published at */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">
+                <label
+                  htmlFor="meta-published-at"
+                  className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30"
+                >
                   Published at
                 </label>
                 <input
+                  id="meta-published-at"
                   type="date"
                   value={publishedAt}
                   onChange={(e) => setPublishedAt(e.target.value)}
@@ -625,10 +717,14 @@ export default function PostEditor() {
 
               {/* Description */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">
+                <label
+                  htmlFor="meta-description"
+                  className="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30"
+                >
                   Description {langTab === 'id' ? '(ID)' : '(EN)'}
                 </label>
                 <textarea
+                  id="meta-description"
                   value={langTab === 'id' ? descriptionId : description}
                   onChange={(e) =>
                     langTab === 'id'

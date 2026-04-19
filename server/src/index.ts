@@ -4,6 +4,8 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { serve } from '@hono/node-server'
 import { runMigrations } from './db/migrate.js'
 import { initJwtSecret } from './lib/init.js'
+import { db } from './db/index.js'
+import { sql } from 'drizzle-orm'
 import authRoutes from './routes/auth.js'
 import postsRoutes from './routes/posts.js'
 import adminRoutes from './routes/admin.js'
@@ -12,6 +14,7 @@ import { albumsPublic, albumsAdmin } from './routes/albums.js'
 import { resumePublic, resumeAdmin } from './routes/resume.js'
 import { authMiddleware } from './middleware/auth.js'
 import { requestLogger } from './middleware/requestLogger.js'
+import { createRateLimit } from './middleware/rateLimit.js'
 import { logger } from './lib/logger.js'
 
 // Bootstrap
@@ -34,7 +37,7 @@ app.use(
         'http://localhost:5173',
         'http://localhost:5174',
       ]
-      return allowed.includes(origin) ? origin : allowed[0]
+      return allowed.includes(origin) ? origin : null
     },
     credentials: true,
   }),
@@ -43,7 +46,12 @@ app.use(
 // Static uploads
 app.use('/uploads/*', serveStatic({ root: './' }))
 
+// Rate limiters
+const loginLimiter = createRateLimit({ windowMs: 15 * 60 * 1000, max: 10 })
+const uploadLimiter = createRateLimit({ windowMs: 60 * 1000, max: 20 })
+
 // Public routes
+app.use('/api/auth/login', loginLimiter)
 app.route('/api/auth', authRoutes)
 app.route('/api/posts', postsRoutes)
 app.route('/api/books', booksPublic)
@@ -51,6 +59,7 @@ app.route('/api/albums', albumsPublic)
 app.route('/api/resume', resumePublic)
 
 // Protected admin routes
+app.use('/api/admin/upload', uploadLimiter)
 app.use('/api/admin/*', authMiddleware)
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin/books', booksAdmin)
@@ -58,7 +67,20 @@ app.route('/api/admin/albums', albumsAdmin)
 app.route('/api/admin/resume', resumeAdmin)
 
 // Health check
-app.get('/api/health', (c) => c.json({ ok: true }))
+app.get('/api/health', (c) => {
+  try {
+    db.run(sql`SELECT 1`)
+    return c.json({ ok: true })
+  } catch {
+    return c.json({ ok: false, error: 'Database unavailable' }, 503)
+  }
+})
+
+// Global error handler
+app.onError((err, c) => {
+  logger.error(`${c.req.method} ${c.req.path} — ${err.message}`)
+  return c.json({ error: 'Internal server error' }, 500)
+})
 
 // Server
 

@@ -19,5 +19,12 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", "contentful", "server", "admin", "shared"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "contentful",
+    "server",
+    "admin",
+    "server.ts"
+  ]
 }

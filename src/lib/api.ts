@@ -8,10 +8,20 @@ import type { Lang } from './i18n.js'
 
 // Server-side SSR uses VITE_API_INTERNAL_URL (e.g. http://localhost:3001) to avoid
 // going through the public domain. Client-side uses VITE_API_URL (public URL).
-const BASE =
-  typeof window === 'undefined'
-    ? (import.meta.env.VITE_API_INTERNAL_URL ?? 'http://localhost:3001')
-    : (import.meta.env.VITE_API_URL ?? 'http://localhost:3001')
+function resolveBase(): string {
+  if (typeof window === 'undefined') {
+    const url = import.meta.env.VITE_API_INTERNAL_URL
+    if (!url && import.meta.env.PROD)
+      throw new Error('VITE_API_INTERNAL_URL is required in production')
+    return url ?? 'http://localhost:3001'
+  }
+  const url = import.meta.env.VITE_API_URL
+  if (!url && import.meta.env.PROD)
+    throw new Error('VITE_API_URL is required in production')
+  return url ?? 'http://localhost:3001'
+}
+
+const BASE = resolveBase()
 
 export interface PostTag {
   name: string
@@ -29,6 +39,13 @@ export interface PostSummary {
   /** ISO date string of row creation. */
   createdAt: string
   tags: PostTag[]
+}
+
+export interface PostsResponse {
+  data: PostSummary[]
+  total: number
+  page: number
+  limit: number
 }
 
 export interface PostDetail {
@@ -117,12 +134,12 @@ export interface ResumeData {
   projects: ResumeProjectItem[]
 }
 
-async function apiFetch<T>(path: string): Promise<T> {
+async function apiFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
   const url = `${BASE}${path}`
   const start = performance.now()
   logger.debug('→', path)
   try {
-    const res = await fetch(url)
+    const res = await fetch(url, { signal })
     const ms = Math.round(performance.now() - start)
     if (!res.ok) {
       logger.error(`${res.status} ${path} (${ms}ms)`)
@@ -138,13 +155,15 @@ async function apiFetch<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  getPosts: (lang?: Lang) =>
-    apiFetch<PostSummary[]>(
+  getPosts: (lang?: Lang, signal?: AbortSignal) =>
+    apiFetch<PostsResponse>(
       lang && lang !== 'en' ? `/posts?lang=${lang}` : '/posts',
+      signal,
     ),
-  getPost: (slug: string, lang?: Lang) =>
+  getPost: (slug: string, lang?: Lang, signal?: AbortSignal) =>
     apiFetch<PostDetail>(
       lang && lang !== 'en' ? `/posts/${slug}?lang=${lang}` : `/posts/${slug}`,
+      signal,
     ),
   getBooks: () => apiFetch<BookItem[]>('/books'),
   getAlbums: () => apiFetch<AlbumItem[]>('/albums'),

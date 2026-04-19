@@ -1,8 +1,14 @@
 import type { Context, Next } from 'hono'
 import jwt from 'jsonwebtoken'
+import { z } from 'zod'
+import { getCookie } from 'hono/cookie'
 import { db } from '../db/index.js'
 import { appSettings } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
+
+const jwtPayloadSchema = z.object({
+  sub: z.string(),
+})
 
 export async function getJwtSecret(): Promise<string> {
   const row = db
@@ -16,15 +22,15 @@ export async function getJwtSecret(): Promise<string> {
 }
 
 export async function authMiddleware(c: Context, next: Next) {
-  const header = c.req.header('Authorization')
-  if (!header?.startsWith('Bearer ')) {
+  const token = getCookie(c, 'admin_token')
+  if (!token) {
     return c.json({ error: 'Unauthorized' }, 401)
   }
 
-  const token = header.slice(7)
   try {
     const secret = await getJwtSecret()
-    const payload = jwt.verify(token, secret) as { sub: string }
+    const raw = jwt.verify(token, secret)
+    const payload = jwtPayloadSchema.parse(raw)
     c.set('userId', payload.sub)
     await next()
   } catch {

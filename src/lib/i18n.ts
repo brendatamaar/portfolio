@@ -90,14 +90,22 @@ export const translations = {
 type Translations = typeof translations
 type LangDict = Translations[Lang]
 
-/** Nested key resolver — supports up to 2-level dot-notation e.g. "blog.heading" */
-export function resolveKey(dict: LangDict, key: string): string {
+/** All valid dot-notation translation keys — typos become compile errors */
+type DotKeys<T, Prefix extends string = ''> = {
+  [K in keyof T]: T[K] extends string
+    ? `${Prefix}${K & string}`
+    : DotKeys<T[K], `${Prefix}${K & string}.`>
+}[keyof T]
+
+export type TranslationKey = DotKeys<Translations['en']>
+
+/** Nested key resolver — supports dot-notation e.g. "blog.heading" */
+export function resolveKey(dict: LangDict, key: TranslationKey): string {
   const parts = key.split('.')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let cur: any = dict
+  let cur: unknown = dict
   for (const p of parts) {
     if (cur == null || typeof cur !== 'object') return key
-    cur = cur[p]
+    cur = (cur as Record<string, unknown>)[p]
   }
   return typeof cur === 'string' ? cur : key
 }
