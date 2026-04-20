@@ -2,9 +2,7 @@ import { useState } from 'react'
 import type { BookItem, AlbumItem } from '@/src/lib/api'
 import { BOOK_STATUS_LABEL, BOOK_STATUS_BADGE } from '@/src/lib/constants'
 
-type FeaturedCardProps =
-  | { type: 'book'; item: BookItem }
-  | { type: 'album'; item: AlbumItem }
+import type { FeaturedCardProps } from './featured-card.types'
 
 const STATUS_STYLE = BOOK_STATUS_BADGE
 const STATUS_LABEL = BOOK_STATUS_LABEL

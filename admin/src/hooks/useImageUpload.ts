@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { api } from '../lib/api.ts'
-
-export type UploadedImage = { id: number; url: string; filename: string }
+import type { UploadedImage } from '../types/editor'
+export type { UploadedImage }
 
 /**
  * Returns an upload function that handles a list of image files.

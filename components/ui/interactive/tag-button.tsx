@@ -5,11 +5,7 @@ import {
   TAG_BUTTON_INACTIVE,
 } from '@/lib/constants'
 
-interface TagButtonProps {
-  label: string
-  active: boolean
-  onClick: () => void
-}
+import type { TagButtonProps } from './tag-button.types'
 
 export function TagButton({ label, active, onClick }: TagButtonProps) {
   return (

@@ -10,6 +10,23 @@ import { parse } from '../../../shared/markdown/parser.js'
 
 const app = new Hono()
 
+function localizeFields(
+  src: {
+    title: string
+    titleId: string | null
+    description: string
+    descriptionId: string | null
+  },
+  lang: string | undefined,
+) {
+  const useId = lang === 'id'
+  return {
+    title: useId && src.titleId ? src.titleId : src.title,
+    description:
+      useId && src.descriptionId ? src.descriptionId : src.description,
+  }
+}
+
 app.get('/', (c) => {
   const lang = c.req.query('lang')
   const page = Math.max(1, Number(c.req.query('page') || 1))
@@ -59,7 +76,6 @@ app.get('/', (c) => {
     .all()
 
   // Group rows by post, collecting tags
-  const useId = lang === 'id'
   const postMap = new Map<
     number,
     {
@@ -76,12 +92,12 @@ app.get('/', (c) => {
 
   for (const row of rows) {
     if (!postMap.has(row.id)) {
+      const { title, description } = localizeFields(row, lang)
       postMap.set(row.id, {
         id: row.id,
-        title: useId && row.titleId ? row.titleId : row.title,
+        title,
         slug: row.slug,
-        description:
-          useId && row.descriptionId ? row.descriptionId : row.description,
+        description,
         coverImageUrl: row.coverImageUrl,
         publishedAt: row.publishedAt,
         createdAt: row.createdAt,
@@ -118,14 +134,14 @@ app.get('/:slug', (c) => {
   const useId = lang === 'id'
   const contentSrc = useId && post.contentId ? post.contentId : post.content
   const { html, toc, sidenotes, bibliography } = parse(contentSrc)
+  const { title, description } = localizeFields(post, lang)
 
   return c.json({
     post: {
       id: post.id,
-      title: useId && post.titleId ? post.titleId : post.title,
+      title,
       slug: post.slug,
-      description:
-        useId && post.descriptionId ? post.descriptionId : post.description,
+      description,
       coverImageUrl: post.coverImageUrl,
       publishedAt: post.publishedAt,
       createdAt: post.createdAt,

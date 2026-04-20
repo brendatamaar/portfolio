@@ -28,7 +28,8 @@ import {
   PanelRightIcon,
 } from 'lucide-react'
 
-import type { Mode, ToolbarProps } from '../lib/types.ts'
+import type { Mode } from '../types/editor'
+import type { ToolbarProps } from '../types/ui'
 import { ADMONITION_TYPES } from '../lib/constants.ts'
 
 function wrap(

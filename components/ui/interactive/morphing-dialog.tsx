@@ -9,23 +9,36 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import {
-  motion,
-  AnimatePresence,
-  MotionConfig,
-  Transition,
-  Variant,
-} from 'motion/react'
+import { motion, AnimatePresence, MotionConfig } from 'motion/react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { XIcon } from 'lucide-react'
 import useClickOutside from '@/hooks/useClickOutside'
-
-export type MorphingDialogContextType = {
-  isOpen: boolean
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  uniqueId: string
-  triggerRef: React.RefObject<HTMLDivElement>
+import type {
+  MorphingDialogContextType,
+  MorphingDialogProviderProps,
+  MorphingDialogProps,
+  MorphingDialogTriggerProps,
+  MorphingDialogContentProps,
+  MorphingDialogContainerProps,
+  MorphingDialogTitleProps,
+  MorphingDialogSubtitleProps,
+  MorphingDialogDescriptionProps,
+  MorphingDialogImageProps,
+  MorphingDialogCloseProps,
+} from './morphing-dialog.types'
+export type {
+  MorphingDialogContextType,
+  MorphingDialogProviderProps,
+  MorphingDialogProps,
+  MorphingDialogTriggerProps,
+  MorphingDialogContentProps,
+  MorphingDialogContainerProps,
+  MorphingDialogTitleProps,
+  MorphingDialogSubtitleProps,
+  MorphingDialogDescriptionProps,
+  MorphingDialogImageProps,
+  MorphingDialogCloseProps,
 }
 
 const MorphingDialogContext =
@@ -39,11 +52,6 @@ function useMorphingDialog() {
     )
   }
   return context
-}
-
-export type MorphingDialogProviderProps = {
-  children: React.ReactNode
-  transition?: Transition
 }
 
 function MorphingDialogProvider({
@@ -71,24 +79,12 @@ function MorphingDialogProvider({
   )
 }
 
-export type MorphingDialogProps = {
-  children: React.ReactNode
-  transition?: Transition
-}
-
 function MorphingDialog({ children, transition }: MorphingDialogProps) {
   return (
     <MorphingDialogProvider>
       <MotionConfig transition={transition}>{children}</MotionConfig>
     </MorphingDialogProvider>
   )
-}
-
-export type MorphingDialogTriggerProps = {
-  children: React.ReactNode
-  className?: string
-  style?: React.CSSProperties
-  triggerRef?: React.RefObject<HTMLDivElement>
 }
 
 function MorphingDialogTrigger({
@@ -130,12 +126,6 @@ function MorphingDialogTrigger({
       {children}
     </motion.div>
   )
-}
-
-export type MorphingDialogContentProps = {
-  children: React.ReactNode
-  className?: string
-  style?: React.CSSProperties
 }
 
 function MorphingDialogContent({
@@ -220,12 +210,6 @@ function MorphingDialogContent({
   )
 }
 
-export type MorphingDialogContainerProps = {
-  children: React.ReactNode
-  className?: string
-  style?: React.CSSProperties
-}
-
 function MorphingDialogContainer({ children }: MorphingDialogContainerProps) {
   const { isOpen, uniqueId } = useMorphingDialog()
   const [mounted, setMounted] = useState(false)
@@ -258,12 +242,6 @@ function MorphingDialogContainer({ children }: MorphingDialogContainerProps) {
   )
 }
 
-export type MorphingDialogTitleProps = {
-  children: React.ReactNode
-  className?: string
-  style?: React.CSSProperties
-}
-
 function MorphingDialogTitle({
   children,
   className,
@@ -283,12 +261,6 @@ function MorphingDialogTitle({
   )
 }
 
-export type MorphingDialogSubtitleProps = {
-  children: React.ReactNode
-  className?: string
-  style?: React.CSSProperties
-}
-
 function MorphingDialogSubtitle({
   children,
   className,
@@ -305,17 +277,6 @@ function MorphingDialogSubtitle({
       {children}
     </motion.div>
   )
-}
-
-export type MorphingDialogDescriptionProps = {
-  children: React.ReactNode
-  className?: string
-  disableLayoutAnimation?: boolean
-  variants?: {
-    initial: Variant
-    animate: Variant
-    exit: Variant
-  }
 }
 
 function MorphingDialogDescription({
@@ -346,13 +307,6 @@ function MorphingDialogDescription({
   )
 }
 
-export type MorphingDialogImageProps = {
-  src: string
-  alt: string
-  className?: string
-  style?: React.CSSProperties
-}
-
 function MorphingDialogImage({
   src,
   alt,
@@ -370,16 +324,6 @@ function MorphingDialogImage({
       style={style}
     />
   )
-}
-
-export type MorphingDialogCloseProps = {
-  children?: React.ReactNode
-  className?: string
-  variants?: {
-    initial: Variant
-    animate: Variant
-    exit: Variant
-  }
 }
 
 function MorphingDialogClose({

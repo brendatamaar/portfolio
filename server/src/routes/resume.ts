@@ -8,10 +8,9 @@ import {
   resumeProjects,
 } from '../db/schema.js'
 import { eq, asc } from 'drizzle-orm'
+import type { Lang } from '../../../shared/types/common.js'
 
-type Locale = 'en' | 'id'
-
-function parseLocale(raw: string | undefined): Locale {
+function parseLocale(raw: string | undefined): Lang {
   return raw === 'id' ? 'id' : 'en'
 }
 
@@ -27,7 +26,7 @@ function typeLabel(type: string): string {
   return type === 'work' ? 'work' : 'side project'
 }
 
-function buildResumeResponse(locale: Locale) {
+function buildResumeResponse(locale: Lang) {
   const prof = db.select().from(profile).where(eq(profile.locale, locale)).get()
   const work = db
     .select()

@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
 import { createRouter } from './router'
+import type { RouteWithHead } from './types/router'
 
 const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
 const SITE_URL = 'https://www.brendatama.xyz'
@@ -37,16 +38,6 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-}
-
-interface RouteWithHead {
-  options?: {
-    head?: (ctx: {
-      loaderData: unknown
-      params: Record<string, string>
-      context: unknown
-    }) => { meta?: Array<Record<string, string>> } | void
-  }
 }
 
 function buildMetaTags(metas: Array<Record<string, string>>): string {

@@ -124,7 +124,9 @@ function VinylSpine({
   )
 }
 
-export function VinylShelf({ albums }: { albums: AlbumItem[] }) {
+import type { VinylShelfProps } from './vinyl-shelf.types'
+
+export function VinylShelf({ albums }: VinylShelfProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detailImgError, setDetailImgError] = useState(false)
 

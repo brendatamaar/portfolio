@@ -1,23 +1,14 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  type ReactNode,
-} from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 import {
   translations,
   resolveKey,
   type Lang,
   type TranslationKey,
 } from '../lib/i18n'
-
-interface LanguageContextValue {
-  lang: Lang
-  setLang: (lang: Lang) => void
-  /** Resolve a dot-notated translation key, with optional {n} interpolation */
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string
-}
+import type {
+  LanguageContextValue,
+  LanguageProviderProps,
+} from './LanguageContext.types'
 
 const LanguageContext = createContext<LanguageContextValue | null>(null)
 
@@ -29,7 +20,7 @@ function detectLang(): Lang {
   return browser.startsWith('id') ? 'id' : 'en'
 }
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({ children }: LanguageProviderProps) {
   // Lazy initializer runs synchronously on the client during hydration,
   // eliminating the post-paint flash caused by a useEffect swap.
   // The server always renders 'en'; the hydration mismatch (if any) is

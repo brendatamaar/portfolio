@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { XIcon, Trash2Icon, UploadIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Image } from '../lib/api.ts'
-import type { ImageGalleryProps } from '../lib/types.ts'
+import type { ImageGalleryProps } from '../types/ui'
 import { useImageUpload } from '../hooks/useImageUpload.ts'
 
 export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {

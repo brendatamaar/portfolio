@@ -3,15 +3,10 @@ import { z } from 'zod'
 import { db } from '../db/index.js'
 import { albums } from '../db/schema.js'
 import { eq, desc } from 'drizzle-orm'
+import type { ItunesResult } from '../types/external.js'
+import type { CacheEntry } from '../types/cache.js'
 
 // helpers
-
-type ItunesResult = {
-  collectionName?: string
-  artistName?: string
-  artworkUrl100?: string
-  releaseDate?: string
-}
 
 function yearFromIso(dateStr?: string): number | null {
   if (!dateStr) return null
@@ -20,7 +15,6 @@ function yearFromIso(dateStr?: string): number | null {
 }
 
 // In-memory TTL cache for iTunes search results
-type CacheEntry<T> = { value: T; expiresAt: number }
 const searchCache = new Map<string, CacheEntry<ItunesResult[]>>()
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 

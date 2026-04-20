@@ -90,7 +90,9 @@ function BookSpine({
   )
 }
 
-export function BookShelf({ books }: { books: BookItem[] }) {
+import type { BookShelfProps } from './book-shelf.types'
+
+export function BookShelf({ books }: BookShelfProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detailImgError, setDetailImgError] = useState(false)
 

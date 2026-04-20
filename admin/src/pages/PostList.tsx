@@ -14,7 +14,7 @@ import {
 import { api } from '../lib/api.ts'
 import type { Post } from '../lib/api.ts'
 import { useTheme } from '../lib/theme.ts'
-import type { StatusFilter } from '../lib/types.ts'
+import type { StatusFilter } from '../types/editor'
 
 function formatDate(ts: string, label: string) {
   return `${label} ${new Date(ts).toLocaleDateString('en-US', {

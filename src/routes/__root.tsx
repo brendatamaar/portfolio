@@ -1,6 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { ThemeProvider } from 'next-themes'
 import { LanguageProvider } from '@/src/context/LanguageContext'
+import type { RootErrorProps } from './__root.types'
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -29,7 +30,7 @@ function RootLayout() {
   )
 }
 
-function RootError({ error }: { error: Error }) {
+function RootError({ error }: RootErrorProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white dark:bg-black">
       <div className="mx-auto max-w-md px-6 text-center">

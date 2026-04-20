@@ -2,26 +2,17 @@ import { memo } from 'react'
 import { ArrowUpRightIcon } from 'lucide-react'
 import { MAX_TECH_TAGS } from '@/lib/constants'
 
-type Project = {
-  readonly title: string
-  readonly company?: string
-  readonly techStack: readonly string[]
-  readonly description: string
-  readonly logo?: string
-  readonly img?: string
-  readonly isFeatured: boolean
-  readonly link?: { readonly label: string; readonly href: string }
-}
-type ProjectWithLink = Project & { link: { href: string } }
+import type {
+  Project,
+  ProjectWithLink,
+  ProjectCardProps,
+} from './project-card.types'
 
 /** Memoized project card. Wrapped in an <a> only when the project has a link. */
 export const ProjectCard = memo(function ProjectCard({
   project,
   index,
-}: {
-  project: Project
-  index: number
-}) {
+}: ProjectCardProps) {
   const hasLink = 'link' in project
   // First techStack entry is the project type ("work" | "personal" | …); rest are tech tags.
   const type = project.techStack[0]

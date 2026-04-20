@@ -5,11 +5,7 @@ import { cn } from '@/lib/utils'
 import { RefObject } from 'react'
 import { SCROLL_PROGRESS_SPRING_OPTIONS } from '@/lib/constants'
 
-export type ScrollProgressProps = {
-  className?: string
-  springOptions?: SpringOptions
-  containerRef?: RefObject<HTMLDivElement>
-}
+import type { ScrollProgressProps } from './scroll-progress.types'
 
 export function ScrollProgress({
   className,

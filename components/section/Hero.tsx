@@ -1,6 +1,6 @@
-import type { ResumeData } from '@/src/lib/api'
+import type { HeroProps } from './Hero.types'
 
-export default function Hero({ data }: { data: ResumeData }) {
+export default function Hero({ data }: HeroProps) {
   const profile = data.profile
 
   if (!profile) return null

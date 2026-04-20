@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { parse } from '@portfolio/shared/markdown/parser.js'
-import type { PreviewProps } from '../lib/types.ts'
+import type { PreviewProps } from '../types/ui'
 import { PREVIEW_DEBOUNCE_MS } from '../lib/constants.ts'
 
 export default function Preview({ markdown }: PreviewProps) {

@@ -7,8 +7,7 @@ import CollectionManager from './pages/CollectionManager.tsx'
 import ResumeEditor from './pages/ResumeEditor.tsx'
 import { api } from './lib/api.ts'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
-
-type AuthState = 'checking' | 'authenticated' | 'unauthenticated'
+import type { AuthState } from './types/editor'
 
 export default function App() {
   const [auth, setAuth] = useState<AuthState>('checking')
