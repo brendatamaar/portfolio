@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { AlbumItem } from '@/src/lib/api'
 
-export function AlbumCard({ album }: { album: AlbumItem }) {
+import type { AlbumCardProps } from './album-card.types'
+
+export function AlbumCard({ album }: AlbumCardProps) {
   const [imgError, setImgError] = useState(!album.coverUrl)
 
   return (

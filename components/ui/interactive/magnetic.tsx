@@ -24,13 +24,7 @@ function _removeHandler(fn: (e: MouseEvent) => void) {
   if (_handlers.size === 0) document.removeEventListener('mousemove', _dispatch)
 }
 
-export type MagneticProps = {
-  children: React.ReactNode
-  intensity?: number
-  range?: number
-  actionArea?: 'self' | 'parent' | 'global'
-  springOptions?: SpringOptions
-}
+import type { MagneticProps } from './magnetic.types'
 
 export function Magnetic({
   children,

@@ -3,18 +3,10 @@ import { z } from 'zod'
 import { db } from '../db/index.js'
 import { books } from '../db/schema.js'
 import { eq, desc } from 'drizzle-orm'
+import type { GBVolume } from '../types/external.js'
+import type { CacheEntry } from '../types/cache.js'
 
 // helpers
-
-type GBVolume = {
-  volumeInfo?: {
-    title?: string
-    authors?: string[]
-    publishedDate?: string
-    industryIdentifiers?: { type: string; identifier: string }[]
-    imageLinks?: { thumbnail?: string }
-  }
-}
 
 function isbnFrom(q: string): string | null {
   const raw = q.replace(/[-\s]/g, '')
@@ -40,7 +32,6 @@ function coverFromVolume(vol: GBVolume['volumeInfo']): string | null {
 }
 
 // In-memory TTL cache for Google Books search results
-type CacheEntry<T> = { value: T; expiresAt: number }
 const searchCache = new Map<string, CacheEntry<GBVolume[]>>()
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 

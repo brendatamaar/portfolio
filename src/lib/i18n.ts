@@ -1,4 +1,7 @@
-export type Lang = 'en' | 'id'
+import type { Lang } from '@portfolio/shared/types/common.js'
+export type { Lang }
+import type { LangDict, TranslationKey } from '../types/i18n.js'
+export type { TranslationKey }
 
 export const translations = {
   en: {
@@ -86,18 +89,6 @@ export const translations = {
     },
   },
 } as const
-
-type Translations = typeof translations
-type LangDict = Translations[Lang]
-
-/** All valid dot-notation translation keys — typos become compile errors */
-type DotKeys<T, Prefix extends string = ''> = {
-  [K in keyof T]: T[K] extends string
-    ? `${Prefix}${K & string}`
-    : DotKeys<T[K], `${Prefix}${K & string}.`>
-}[keyof T]
-
-export type TranslationKey = DotKeys<Translations['en']>
 
 /** Nested key resolver — supports dot-notation e.g. "blog.heading" */
 export function resolveKey(dict: LangDict, key: TranslationKey): string {

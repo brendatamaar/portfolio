@@ -13,7 +13,9 @@ const STATUS_LABEL: Record<BookItem['status'], string> = {
   want: 'want',
 }
 
-export function BookCollectionCard({ book }: { book: BookItem }) {
+import type { BookCollectionCardProps } from './book-collection-card.types'
+
+export function BookCollectionCard({ book }: BookCollectionCardProps) {
   const [imgError, setImgError] = useState(!book.coverUrl)
 
   return (

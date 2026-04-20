@@ -1,20 +1,6 @@
 import { useEffect, useState } from 'react'
 
-// ---- Types ----
-
-interface Track {
-  name: string
-  artist: string
-  album: string
-  imageUrl: string
-  url: string
-}
-
-interface NowPlayingState {
-  track: Track | null
-  isLoading: boolean
-  error: string | null
-}
+import type { Track, NowPlayingState } from './now-playing.types'
 
 // ---- Hook ----
 

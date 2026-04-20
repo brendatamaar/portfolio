@@ -1,5 +1,6 @@
 import '@/src/styles/blog.css'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import type { ShareButtonProps } from './blog.$slug.types'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Share2, Link2, Twitter, Linkedin, Facebook } from 'lucide-react'
 import { api } from '@/src/lib/api'
@@ -13,7 +14,7 @@ import { BackToTop } from '@/components/ui/layout/back-to-top'
 import { READING_WPM, HTML_TAG_REGEX } from '@/src/lib/constants'
 import { useLang } from '@/src/context/LanguageContext'
 
-function ShareButton({ title }: { title: string }) {
+function ShareButton({ title }: ShareButtonProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const ref = useRef<HTMLDivElement>(null)

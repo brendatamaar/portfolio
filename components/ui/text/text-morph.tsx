@@ -3,14 +3,8 @@ import { cn } from '@/lib/utils'
 import { AnimatePresence, motion, Transition, Variants } from 'motion/react'
 import { useMemo, useId } from 'react'
 
-export type TextMorphProps = {
-  children: string
-  as?: React.ElementType
-  className?: string
-  style?: React.CSSProperties
-  variants?: Variants
-  transition?: Transition
-}
+import type { TextMorphProps } from './text-morph.types'
+export type { TextMorphProps }
 
 export function TextMorph({
   children,

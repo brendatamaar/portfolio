@@ -1,10 +1,30 @@
-import type {
-  TocItem,
-  Sidenote,
-  BibliographyEntry,
-} from '../../shared/markdown/types.js'
 import { logger } from './logger.js'
 import type { Lang } from './i18n.js'
+import type { BookItem, AlbumItem } from '@portfolio/shared/types/content.js'
+import type {
+  PostTag,
+  PostSummary,
+  PostsResponse,
+  PostDetail,
+  ResumeProfile,
+  ResumeWorkItem,
+  ResumeEducationItem,
+  ResumeProjectItem,
+  ResumeData,
+} from '../types/api.js'
+export type {
+  BookItem,
+  AlbumItem,
+  PostTag,
+  PostSummary,
+  PostsResponse,
+  PostDetail,
+  ResumeProfile,
+  ResumeWorkItem,
+  ResumeEducationItem,
+  ResumeProjectItem,
+  ResumeData,
+}
 
 // Server-side SSR uses VITE_API_INTERNAL_URL (e.g. http://localhost:3001) to avoid
 // going through the public domain. Client-side uses VITE_API_URL (public URL).
@@ -23,115 +43,15 @@ function resolveBase(): string {
 
 const BASE = resolveBase()
 
-export interface PostTag {
-  name: string
-  slug: string
-}
-
-export interface PostSummary {
-  id: number
-  title: string
-  slug: string
-  description: string
-  coverImageUrl: string | null
-  /** ISO date string. Null if the post was never explicitly published. */
-  publishedAt: string | null
-  /** ISO date string of row creation. */
-  createdAt: string
-  tags: PostTag[]
-}
-
-export interface PostsResponse {
-  data: PostSummary[]
-  total: number
-  page: number
-  limit: number
-}
-
-export interface PostDetail {
-  post: PostSummary
-  /** Server-rendered HTML from the markdown parser. */
-  html: string
-  toc: TocItem[]
-  sidenotes: Sidenote[]
-  bibliography: BibliographyEntry[]
-}
-
-export interface BookItem {
-  id: number
-  title: string
-  author: string
-  status: 'reading' | 'finished' | 'want'
-  year: number | null
-  coverUrl: string | null
-  featured: boolean
-  createdAt: string
-}
-
-export interface AlbumItem {
-  id: number
-  title: string
-  artist: string
-  year: number | null
-  coverUrl: string | null
-  featured: boolean
-  createdAt: string
-}
-
-export interface ResumeProfile {
-  name: string
-  initials: string
-  location: string
-  locationLink: string
-  currentJob: string
-  description: string
-  about: string
-  summary: string
-  avatarUrl: string
-  personalWebsiteUrl: string
-  email: string
-  tel: string
-  social: { name: string; url: string }[]
-}
-
-export interface ResumeWorkItem {
-  id: number
-  company: string
-  link: string
-  badge: string
-  title: string
-  start: string
-  end: string
-  description: string
-}
-
-export interface ResumeEducationItem {
-  id: number
-  school: string
-  degree: string
-  start: string
-  end: string
-  desc: string
-}
-
-export interface ResumeProjectItem {
-  id: number
-  title: string
-  type: 'side_project' | 'work'
-  company?: string
-  techStack: string[]
-  description: string
-  link?: { label: string; href: string }
-  img: string
-  isFeatured: boolean
-}
-
-export interface ResumeData {
-  profile: ResumeProfile | null
-  work: ResumeWorkItem[]
-  education: ResumeEducationItem[]
-  skills: string[]
-  projects: ResumeProjectItem[]
+function path(base: string, params: Record<string, string | undefined>) {
+  const search = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v && v !== 'en') as [
+      string,
+      string,
+    ][],
+  )
+  const qs = search.toString()
+  return qs ? `${base}?${qs}` : base
 }
 
 async function apiFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
@@ -156,15 +76,9 @@ async function apiFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
 
 export const api = {
   getPosts: (lang?: Lang, signal?: AbortSignal) =>
-    apiFetch<PostsResponse>(
-      lang && lang !== 'en' ? `/posts?lang=${lang}` : '/posts',
-      signal,
-    ),
+    apiFetch<PostsResponse>(path('/posts', { lang }), signal),
   getPost: (slug: string, lang?: Lang, signal?: AbortSignal) =>
-    apiFetch<PostDetail>(
-      lang && lang !== 'en' ? `/posts/${slug}?lang=${lang}` : `/posts/${slug}`,
-      signal,
-    ),
+    apiFetch<PostDetail>(path(`/posts/${slug}`, { lang }), signal),
   getBooks: () => apiFetch<BookItem[]>('/books'),
   getAlbums: () => apiFetch<AlbumItem[]>('/albums'),
   getFeaturedBook: () =>

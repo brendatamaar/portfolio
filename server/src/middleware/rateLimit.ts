@@ -1,12 +1,8 @@
 import type { Context, Next } from 'hono'
-
-interface Entry {
-  count: number
-  resetAt: number
-}
+import type { RateLimitEntry } from '../types/rate-limit.js'
 
 export function createRateLimit(opts: { windowMs: number; max: number }) {
-  const store = new Map<string, Entry>()
+  const store = new Map<string, RateLimitEntry>()
 
   return async function rateLimitMiddleware(c: Context, next: Next) {
     const ip =

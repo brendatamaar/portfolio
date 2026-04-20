@@ -28,7 +28,7 @@ import Toolbar from '../components/Toolbar.tsx'
 import Preview from '../components/Preview.tsx'
 import ImageGallery from '../components/ImageGallery.tsx'
 import { useTheme } from '../lib/theme.ts'
-import type { Mode } from '../lib/types.ts'
+import type { Mode } from '../types/editor'
 import { DRAFT_AUTOSAVE_DEBOUNCE_MS } from '../lib/constants.ts'
 
 export default function PostEditor() {
