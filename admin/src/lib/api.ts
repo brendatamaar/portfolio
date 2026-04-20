@@ -76,7 +76,6 @@ async function req<T>(
   }
 
   if (res.status === 401) {
-    window.location.href = '/login'
     throw new ApiError(401, 'Unauthorized')
   }
   if (!res.ok) throw new ApiError(res.status, `API error ${res.status}`)
@@ -237,7 +236,6 @@ export const api = {
         clearTimeout(timeout)
       }
       if (res.status === 401) {
-        window.location.href = '/login'
         throw new ApiError(401, 'Unauthorized')
       }
       if (!res.ok) throw new ApiError(res.status, `Upload failed ${res.status}`)
