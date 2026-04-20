@@ -177,10 +177,9 @@ export function renderBlocks(
     }
   }
 
-  // Build cite map: sort alphabetically by text, assign numbers
-  const sorted = [...allBibEntries].sort((a, b) => a.text.localeCompare(b.text))
+  // Build cite map: numbers follow declaration order in the bibliography block
   const citeMap = new Map<string, number>()
-  sorted.forEach((e, idx) => {
+  allBibEntries.forEach((e, idx) => {
     citeMap.set(e.key, idx + 1)
     bibliography.push({
       key: e.key,

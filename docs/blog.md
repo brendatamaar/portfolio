@@ -322,12 +322,12 @@ This is a note.
 | --------------- | ---- | ---------- | ----------------------------------------------------------------------- |
 | `:::note`       | ℹ   | Note       | General supplementary information the reader should be aware of         |
 | `:::warning`    | ⚠   | Warning    | Potential pitfalls, common mistakes, or things that could go wrong      |
-| `:::danger`     | 🔴   | Danger     | Critical risks or important things to avoid                            |
+| `:::danger`     | 🔴   | Danger     | Critical risks or important things to avoid                             |
 | `:::tip`        | 💡   | Tip        | Helpful advice, best practices, or useful shortcuts                     |
 | `:::info`       | 📘   | Info       | Background context or explanatory detail that supports the main content |
 | `:::tldr`       | ⚡   | TL;DR      | Brief summary of a longer section for readers who want the quick take   |
 | `:::update`     | 📅   | Update     | Post-publication corrections, additions, or status changes              |
-| `:::definition` | 📖   | Definition | Defines a specific term or concept not covered in its own section        |
+| `:::definition` | 📖   | Definition | Defines a specific term or concept not covered in its own section       |
 | `:::ai`         | 🤖   | Ask AI     | AI prompts the reader can copy and use in their preferred AI tool       |
 | `:::see-also`   | →    | See Also   | Links to related posts, resources, or further reading                   |
 
@@ -379,7 +379,7 @@ Renders as a superscript number `[1]` linking to the bibliography section.
 | `repo`    | 💾   |
 | `other`   | ·    |
 
-The bibliography section auto-groups entries by type, sorts alphabetically within groups, and assigns sequential numbers. Quoted titles (`"Title"`) are rendered bold.
+The bibliography section auto-groups entries by type and assigns sequential numbers based on declaration order in the bibliography block — the first entry is `[1]`, the second is `[2]`, etc. Quoted titles (`"Title"`) are rendered bold.
 
 ---
 
