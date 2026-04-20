@@ -38,17 +38,22 @@ app.post('/login', async (c) => {
   const isProduction = process.env.NODE_ENV === 'production'
   setCookie(c, 'admin_token', token, {
     httpOnly: true,
-    secure: isProduction,
+    secure: true,
     sameSite: 'Strict',
     path: '/',
     maxAge: 60 * 60 * 24 * 30,
+    ...(isProduction && { domain: '.brendatama.xyz' }),
   })
 
   return c.json({ ok: true })
 })
 
 app.post('/logout', (c) => {
-  deleteCookie(c, 'admin_token', { path: '/' })
+  const isProduction = process.env.NODE_ENV === 'production'
+  deleteCookie(c, 'admin_token', {
+    path: '/',
+    ...(isProduction && { domain: '.brendatama.xyz' }),
+  })
   return c.json({ ok: true })
 })
 
