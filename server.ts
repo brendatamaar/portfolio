@@ -6,7 +6,7 @@ const templatePath = join(clientDir, 'index.html')
 
 // Async reads — no event loop blocking
 const template = await Bun.file(templatePath).text()
-const { render } = await import('./dist/server/entry-server.mjs')
+const { render } = await import('./dist/server/entry-server.js')
 
 Bun.serve({
   port: PORT,
