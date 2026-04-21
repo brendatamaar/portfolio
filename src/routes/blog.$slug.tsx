@@ -1,6 +1,6 @@
 import '@/src/styles/blog.css'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import type { ShareButtonProps } from './blog.$slug.types'
+import type { ShareButtonProps } from '@/src/types/blog'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Share2, Link2, Twitter, Linkedin, Facebook } from 'lucide-react'
 import { api } from '@/src/lib/api'

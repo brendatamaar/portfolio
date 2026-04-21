@@ -2,6 +2,7 @@
   "name": "portofolio-brenda",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently -k -n server,portfolio,admin -c yellow,cyan,magenta \"npm run dev --prefix server\" \"npm run dev\" \"npm run dev --prefix admin\"",
