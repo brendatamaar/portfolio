@@ -34,11 +34,6 @@ const ADMONITION_CONFIG: Record<
   info: { icon: '📘', label: 'Info', colorClass: 'admonition-info' },
   tldr: { icon: '⚡', label: 'TL;DR', colorClass: 'admonition-tldr' },
   update: { icon: '📅', label: 'Update', colorClass: 'admonition-update' },
-  definition: {
-    icon: '📖',
-    label: 'Definition',
-    colorClass: 'admonition-definition',
-  },
   ai: { icon: '🤖', label: 'Ask AI', colorClass: 'admonition-ai' },
   'see-also': {
     icon: '→',

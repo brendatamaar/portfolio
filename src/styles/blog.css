@@ -477,13 +477,6 @@
     color: #fff;
   }
 }
-.admonition-definition {
-  border-color: #0d9488;
-  & .admonition-header {
-    background: #0d9488;
-    color: #fff;
-  }
-}
 .admonition-ai {
   border-color: #7c3aed;
   & .admonition-header {
