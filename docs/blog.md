@@ -82,7 +82,8 @@ Three modes toggled from the toolbar (right side):
 - Link — wraps selection in `[text](url)`
 - Image — opens image gallery modal, inserts `![image](url)`
 - **Note** — inserts `[^N]` at cursor + `[^N]: ` definition at end of document (auto-increments N)
-- **DL** — inserts a definition list template
+- **[G]** — inserts a glossary reference `[gloss:term]`
+- **[Cite]** — inserts a bibliography citation `[cite:key]`
 - **Fig** — inserts a figure template `![Caption text](image-url)`
 
 **Admonition** — dropdown picker for all admonition types (see Admonitions section below)
@@ -279,18 +280,38 @@ Also accepts `***` or `___`.
 
 Alignment in the separator row: `:---` = left, `:---:` = center, `---:` = right, `---` = default.
 
-### Definition List
+### Glossary
 
-```md
-Term
-: Definition text here
+The glossary is managed in a **dedicated tab** in the admin editor. Add terms with unique keys, labels, and definitions there.
 
-Another Term
-: First definition
-: Second definition
+**Glossary entry structure:**
+
+```json
+{
+  "key": "termKey",
+  "term": "Display Term",
+  "definition": "Description of the term..."
+}
 ```
 
-The term must be a plain line immediately followed by `: definition` on the next line.
+**Inline glossary references:**
+
+```md
+This article discusses [gloss:termKey] in detail.
+```
+
+- References use the **key** (not the term label)
+- Renders as a superscript `[1]`, `[2]`, etc.
+- Terms are numbered alphabetically in the glossary section
+- Hover shows a quick tooltip with the definition
+- Click opens a persistent popup (dismiss with Esc or click outside)
+- Keys not found render as `[?]`
+
+**Glossary Section:**
+
+- Auto-renders at the bottom of the post (above bibliography)
+- Lists all terms alphabetically by term label
+- Click a term to jump to its first occurrence in the text
 
 ### Footnotes / Sidenotes
 
@@ -345,41 +366,51 @@ Explain the concept of dependency injection in simple terms.
 
 ### Bibliography
 
-A bibliography block declares references, then you cite them inline:
+The bibliography is managed in a **dedicated tab** in the admin editor. Add entries with unique keys, full text, and source type there.
 
-**Declaration** (at any point in the document — typically at the end):
+**Bibliography entry structure:**
 
-````md
-```bibliography
-[key1:web] Author Name "Title of Article" https://example.com
-[key2:book] Author Name "Book Title" Publisher, Year
-[key3:journal] Author Name "Paper Title" Journal Vol(Issue), Year
+```json
+{
+  "key": "mdn-docs",
+  "text": "MDN Web Docs: View Transition API",
+  "source": "docs",
+  "url": "https://developer.mozilla.org/..."
+}
 ```
-````
 
-**Inline citation:**
+**Inline citations:**
 
 ```md
-This claim is supported by research.[cite:key1]
+This claim is supported by research.[cite:mdn-docs]
 ```
 
-Renders as a superscript number `[1]` linking to the bibliography section.
+- References use the **key** (defined in the editor)
+- Renders as a superscript `[1]`, `[2]`, etc.
+- Hover or click to see the citation in a popup
+- Keys not found render as `[?]`
 
-**Source types** (after the colon in the key):
+**Bibliography Section:**
 
-| Type      | Icon |
-| --------- | ---- |
-| `web`     | 🌐   |
-| `docs`    | 📖   |
-| `journal` | 📄   |
-| `article` | 📰   |
-| `book`    | 📚   |
-| `video`   | 🎬   |
-| `podcast` | 🎙   |
-| `repo`    | 💾   |
-| `other`   | ·    |
+- Auto-renders at the bottom of the post (below glossary)
+- Entries numbered by citation order (first use = 1, second = 2, etc.)
+- Classic encyclopedia format with hanging indent
+- Quoted titles (`"Title"`) are rendered bold
+- Click an entry to jump to where it's first cited in the text
 
-The bibliography section auto-groups entries by type and assigns sequential numbers based on declaration order in the bibliography block — the first entry is `[1]`, the second is `[2]`, etc. Quoted titles (`"Title"`) are rendered bold.
+**Source types:**
+
+| Type      | Description       |
+| --------- | ----------------- |
+| `web`     | Websites, blogs   |
+| `docs`    | Documentation     |
+| `journal` | Academic journals |
+| `article` | News articles     |
+| `book`    | Books             |
+| `video`   | Videos, talks     |
+| `podcast` | Podcasts          |
+| `repo`    | Code repositories |
+| `other`   | Everything else   |
 
 ---
 

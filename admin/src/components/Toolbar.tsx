@@ -182,6 +182,9 @@ export default function Toolbar({
   function definitionList() {
     insertBlock(ta(), '\nTerm\n: Definition\n')
   }
+  function glossaryRef() {
+    wrap(ta(), '[gloss:', ']')
+  }
   function figureCaption() {
     insertBlock(ta(), '\n![Caption text](image-url)\n')
   }
@@ -303,10 +306,18 @@ export default function Toolbar({
       <button
         type="button"
         onClick={definitionList}
-        title="Definition list (Term / : Definition)"
+        title="Glossary definition (Term / : Definition)"
         className={[labelBtnBase, btnInactive].join(' ')}
       >
-        <span className="font-mono text-[11px]">DL</span>
+        <span className="font-mono text-[11px]">GL</span>
+      </button>
+      <button
+        type="button"
+        onClick={glossaryRef}
+        title="Glossary reference [gloss:term]"
+        className={[labelBtnBase, btnInactive].join(' ')}
+      >
+        <span className="font-mono text-[11px]">[G]</span>
       </button>
       <button
         type="button"

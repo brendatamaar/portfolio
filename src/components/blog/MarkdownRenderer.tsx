@@ -2,13 +2,19 @@ import { useRef, useEffect, useState } from 'react'
 import type { MarkdownRendererProps } from '../../lib/types.js'
 import Sidenotes from './Sidenotes.js'
 import TOC from './TOC.js'
+import GlossaryPopup from './GlossaryPopup.js'
+import BibliographyPopup from './BibliographyPopup.js'
 
 export default function MarkdownRenderer({
   html,
   toc,
   sidenotes,
+  bibliography,
+  glossary,
+  contentRef: externalContentRef,
 }: MarkdownRendererProps) {
-  const contentRef = useRef<HTMLDivElement>(null)
+  const internalContentRef = useRef<HTMLDivElement>(null)
+  const contentRef = externalContentRef || internalContentRef
   const [zoomedImg, setZoomedImg] = useState<string | null>(null)
 
   // Inject a "copy" button into every code block after the HTML mounts.
@@ -112,8 +118,18 @@ export default function MarkdownRenderer({
         />
 
         {/* Right: sticky scrollspy TOC (desktop only) */}
-        <TOC toc={toc} />
+        <TOC
+          toc={toc}
+          hasGlossary={glossary.length > 0}
+          hasBibliography={bibliography.length > 0}
+        />
       </div>
+
+      {/* Bibliography popup/tooltip */}
+      <BibliographyPopup bibliography={bibliography} contentRef={contentRef} />
+
+      {/* Glossary popup/tooltip */}
+      <GlossaryPopup glossary={glossary} contentRef={contentRef} />
 
       {/* Image zoom overlay */}
       {zoomedImg && (

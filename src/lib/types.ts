@@ -1,8 +1,15 @@
 import type { RefObject } from 'react'
-import type { TocItem, Sidenote } from '../../shared/markdown/types.js'
+import type {
+  TocItem,
+  Sidenote,
+  BibliographyEntry,
+  GlossaryEntry,
+} from '../../shared/markdown/types.js'
 
 export interface TOCProps {
   toc: TocItem[]
+  hasGlossary?: boolean
+  hasBibliography?: boolean
 }
 
 export interface SidenotesProps {
@@ -14,4 +21,7 @@ export interface MarkdownRendererProps {
   html: string
   toc: TocItem[]
   sidenotes: Sidenote[]
+  bibliography: BibliographyEntry[]
+  glossary: GlossaryEntry[]
+  contentRef?: RefObject<HTMLDivElement | null>
 }

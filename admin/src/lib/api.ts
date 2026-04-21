@@ -11,6 +11,8 @@ import type {
   ResumeEducationItem,
   ResumeSkillItem,
   ResumeProjectItem,
+  GlossaryEntry,
+  BibliographyEntry,
 } from '../types/api.js'
 export type {
   BookItem,
@@ -26,6 +28,8 @@ export type {
   ResumeEducationItem,
   ResumeSkillItem,
   ResumeProjectItem,
+  GlossaryEntry,
+  BibliographyEntry,
 }
 export type ResumeLocale = Lang
 

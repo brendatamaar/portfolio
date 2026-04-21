@@ -22,11 +22,13 @@ import {
   RefreshCwIcon,
 } from 'lucide-react'
 import { api, ApiError } from '../lib/api.ts'
-import type { Post, Tag } from '../lib/api.ts'
+import type { Post, Tag, GlossaryEntry, BibliographyEntry } from '../lib/api.ts'
 import { useImageUpload } from '../hooks/useImageUpload.ts'
 import Toolbar from '../components/Toolbar.tsx'
 import Preview from '../components/Preview.tsx'
 import ImageGallery from '../components/ImageGallery.tsx'
+import GlossaryEditor from '../components/GlossaryEditor.tsx'
+import BibliographyEditor from '../components/BibliographyEditor.tsx'
 import { useTheme } from '../lib/theme.ts'
 import type { Mode } from '../types/editor'
 import { DRAFT_AUTOSAVE_DEBOUNCE_MS } from '../lib/constants.ts'
@@ -42,6 +44,9 @@ export default function PostEditor() {
   const saveRef = useRef<() => void>(() => {})
 
   const [langTab, setLangTab] = useState<'en' | 'id'>('en')
+  const [activeTab, setActiveTab] = useState<
+    'content' | 'glossary' | 'bibliography'
+  >('content')
 
   // Fingerprint of source content at the time of last translation.
   // Used to detect when source has changed since translation ("stale" indicator).
@@ -63,6 +68,12 @@ export default function PostEditor() {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [allTags, setAllTags] = useState<Tag[]>([])
   const [newTagName, setNewTagName] = useState('')
+
+  // Glossary and Bibliography
+  const [glossaryEn, setGlossaryEn] = useState<GlossaryEntry[]>([])
+  const [glossaryId, setGlossaryId] = useState<GlossaryEntry[]>([])
+  const [bibliographyEn, setBibliographyEn] = useState<BibliographyEntry[]>([])
+  const [bibliographyId, setBibliographyId] = useState<BibliographyEntry[]>([])
 
   const { isDark, toggle } = useTheme()
   const [mode, setMode] = useState<Mode>('split')
@@ -100,6 +111,10 @@ export default function PostEditor() {
           )
           setCoverImageUrl(post.coverImageUrl ?? '')
           setSelectedTagIds(post.tags.map((t) => t.id))
+          setGlossaryEn(post.glossaryEn || [])
+          setGlossaryId(post.glossaryId || [])
+          setBibliographyEn(post.bibliographyEn || [])
+          setBibliographyId(post.bibliographyId || [])
         })
         .catch((err) => {
           if (err instanceof ApiError && err.status === 0) return
@@ -267,6 +282,10 @@ export default function PostEditor() {
       coverImageUrl: coverImageUrl || null,
       tagIds: selectedTagIds,
       publishedAt: publishedAt ? new Date(publishedAt).toISOString() : null,
+      glossaryEn,
+      glossaryId: glossaryId.length > 0 ? glossaryId : null,
+      bibliographyEn,
+      bibliographyId: bibliographyId.length > 0 ? bibliographyId : null,
     }
     try {
       if (isNew) {
@@ -383,6 +402,10 @@ export default function PostEditor() {
         contentId,
         coverImageUrl,
         selectedTagIds,
+        glossaryEn,
+        glossaryId,
+        bibliographyEn,
+        bibliographyId,
         savedAt: new Date().toISOString(),
       })
       localStorage.setItem(draftKey, draft)
@@ -399,6 +422,10 @@ export default function PostEditor() {
     contentId,
     coverImageUrl,
     selectedTagIds,
+    glossaryEn,
+    glossaryId,
+    bibliographyEn,
+    bibliographyId,
   ])
 
   // Restore draft for new posts on mount
@@ -423,6 +450,10 @@ export default function PostEditor() {
           setContentId(draft.contentId ?? '')
           setCoverImageUrl(draft.coverImageUrl ?? '')
           setSelectedTagIds(draft.selectedTagIds ?? [])
+          setGlossaryEn(draft.glossaryEn ?? [])
+          setGlossaryId(draft.glossaryId ?? [])
+          setBibliographyEn(draft.bibliographyEn ?? [])
+          setBibliographyId(draft.bibliographyId ?? [])
         }
       }
     } catch {
@@ -627,6 +658,28 @@ export default function PostEditor() {
         </div>
       </header>
 
+      {/* Tabs */}
+      <div className="flex border-b border-black/10 dark:border-white/10">
+        {(['content', 'glossary', 'bibliography'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={[
+              'px-4 py-2 font-mono text-[11px] tracking-widest uppercase transition-colors',
+              activeTab === tab
+                ? 'bg-black text-white dark:bg-white dark:text-black'
+                : 'text-black/40 hover:bg-black/5 hover:text-black dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white',
+            ].join(' ')}
+          >
+            {tab === 'content' && 'Content'}
+            {tab === 'glossary' &&
+              `Glossary (${(langTab === 'id' ? glossaryId : glossaryEn).length})`}
+            {tab === 'bibliography' &&
+              `Bibliography (${(langTab === 'id' ? bibliographyId : bibliographyEn).length})`}
+          </button>
+        ))}
+      </div>
+
       {/* Toolbar */}
       <Toolbar
         textareaRef={textareaRef}
@@ -643,7 +696,7 @@ export default function PostEditor() {
       <div className="flex min-h-0 flex-1">
         {/* Editor + Preview */}
         <div className="flex min-h-0 flex-1 divide-x divide-black/10 dark:divide-white/10">
-          {editorVisible && (
+          {activeTab === 'content' && editorVisible && (
             <div
               className={`flex min-h-0 flex-col ${mode === 'split' ? 'w-1/2' : 'w-full'}`}
             >
@@ -665,12 +718,42 @@ export default function PostEditor() {
             </div>
           )}
 
-          {previewVisible && (
+          {activeTab === 'content' && previewVisible && (
             <div
               ref={previewRef}
               className={`min-h-0 overflow-y-auto ${mode === 'split' ? 'w-1/2' : 'w-full'}`}
             >
               <Preview markdown={deferredContent} />
+            </div>
+          )}
+
+          {activeTab === 'glossary' && (
+            <div className="flex min-h-0 w-full flex-col overflow-y-auto p-4">
+              <GlossaryEditor
+                entries={langTab === 'id' ? glossaryId : glossaryEn}
+                onChange={(entries) => {
+                  if (langTab === 'id') {
+                    setGlossaryId(entries)
+                  } else {
+                    setGlossaryEn(entries)
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          {activeTab === 'bibliography' && (
+            <div className="flex min-h-0 w-full flex-col overflow-y-auto p-4">
+              <BibliographyEditor
+                entries={langTab === 'id' ? bibliographyId : bibliographyEn}
+                onChange={(entries) => {
+                  if (langTab === 'id') {
+                    setBibliographyId(entries)
+                  } else {
+                    setBibliographyEn(entries)
+                  }
+                }}
+              />
             </div>
           )}
         </div>

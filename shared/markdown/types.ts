@@ -21,8 +21,6 @@ export type BlockTokenType =
   | 'table'
   | 'admonition'
   | 'footnote_def'
-  | 'definition_list'
-  | 'bibliography'
 
 export interface HeadingToken {
   type: 'heading'
@@ -82,21 +80,18 @@ export interface FootnoteDefToken {
   text: string
 }
 
-export interface DefinitionListToken {
-  type: 'definition_list'
-  items: Array<{ term: string; defs: string[] }>
-}
-
-export interface BibliographyToken {
-  type: 'bibliography'
-  entries: Array<{ key: string; text: string; sourceType: string }>
-}
-
 export interface BibliographyEntry {
   key: string
   text: string
   num: number
   sourceType: string
+}
+
+export interface GlossaryEntry {
+  key: string
+  term: string
+  definition: string
+  num: number
 }
 
 export type BlockToken =
@@ -109,8 +104,6 @@ export type BlockToken =
   | TableToken
   | AdmonitionToken
   | FootnoteDefToken
-  | DefinitionListToken
-  | BibliographyToken
 
 export interface TocItem {
   id: string
@@ -127,5 +120,4 @@ export interface ParseResult {
   html: string
   toc: TocItem[]
   sidenotes: Sidenote[]
-  bibliography: BibliographyEntry[]
 }
