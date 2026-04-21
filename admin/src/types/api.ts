@@ -4,6 +4,31 @@ export interface Tag {
   slug: string
 }
 
+// Import source type from shared
+export type { SourceType } from '../../../shared/types/glossary-bibliography.js'
+
+// Admin versions (without num field since it's added by API)
+export interface GlossaryEntry {
+  key: string
+  term: string
+  definition: string
+}
+
+export interface BibliographyEntry {
+  key: string
+  text: string
+  sourceType:
+    | 'web'
+    | 'docs'
+    | 'journal'
+    | 'article'
+    | 'book'
+    | 'video'
+    | 'podcast'
+    | 'repo'
+    | 'other'
+}
+
 export interface Post {
   id: number
   title: string
@@ -19,6 +44,10 @@ export interface Post {
   createdAt: string
   updatedAt: string
   tags: Tag[]
+  glossaryEn: GlossaryEntry[]
+  glossaryId: GlossaryEntry[] | null
+  bibliographyEn: BibliographyEntry[]
+  bibliographyId: BibliographyEntry[] | null
 }
 
 export interface Image {

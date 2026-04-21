@@ -85,6 +85,21 @@ export function runMigrations(): void {
     }
   }
 
+  // Add glossary and bibliography columns
+  for (const col of [
+    "glossary_en TEXT NOT NULL DEFAULT '[]'",
+    'glossary_id TEXT',
+    "bibliography_en TEXT NOT NULL DEFAULT '[]'",
+    'bibliography_id TEXT',
+  ]) {
+    try {
+      sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (!message.includes('duplicate column')) throw err
+    }
+  }
+
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS profile (
       locale               TEXT PRIMARY KEY CHECK(locale IN ('en', 'id')),

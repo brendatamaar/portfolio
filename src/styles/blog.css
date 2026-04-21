@@ -223,6 +223,10 @@
   opacity: 1;
 }
 
+.prose-custom :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 3rem;
+}
+
 /* Inline code */
 
 .inline-code {
@@ -503,28 +507,201 @@
   }
 }
 
-/* Inline citation & footnote superscript badges */
+/* Glossary inline refs — just numbers with brutalist design */
+.gloss-ref a {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  font-weight: 900;
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+  padding: 0.1em 0.4em;
+  text-decoration: none;
+  line-height: 1.2;
+  box-shadow: 2px 2px 0px #000;
+  transition: all 150ms;
+  cursor: pointer;
+  vertical-align: super;
 
-.cite-ref {
-  & a {
-    display: inline-block;
-    background: #ffe600;
-    color: #000;
-    font-family: var(--font-mono);
-    font-size: 0.6em;
-    font-weight: 700;
-    padding: 0.1em 0.3em;
-    border: 1.5px solid #000;
-    text-decoration: none;
-    line-height: 1.4;
-    transition: opacity 150ms;
+  &:hover {
+    background: #000;
+    color: #fff;
+    box-shadow: 3px 3px 0px #666;
+    transform: translate(-1px, -1px);
+  }
+
+  .dark & {
+    background: #000;
+    color: #fff;
+    border-color: #fff;
+    box-shadow: 2px 2px 0px #fff;
 
     &:hover {
-      opacity: 0.75;
+      background: #fff;
+      color: #000;
+      box-shadow: 3px 3px 0px #999;
     }
+  }
+}
 
-    .dark & {
-      border-color: #fff;
+/* Glossary popup */
+.gloss-popup {
+  position: fixed;
+  z-index: 50;
+  max-width: 400px;
+  background: #fff;
+  border: 2px solid #000;
+  padding: 12px 16px;
+  box-shadow: 4px 4px 0px #000;
+  font-size: 0.85rem;
+
+  .dark & {
+    background: #000;
+    border-color: #fff;
+    box-shadow: 4px 4px 0px #fff;
+    color: #fff;
+  }
+}
+
+.gloss-popup-term {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gloss-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.gloss-popup-close {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 4px;
+  margin-left: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #000;
+  transition: opacity 150ms;
+
+  &:hover {
+    opacity: 0.6;
+  }
+
+  .dark & {
+    color: #fff;
+  }
+}
+
+/* Bibliography popup */
+.bib-popup {
+  position: fixed;
+  z-index: 50;
+  max-width: 320px;
+  background: #fff;
+  border: 2px solid #000;
+  padding: 12px 16px;
+  box-shadow: 4px 4px 0px #000;
+  font-size: 0.85rem;
+  line-height: 1.5;
+
+  .dark & {
+    background: #000;
+    border-color: #fff;
+    box-shadow: 4px 4px 0px #fff;
+    color: #fff;
+  }
+}
+
+.bib-popup-source {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #000;
+  border-left: 3px solid #ffe600;
+  padding-left: 0.6rem;
+  margin-bottom: 0.5rem;
+
+  .dark & {
+    color: #fff;
+    border-color: #ffe600;
+  }
+}
+
+.bib-popup-icon {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.bib-popup-close {
+  float: right;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 4px;
+  margin-left: 8px;
+  margin-top: -4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #000;
+  transition: opacity 150ms;
+
+  &:hover {
+    opacity: 0.6;
+  }
+
+  .dark & {
+    color: #fff;
+  }
+}
+
+/* Bibliography inline refs — 1, 2, etc. (brutalist yellow accent) */
+.cite-ref.bib-ref a {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  font-weight: 900;
+  background: #ffe600;
+  color: #000;
+  border: 2px solid #000;
+  padding: 0.1em 0.4em;
+  text-decoration: none;
+  line-height: 1.2;
+  box-shadow: 2px 2px 0px #000;
+  transition: all 150ms;
+
+  &:hover {
+    background: #000;
+    color: #ffe600;
+    box-shadow: 3px 3px 0px #666;
+    transform: translate(-1px, -1px);
+  }
+
+  .dark & {
+    background: #ffe600;
+    color: #000;
+    border-color: #ffe600;
+    box-shadow: 2px 2px 0px #ffe600;
+
+    &:hover {
+      background: #fff;
+      color: #000;
+      box-shadow: 3px 3px 0px #999;
     }
   }
 }

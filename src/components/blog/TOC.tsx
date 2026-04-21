@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { TOCProps } from '../../lib/types.js'
 
-export default function TOC({ toc }: TOCProps) {
+export default function TOC({ toc, hasGlossary, hasBibliography }: TOCProps) {
   const [activeId, setActiveId] = useState<string>('')
   const observerRef = useRef<IntersectionObserver | null>(null)
 
@@ -26,7 +26,7 @@ export default function TOC({ toc }: TOCProps) {
         const topmost = headingEls.find((el) => visibleIds.has(el.id))
         if (topmost) setActiveId(topmost.id)
       },
-      { rootMargin: '0px 0px -60% 0px', threshold: 0 },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
     )
 
     headingEls.forEach((el) => observerRef.current!.observe(el))
@@ -47,6 +47,21 @@ export default function TOC({ toc }: TOCProps) {
     return { numbered: items, minLevel: min }
   }, [toc])
 
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault()
+    const element = document.getElementById(id)
+    if (element) {
+      const offset = 80 // margin top in pixels
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      })
+      history.pushState(null, '', `#${id}`)
+    }
+  }
+
   if (!toc.length) return null
 
   return (
@@ -65,6 +80,7 @@ export default function TOC({ toc }: TOCProps) {
           >
             <a
               href={`#${item.id}`}
+              onClick={(e) => handleClick(e, item.id)}
               className={[
                 'block text-[12px] leading-snug transition-colors',
                 activeId === item.id
@@ -80,6 +96,35 @@ export default function TOC({ toc }: TOCProps) {
           </li>
         ))}
       </ul>
+
+      {(hasGlossary || hasBibliography) && (
+        <div className="mt-4 border-t border-black/10 pt-3 dark:border-white/10">
+          <ul className="space-y-1.5">
+            {hasGlossary && (
+              <li>
+                <a
+                  href="#glossary-section"
+                  onClick={(e) => handleClick(e, 'glossary-section')}
+                  className="block text-[12px] leading-snug text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+                >
+                  Glossary
+                </a>
+              </li>
+            )}
+            {hasBibliography && (
+              <li>
+                <a
+                  href="#bibliography-section"
+                  onClick={(e) => handleClick(e, 'bibliography-section')}
+                  className="block text-[12px] leading-snug text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+                >
+                  Bibliography
+                </a>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
     </nav>
   )
 }

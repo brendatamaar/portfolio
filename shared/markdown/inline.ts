@@ -20,6 +20,7 @@ export function sanitizeUrl(url: string): string {
 
 export interface InlineContext {
   citeMap?: Map<string, number>
+  glossMap?: Map<string, number>
 }
 
 export function parseInline(text: string, ctx?: InlineContext): string {
@@ -42,13 +43,25 @@ export function parseInline(text: string, ctx?: InlineContext): string {
       }
     }
 
-    // Citation [cite:key]
+    // Citation [cite:key] - Bibliography reference
     if (text[i] === '[' && text.slice(i + 1, i + 6) === 'cite:') {
       const end = text.indexOf(']', i + 6)
       if (end !== -1) {
         const key = text.slice(i + 6, end)
         const num = ctx?.citeMap?.get(key) ?? '?'
-        result += `<sup class="cite-ref"><a href="#ref-${escapeHtml(key)}" id="citeref-${escapeHtml(key)}" data-cite-id="${escapeHtml(key)}">[${num}]</a></sup>`
+        result += `<sup class="cite-ref bib-ref"><a href="#ref-${escapeHtml(key)}" id="citeref-${escapeHtml(key)}" data-cite-id="${escapeHtml(key)}">${num}</a></sup>`
+        i = end + 1
+        continue
+      }
+    }
+
+    // Glossary reference [gloss:key] - Just the number with brutalist style
+    if (text[i] === '[' && text.slice(i + 1, i + 7) === 'gloss:') {
+      const end = text.indexOf(']', i + 7)
+      if (end !== -1) {
+        const key = text.slice(i + 7, end)
+        const num = ctx?.glossMap?.get(key) ?? '?'
+        result += `<sup class="gloss-ref"><a data-gloss-key="${escapeHtml(key)}">${num}</a></sup>`
         i = end + 1
         continue
       }

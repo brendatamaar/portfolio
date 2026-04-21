@@ -2,6 +2,7 @@ import type {
   TocItem,
   Sidenote,
   BibliographyEntry,
+  GlossaryEntry,
 } from '@portfolio/shared/markdown/types.js'
 
 export interface PostTag {
@@ -36,6 +37,7 @@ export interface PostDetail {
   toc: TocItem[]
   sidenotes: Sidenote[]
   bibliography: BibliographyEntry[]
+  glossary: GlossaryEntry[]
 }
 
 export interface ResumeProfile {

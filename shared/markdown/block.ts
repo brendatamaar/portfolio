@@ -131,28 +131,6 @@ export function tokenizeBlocks(markdown: string): BlockToken[] {
         i++
       }
       i++ // closing ```
-
-      // Bibliography block — parse [key:type] text entries
-      if (lang === 'bibliography') {
-        const entries: Array<{
-          key: string
-          text: string
-          sourceType: string
-        }> = []
-        for (const line of codeLines) {
-          const m = line.trim().match(/^\[([^\]]+)\]\s+(.+)/)
-          if (m) {
-            const colonIdx = m[1].lastIndexOf(':')
-            const key = colonIdx !== -1 ? m[1].slice(0, colonIdx) : m[1]
-            const sourceType =
-              colonIdx !== -1 ? m[1].slice(colonIdx + 1) : 'other'
-            entries.push({ key, text: m[2], sourceType })
-          }
-        }
-        tokens.push({ type: 'bibliography', entries })
-        continue
-      }
-
       tokens.push({ type: 'code', lang, text: codeLines.join('\n') })
       continue
     }
@@ -240,45 +218,6 @@ export function tokenizeBlocks(markdown: string): BlockToken[] {
       }
       tokens.push({ type: 'table', headers, align, rows })
       continue
-    }
-
-    // Definition list: "term\n: definition" pattern
-    // Matches a plain line immediately followed by a line starting with ": "
-    if (
-      !trimmed.match(/^[#>*+\-:]/) &&
-      !trimmed.match(/^\d+\./) &&
-      !trimmed.match(/^\[\^/) &&
-      !trimmed.match(/^```/) &&
-      !trimmed.match(/^:::/) &&
-      !/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed) &&
-      i + 1 < lines.length &&
-      lines[i + 1].trim().startsWith(': ')
-    ) {
-      const defItems: Array<{ term: string; defs: string[] }> = []
-      while (i < lines.length) {
-        if (!lines[i].trim()) {
-          i++
-          continue
-        }
-        const term = lines[i].trim()
-        let j = i + 1
-        while (j < lines.length && !lines[j].trim()) j++
-        if (j < lines.length && lines[j].trim().startsWith(': ')) {
-          i = j
-          const defs: string[] = []
-          while (i < lines.length && lines[i].trim().startsWith(': ')) {
-            defs.push(lines[i].trim().slice(2))
-            i++
-          }
-          defItems.push({ term, defs })
-        } else {
-          break
-        }
-      }
-      if (defItems.length) {
-        tokens.push({ type: 'definition_list', items: defItems })
-        continue
-      }
     }
 
     // Paragraph — collect until blank line or block-level element

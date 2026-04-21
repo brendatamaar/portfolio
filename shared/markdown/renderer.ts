@@ -9,7 +9,6 @@ import type {
   TocItem,
   Sidenote,
   ParseResult,
-  BibliographyEntry,
 } from './types.js'
 import { parseInline, sanitizeUrl, type InlineContext } from './inline.js'
 import { highlight } from './highlight.js'
@@ -64,91 +63,6 @@ function renderListItem(
   return html
 }
 
-// Bibliography rendering
-
-const SOURCE_TYPE_CONFIG: Record<string, { label: string; icon: string }> = {
-  web: { label: 'Web', icon: '🌐' },
-  docs: { label: 'Docs', icon: '📖' },
-  journal: { label: 'Journal', icon: '📄' },
-  article: { label: 'Article', icon: '📰' },
-  book: { label: 'Book', icon: '📚' },
-  video: { label: 'Video', icon: '🎬' },
-  podcast: { label: 'Podcast', icon: '🎙' },
-  repo: { label: 'Repository', icon: '💾' },
-  other: { label: 'Other', icon: '·' },
-}
-
-const SOURCE_TYPE_ORDER = [
-  'web',
-  'docs',
-  'journal',
-  'article',
-  'book',
-  'video',
-  'podcast',
-  'repo',
-  'other',
-]
-
-function renderBibEntryText(text: string): string {
-  const urlRegex = /https?:\/\/[^\s]+/g
-  const parts: string[] = []
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-
-  while ((match = urlRegex.exec(text)) !== null) {
-    parts.push(escapeHtml(text.slice(lastIndex, match.index)))
-    const url = match[0]
-    parts.push(
-      `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="bib-link">${escapeHtml(url)}</a>`,
-    )
-    lastIndex = match.index + url.length
-  }
-  parts.push(escapeHtml(text.slice(lastIndex)))
-
-  // Bold quoted titles e.g. "Title here" (quotes are HTML-escaped at this point)
-  return parts.join('').replace(/&quot;(.*?)&quot;/g, '"<strong>$1</strong>"')
-}
-
-function renderBibliography(entries: BibliographyEntry[]): string {
-  if (!entries.length) return ''
-
-  // Group by source type
-  const groups = new Map<string, BibliographyEntry[]>()
-  for (const entry of entries) {
-    const type = entry.sourceType || 'other'
-    if (!groups.has(type)) groups.set(type, [])
-    groups.get(type)!.push(entry)
-  }
-
-  // Sort by predefined order, unknown types go last
-  const sortedTypes = SOURCE_TYPE_ORDER.filter((t) => groups.has(t))
-  for (const t of groups.keys()) {
-    if (!sortedTypes.includes(t)) sortedTypes.push(t)
-  }
-
-  let html = `<section class="bibliography" aria-label="Bibliography">\n`
-  html += `<h2 class="bibliography-title">Bibliography</h2>\n`
-
-  for (const type of sortedTypes) {
-    const groupEntries = groups.get(type)!
-    const cfg = SOURCE_TYPE_CONFIG[type] ?? { label: type, icon: '·' }
-    html += `<div class="bib-group">\n`
-    html += `<div class="bib-source-label"><span class="bib-source-icon">${cfg.icon}</span><span>${cfg.label}</span></div>\n`
-    html += `<ol class="bib-entries">\n`
-    for (const entry of groupEntries) {
-      html += `<li id="ref-${escapeHtml(entry.key)}" class="bib-entry">`
-      html += `<span class="bib-num">[${entry.num}]</span>`
-      html += `<span class="bib-text">${renderBibEntryText(entry.text)}</span>`
-      html += `</li>\n`
-    }
-    html += `</ol>\n</div>\n`
-  }
-
-  html += `</section>\n`
-  return html
-}
-
 // Main renderer
 
 export function renderBlocks(
@@ -157,39 +71,18 @@ export function renderBlocks(
 ): ParseResult {
   const toc: TocItem[] = []
   const sidenotes: Sidenote[] = []
-  const bibliography: BibliographyEntry[] = []
   let html = ''
 
-  // First pass: collect footnote definitions + bibliography entries
+  // First pass: collect footnote definitions
   const sidenoteMap = new Map<string, string>()
-  const allBibEntries: Array<{
-    key: string
-    text: string
-    sourceType: string
-  }> = []
 
   for (const token of tokens) {
     if (token.type === 'footnote_def') {
       sidenoteMap.set(token.id, parseInline(token.text))
     }
-    if (token.type === 'bibliography') {
-      allBibEntries.push(...token.entries)
-    }
   }
 
-  // Build cite map: numbers follow declaration order in the bibliography block
-  const citeMap = new Map<string, number>()
-  allBibEntries.forEach((e, idx) => {
-    citeMap.set(e.key, idx + 1)
-    bibliography.push({
-      key: e.key,
-      text: e.text,
-      num: idx + 1,
-      sourceType: e.sourceType,
-    })
-  })
-
-  const resolvedCtx: InlineContext = { ...ctx, citeMap }
+  const resolvedCtx: InlineContext = { ...ctx }
 
   // Second pass: render
   for (const token of tokens) {
@@ -317,26 +210,8 @@ export function renderBlocks(
 </div>\n`
         break
       }
-
-      case 'definition_list': {
-        const items = token.items
-          .map(({ term, defs }) => {
-            const dd = defs
-              .map((d) => `<dd>${parseInline(d, resolvedCtx)}</dd>`)
-              .join('')
-            return `<dt>${escapeHtml(term)}</dt>${dd}`
-          })
-          .join('')
-        html += `<dl>${items}</dl>\n`
-        break
-      }
-
-      case 'bibliography': {
-        html += renderBibliography(bibliography)
-        break
-      }
     }
   }
 
-  return { html, toc, sidenotes, bibliography }
+  return { html, toc, sidenotes }
 }

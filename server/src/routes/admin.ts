@@ -39,6 +39,28 @@ function slugify(text: string): string {
 
 // Posts
 
+const glossaryEntrySchema = z.object({
+  key: z.string().min(1),
+  term: z.string().min(1),
+  definition: z.string().min(1),
+})
+
+const bibliographyEntrySchema = z.object({
+  key: z.string().min(1),
+  text: z.string().min(1),
+  sourceType: z.enum([
+    'web',
+    'docs',
+    'journal',
+    'article',
+    'book',
+    'video',
+    'podcast',
+    'repo',
+    'other',
+  ]),
+})
+
 const postSchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1).optional(),
@@ -51,6 +73,10 @@ const postSchema = z.object({
   coverImageUrl: z.string().nullable().optional(),
   tagIds: z.array(z.number()).optional(),
   publishedAt: z.coerce.date().nullable().optional(),
+  glossaryEn: z.array(glossaryEntrySchema).default([]),
+  glossaryId: z.array(glossaryEntrySchema).nullable().optional(),
+  bibliographyEn: z.array(bibliographyEntrySchema).default([]),
+  bibliographyId: z.array(bibliographyEntrySchema).nullable().optional(),
 })
 
 app.get('/posts', (c) => {
@@ -125,7 +151,16 @@ app.get('/posts/:id', (c) => {
     .innerJoin(tags, eq(postTags.tagId, tags.id))
     .where(eq(postTags.postId, id))
     .all()
-  return c.json({ ...post, tags: postTagRows })
+  return c.json({
+    ...post,
+    tags: postTagRows,
+    glossaryEn: JSON.parse(post.glossaryEn || '[]'),
+    glossaryId: post.glossaryId ? JSON.parse(post.glossaryId) : null,
+    bibliographyEn: JSON.parse(post.bibliographyEn || '[]'),
+    bibliographyId: post.bibliographyId
+      ? JSON.parse(post.bibliographyId)
+      : null,
+  })
 })
 
 app.post('/posts', async (c) => {
@@ -170,6 +205,12 @@ app.post('/posts', async (c) => {
         coverImageUrl: data.coverImageUrl ?? null,
         publishedAt,
         updatedAt: now,
+        glossaryEn: JSON.stringify(data.glossaryEn),
+        glossaryId: data.glossaryId ? JSON.stringify(data.glossaryId) : null,
+        bibliographyEn: JSON.stringify(data.bibliographyEn),
+        bibliographyId: data.bibliographyId
+          ? JSON.stringify(data.bibliographyId)
+          : null,
       })
       .returning({ id: posts.id })
       .get()
@@ -235,6 +276,20 @@ app.put('/posts/:id', async (c) => {
         ...(data.status !== undefined && { status: data.status }),
         ...(data.coverImageUrl !== undefined && {
           coverImageUrl: data.coverImageUrl,
+        }),
+        ...(data.glossaryEn !== undefined && {
+          glossaryEn: JSON.stringify(data.glossaryEn),
+        }),
+        ...(data.glossaryId !== undefined && {
+          glossaryId: data.glossaryId ? JSON.stringify(data.glossaryId) : null,
+        }),
+        ...(data.bibliographyEn !== undefined && {
+          bibliographyEn: JSON.stringify(data.bibliographyEn),
+        }),
+        ...(data.bibliographyId !== undefined && {
+          bibliographyId: data.bibliographyId
+            ? JSON.stringify(data.bibliographyId)
+            : null,
         }),
         publishedAt,
         updatedAt: now,

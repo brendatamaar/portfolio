@@ -133,8 +133,46 @@ app.get('/:slug', (c) => {
 
   const useId = lang === 'id'
   const contentSrc = useId && post.contentId ? post.contentId : post.content
-  const { html, toc, sidenotes, bibliography } = parse(contentSrc)
   const { title, description } = localizeFields(post, lang)
+
+  // Parse glossary and bibliography from DB first
+  const glossaryJson =
+    useId && post.glossaryId ? post.glossaryId : post.glossaryEn
+  const bibliographyJson =
+    useId && post.bibliographyId ? post.bibliographyId : post.bibliographyEn
+
+  const bibliography: Array<{
+    key: string
+    text: string
+    num: number
+    sourceType: string
+  }> = JSON.parse(bibliographyJson || '[]').map(
+    (b: { key: string; text: string; sourceType: string }, i: number) => ({
+      ...b,
+      num: i + 1,
+    }),
+  )
+
+  const glossary: Array<{
+    key: string
+    term: string
+    definition: string
+    num: number
+  }> = JSON.parse(glossaryJson || '[]')
+    .map((g: { key: string; term: string; definition: string }, i: number) => ({
+      ...g,
+      num: i + 1,
+    }))
+    .sort((a: { term: string }, b: { term: string }) =>
+      a.term.localeCompare(b.term),
+    )
+
+  // Build lookup maps for inline references
+  const glossMap = new Map(glossary.map((g) => [g.key, g.num]))
+  const citeMap = new Map(bibliography.map((b) => [b.key, b.num]))
+
+  // Parse markdown with context for inline references
+  const { html, toc, sidenotes } = parse(contentSrc, { glossMap, citeMap })
 
   return c.json({
     post: {
@@ -151,6 +189,7 @@ app.get('/:slug', (c) => {
     toc,
     sidenotes,
     bibliography,
+    glossary,
   })
 })
 

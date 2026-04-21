@@ -19,3 +19,35 @@ export const BOOK_STATUS_BADGE: Record<BookItem['status'], string> = {
   finished: 'bg-[#FFE600] text-black',
   want: 'bg-black/10 text-black dark:bg-white/10 dark:text-white',
 }
+
+// Glossary and Bibliography UI Constants
+export const POPUP_DIMENSIONS = {
+  glossary: {
+    estimatedHeight: 120,
+    estimatedWidth: 320,
+    margin: 8,
+  },
+  bibliography: {
+    estimatedHeight: 100,
+    estimatedWidth: 320,
+    margin: 8,
+  },
+} as const
+
+export const TIMEOUTS = {
+  hideDelay: 100,
+  highlightDuration: 1500,
+} as const
+
+export const VALIDATION_LIMITS = {
+  glossary: {
+    termMaxLength: 100,
+    definitionMaxLength: 1000,
+    maxEntries: 100,
+  },
+  bibliography: {
+    keyMaxLength: 50,
+    textMaxLength: 2000,
+    maxEntries: 100,
+  },
+} as const

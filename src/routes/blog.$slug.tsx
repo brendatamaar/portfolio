@@ -8,6 +8,8 @@ import type { PostDetail } from '@/src/lib/api'
 import Header from '@/components/section/Header'
 import Footer from '@/components/section/Footer'
 import MarkdownRenderer from '@/src/components/blog/MarkdownRenderer'
+import GlossarySection from '@/src/components/blog/GlossarySection'
+import BibliographySection from '@/src/components/blog/BibliographySection'
 import { formatDate } from '@/components/util/formatDate'
 import { ScrollProgress } from '@/components/ui/layout/scroll-progress'
 import { BackToTop } from '@/components/ui/layout/back-to-top'
@@ -135,7 +137,12 @@ function ShareButton({ title }: ShareButtonProps) {
 }
 
 function readingTime(html: string) {
-  const text = html.replace(HTML_TAG_REGEX, '')
+  // Strip bibliography section before counting words
+  const cleaned = html.replace(
+    /<section class="bibliography"[\s\S]*?<\/section>/g,
+    '',
+  )
+  const text = cleaned.replace(HTML_TAG_REGEX, '')
   const words = text.trim().split(/\s+/).length
   return Math.max(1, Math.round(words / READING_WPM))
 }
@@ -173,6 +180,7 @@ function BlogPostPage() {
   const [data, setData] = useState<PostDetail | null>(initialData)
   const [loading, setLoading] = useState(false)
   const mins = useMemo(() => (data ? readingTime(data.html) : 0), [data])
+  const contentRef = useRef<HTMLDivElement>(null)
 
   // Re-fetch when lang changes client-side — AbortController prevents stale responses
   useEffect(() => {
@@ -215,7 +223,7 @@ function BlogPostPage() {
     )
   }
 
-  const { post, html, toc, sidenotes } = data
+  const { post, html, toc, sidenotes, bibliography, glossary } = data
   const date = new Date(post.publishedAt ?? post.createdAt)
 
   if (loading) {
@@ -289,8 +297,24 @@ function BlogPostPage() {
       </div>
 
       <main id="main" className="mx-auto max-w-[72rem] px-6 pb-16">
-        <MarkdownRenderer html={html} toc={toc} sidenotes={sidenotes} />
+        <div ref={contentRef}>
+          <MarkdownRenderer
+            html={html}
+            toc={toc}
+            sidenotes={sidenotes}
+            bibliography={bibliography}
+            glossary={glossary}
+          />
+        </div>
       </main>
+
+      <div className="mx-auto max-w-3xl space-y-4 px-6 pb-16">
+        <GlossarySection glossary={glossary} contentRef={contentRef} />
+        <BibliographySection
+          bibliography={bibliography}
+          contentRef={contentRef}
+        />
+      </div>
 
       <div className="mx-auto max-w-3xl px-6 pb-16">
         <div className="flex items-center justify-between border-t-2 border-black pt-6 dark:border-white">

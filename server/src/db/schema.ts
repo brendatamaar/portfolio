@@ -21,6 +21,10 @@ export const posts = sqliteTable('posts', {
   updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
+  glossaryEn: text('glossary_en').notNull().default('[]'),
+  glossaryId: text('glossary_id'),
+  bibliographyEn: text('bibliography_en').notNull().default('[]'),
+  bibliographyId: text('bibliography_id'),
 })
 
 export const tags = sqliteTable('tags', {
