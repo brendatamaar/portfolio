@@ -75,6 +75,14 @@ export default function PostEditor() {
   const [bibliographyEn, setBibliographyEn] = useState<BibliographyEntry[]>([])
   const [bibliographyId, setBibliographyId] = useState<BibliographyEntry[]>([])
 
+  // Editor modes for glossary and bibliography tabs
+  const [glossaryEditorMode, setGlossaryEditorMode] = useState<
+    'form' | 'markdown'
+  >('form')
+  const [bibliographyEditorMode, setBibliographyEditorMode] = useState<
+    'form' | 'markdown'
+  >('form')
+
   const { isDark, toggle } = useTheme()
   const [mode, setMode] = useState<Mode>('split')
   const [syncScroll, setSyncScroll] = useState(false)
@@ -486,7 +494,7 @@ export default function PostEditor() {
 
   // Keep saveRef current so handleKeyDown can call it without stale closure
   saveRef.current = () => {
-    save()
+    void save()
   }
 
   const wordCount = useMemo(
@@ -738,6 +746,8 @@ export default function PostEditor() {
                     setGlossaryEn(entries)
                   }
                 }}
+                editorMode={glossaryEditorMode}
+                onEditorModeChange={setGlossaryEditorMode}
               />
             </div>
           )}
@@ -753,6 +763,8 @@ export default function PostEditor() {
                     setBibliographyEn(entries)
                   }
                 }}
+                editorMode={bibliographyEditorMode}
+                onEditorModeChange={setBibliographyEditorMode}
               />
             </div>
           )}

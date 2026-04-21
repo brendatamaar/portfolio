@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { ThemeProvider } from 'next-themes'
 import { LanguageProvider } from '@/src/context/LanguageContext'
-import type { RootErrorProps } from './__root.types'
+import type { RootErrorProps } from '@/src/types/root'
 
 export const Route = createRootRoute({
   component: RootLayout,

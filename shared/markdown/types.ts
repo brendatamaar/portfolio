@@ -6,7 +6,6 @@ export type AdmonitionType =
   | 'info'
   | 'tldr'
   | 'update'
-  | 'definition'
   | 'ai'
   | 'see-also'
 

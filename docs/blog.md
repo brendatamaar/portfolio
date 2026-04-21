@@ -26,14 +26,15 @@ Admin editor (admin/)  →  Hono API (server/)  →  SQLite  →  Portfolio fron
 
 The editor is a full-screen split-pane app at `http://localhost:5174`.
 
-| Zone             | Description                                                            |
-| ---------------- | ---------------------------------------------------------------------- |
-| **Header bar**   | Title input, language tabs (EN/ID), status badge, Save/Publish buttons |
-| **Toolbar**      | Formatting buttons + view mode toggle                                  |
-| **Editor pane**  | Raw markdown textarea                                                  |
-| **Preview pane** | Live rendered HTML (uses the same parser as production)                |
-| **Meta sidebar** | Slug, date, description, cover image, tags, heading outline            |
-| **Footer**       | Word count + character count                                           |
+| Zone             | Description                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| **Header bar**   | Title input, language tabs (EN/ID), status badge, Save/Publish buttons                   |
+| **Tab bar**      | Content / Glossary / Bibliography tabs                                                   |
+| **Toolbar**      | Formatting buttons + view mode toggle                                                    |
+| **Editor pane**  | Raw markdown textarea (Content tab) or form/markdown editor (Glossary/Bibliography tabs) |
+| **Preview pane** | Live rendered HTML (uses the same parser as production)                                  |
+| **Meta sidebar** | Slug, date, description, cover image, tags, heading outline                              |
+| **Footer**       | Word count + character count                                                             |
 
 ### View Modes
 
@@ -47,16 +48,36 @@ Three modes toggled from the toolbar (right side):
 
 **Sync scroll**: In split mode, the chain-link button links editor and preview scroll positions proportionally.
 
+### Content Tabs
+
+Three tabs below the header bar organize post content:
+
+| Tab              | Description                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| **Content**      | Main article markdown editor. Supports split-pane editing with live preview.                |
+| **Glossary**     | Term definitions referenced via `[gloss:key]` in content. Dual-mode editor (Form/Markdown). |
+| **Bibliography** | Citations referenced via `[cite:key]` in content. Dual-mode editor (Form/Markdown).         |
+
+**Glossary & Bibliography Editor Features:**
+
+- **Form Mode**: Add entries individually with form fields
+- **Markdown Mode**: Edit all entries as compact text (see Glossary and Bibliography sections below for syntax)
+- **Live Preview**: Shows rendered entries with error highlighting
+- **Error Display**: Parse errors shown with line numbers and descriptions
+- **Mode Toggle**: Form/Markdown buttons or `Ctrl/Cmd+Shift+M` keyboard shortcut
+- **Persistence**: Preferred editor mode is saved per tab
+
 ### Keyboard Shortcuts
 
-| Shortcut       | Action                                |
-| -------------- | ------------------------------------- |
-| `Ctrl+S`       | Save (draft)                          |
-| `Ctrl+B`       | Bold — inserts `****`, cursor between |
-| `Ctrl+I`       | Italic — inserts `**`, cursor between |
-| `Ctrl+K`       | Link — inserts `[](url)`              |
-| `Ctrl+Shift+P` | Toggle preview / split mode           |
-| `Tab`          | Insert 2 spaces                       |
+| Shortcut       | Action                                                 |
+| -------------- | ------------------------------------------------------ |
+| `Ctrl+S`       | Save (draft)                                           |
+| `Ctrl+B`       | Bold — inserts `****`, cursor between                  |
+| `Ctrl+I`       | Italic — inserts `**`, cursor between                  |
+| `Ctrl+K`       | Link — inserts `[](url)`                               |
+| `Ctrl+Shift+P` | Toggle preview / split mode                            |
+| `Ctrl+Shift+M` | Toggle Form/Markdown mode (Glossary/Bibliography tabs) |
+| `Tab`          | Insert 2 spaces                                        |
 
 ### Toolbar Buttons
 
@@ -282,17 +303,49 @@ Alignment in the separator row: `:---` = left, `:---:` = center, `---:` = right,
 
 ### Glossary
 
-The glossary is managed in a **dedicated tab** in the admin editor. Add terms with unique keys, labels, and definitions there.
+The glossary is managed in a **dedicated tab** in the admin editor. It can be edited using either a **Form** interface or **Markdown** syntax.
 
-**Glossary entry structure:**
+**Editor Modes:**
 
-```json
-{
-  "key": "termKey",
-  "term": "Display Term",
-  "definition": "Description of the term..."
-}
+- **Form Mode**: Add entries one by one with fields for key, term, and definition
+- **Markdown Mode**: Edit all entries as text using the compact syntax below
+- Toggle between modes with the Form/Markdown buttons in the tab
+- Keyboard shortcut: `Ctrl/Cmd+Shift+M` to toggle modes
+- Editor mode preference is saved to localStorage
+
+**Glossary Markdown Format:**
+
 ```
+key: term | definition
+```
+
+**Examples:**
+
+```
+startViewTransition: document.startViewTransition() | API method for view transitions
+DOM: Document Object Model | The structure of HTML documents
+vt-name: view-transition-name | CSS property for named capture groups
+```
+
+**Multiline Definitions:**
+
+Use triple quotes (`"""`) for definitions spanning multiple lines:
+
+```
+complex-term: "Complex Term" | """
+This is a multiline
+definition with multiple
+paragraphs or details.
+"""
+```
+
+**Key Rules:**
+
+- Keys must be alphanumeric with hyphens/underscores only
+- Keys are case-insensitive and must be unique
+- Terms with special characters (like `|` or `"`) must be quoted: `"term | with pipe"`
+- Empty lines and lines starting with `#` are ignored (comments)
+- Live preview shows rendered glossary with error highlighting
 
 **Inline glossary references:**
 
@@ -366,18 +419,64 @@ Explain the concept of dependency injection in simple terms.
 
 ### Bibliography
 
-The bibliography is managed in a **dedicated tab** in the admin editor. Add entries with unique keys, full text, and source type there.
+The bibliography is managed in a **dedicated tab** in the admin editor. It can be edited using either a **Form** interface or **Markdown** syntax.
 
-**Bibliography entry structure:**
+**Editor Modes:**
 
-```json
-{
-  "key": "mdn-docs",
-  "text": "MDN Web Docs: View Transition API",
-  "source": "docs",
-  "url": "https://developer.mozilla.org/..."
-}
+- **Form Mode**: Add entries one by one with fields for key, source type, and citation text
+- **Markdown Mode**: Edit all entries as text using the compact syntax below
+- Toggle between modes with the Form/Markdown buttons in the tab
+- Keyboard shortcut: `Ctrl/Cmd+Shift+M` to toggle modes
+- Editor mode preference is saved to localStorage
+
+**Bibliography Markdown Format:**
+
 ```
+key: sourceType | citation text
+```
+
+**Examples:**
+
+```
+mdn-vt: web | MDN Web Docs. "View Transition API". https://developer.mozilla.org/...
+react-docs: docs | React Documentation. Meta Open Source, 2024.
+js-spec: docs | ECMAScript 2024 Language Specification. Ecma International.
+```
+
+**Multiline Citations:**
+
+Use triple quotes (`"""`) for citations spanning multiple lines:
+
+```
+long-ref: book | """
+Author Name. Book Title, 2024.
+Chapter 3, Section 2.
+Publisher Name.
+"""
+```
+
+**Source Types:**
+
+| Type      | Icon | Description       |
+| --------- | ---- | ----------------- |
+| `web`     | 🌐   | Websites, blogs   |
+| `docs`    | 📖   | Documentation     |
+| `journal` | 📄   | Academic journals |
+| `article` | 📰   | News articles     |
+| `book`    | 📚   | Books             |
+| `video`   | 🎬   | Videos, talks     |
+| `podcast` | 🎙   | Podcasts          |
+| `repo`    | 💾   | Code repositories |
+| `other`   | ·    | Everything else   |
+
+**Key Rules:**
+
+- Keys must be alphanumeric with hyphens/underscores only
+- Keys are case-insensitive and must be unique
+- Invalid source types default to `other`
+- Citations with special characters (like `|` or `"`) must be quoted: `"citation | text"`
+- Empty lines and lines starting with `#` are ignored (comments)
+- Live preview shows rendered bibliography with error highlighting
 
 **Inline citations:**
 
@@ -397,20 +496,6 @@ This claim is supported by research.[cite:mdn-docs]
 - Classic encyclopedia format with hanging indent
 - Quoted titles (`"Title"`) are rendered bold
 - Click an entry to jump to where it's first cited in the text
-
-**Source types:**
-
-| Type      | Description       |
-| --------- | ----------------- |
-| `web`     | Websites, blogs   |
-| `docs`    | Documentation     |
-| `journal` | Academic journals |
-| `article` | News articles     |
-| `book`    | Books             |
-| `video`   | Videos, talks     |
-| `podcast` | Podcasts          |
-| `repo`    | Code repositories |
-| `other`   | Everything else   |
 
 ---
 
