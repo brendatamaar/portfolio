@@ -60,24 +60,27 @@ export default function GlossarySection({
           className="border-t-2 border-black px-5 py-4 dark:border-white"
         >
           <dl className="m-0 space-y-3 p-0">
-            {glossary.map((entry) => (
-              <div
-                key={entry.key}
-                className="cursor-pointer border-l-3 border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-[#FFE600]/5"
-                onClick={() => scrollToRef(`[data-gloss-key="${entry.key}"]`)}
-              >
-                <dt className="mb-1 flex items-baseline gap-2 font-mono text-[13px] font-bold text-black dark:text-white">
-                  <span className="inline-flex items-center bg-black px-1.5 py-0.5 font-mono text-[10px] font-black text-white dark:bg-white dark:text-black">
-                    {entry.num}
-                  </span>
-                  {entry.term}
-                </dt>
-                <dd
-                  className="m-0 pl-0 text-[14px] leading-relaxed text-black/70 dark:text-white/70"
-                  dangerouslySetInnerHTML={{ __html: entry.definition }}
-                />
-              </div>
-            ))}
+            {glossary
+              .slice()
+              .sort((a, b) => a.num - b.num)
+              .map((entry) => (
+                <div
+                  key={entry.key}
+                  className="cursor-pointer border-l-3 border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-[#FFE600]/5"
+                  onClick={() => scrollToRef(`[data-gloss-key="${entry.key}"]`)}
+                >
+                  <dt className="mb-1 flex items-baseline gap-2 font-mono text-[13px] font-bold text-black dark:text-white">
+                    <span className="inline-flex items-center bg-black px-1.5 py-0.5 font-mono text-[10px] font-black text-white dark:bg-white dark:text-black">
+                      {entry.num}
+                    </span>
+                    {entry.term}
+                  </dt>
+                  <dd
+                    className="m-0 pl-0 text-[14px] leading-relaxed text-black/70 dark:text-white/70"
+                    dangerouslySetInnerHTML={{ __html: entry.definition }}
+                  />
+                </div>
+              ))}
           </dl>
         </div>
       </div>
