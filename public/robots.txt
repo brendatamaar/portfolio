@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.brendatama.xyz/sitemap.xml
+Sitemap: https://www.brendatama.dev/sitemap.xml

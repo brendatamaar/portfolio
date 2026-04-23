@@ -1,6 +1,6 @@
 import type { SpringOptions } from 'motion/react'
 
-export const WEBSITE_URL = 'https://nim-fawn.vercel.app'
+export const WEBSITE_URL = 'https://www.brendatama.dev'
 
 // back-to-top
 export const SCROLL_THRESHOLD = 400

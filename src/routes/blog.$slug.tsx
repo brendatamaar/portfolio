@@ -155,8 +155,8 @@ export const Route = createFileRoute('/blog/$slug')({
     if (!loaderData) return {}
     const { post } = loaderData as PostDetail
     const title = `${post.title} | Brendatama Akbar`
-    const description = post.description ?? 'Read on brendatama.xyz'
-    const url = `https://www.brendatama.xyz/blog/${post.slug}`
+    const description = post.description ?? 'Read on brendatama.dev'
+    const url = `https://www.brendatama.dev/blog/${post.slug}`
     return {
       meta: [
         { title },

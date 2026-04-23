@@ -33,7 +33,7 @@ const EN_PROFILE = {
     'I am a web software developer specializing in designing and building applications with a focus on simplicity and usability. Currently, I work at PLN Icon Plus as a Web Software Developer. Have a keen interest in tech, RPG games, and good stories.',
   avatarUrl:
     'https://avatars.githubusercontent.com/u/15965200?s=400&u=f240353cd552d7409e345f8d367046014c99161b&v=4',
-  personalWebsiteUrl: 'https://www.brendatama.xyz/',
+  personalWebsiteUrl: 'https://www.brendatama.dev/',
   email: 'brendatamaa@gmail.com',
   tel: '+6282128947353',
   social: JSON.stringify([
@@ -58,7 +58,7 @@ const ID_PROFILE = {
     'Saya adalah web software developer yang berspesialisasi dalam merancang dan membangun aplikasi dengan fokus pada kesederhanaan dan kemudahan penggunaan. Saat ini, saya bekerja di PLN Icon Plus sebagai Web Software Developer. Memiliki ketertarikan pada teknologi, game RPG, dan cerita yang menarik.',
   avatarUrl:
     'https://avatars.githubusercontent.com/u/15965200?s=400&u=f240353cd552d7409e345f8d367046014c99161b&v=4',
-  personalWebsiteUrl: 'https://www.brendatama.xyz/',
+  personalWebsiteUrl: 'https://www.brendatama.dev/',
   email: 'brendatamaa@gmail.com',
   tel: '+6282128947353',
   social: JSON.stringify([

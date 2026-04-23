@@ -14,7 +14,7 @@ export const RESUME_DATA = {
     'I am a web software developer specializing in designing and building applications with a focus on simplicity and usability. Currently, I work at PLN Icon Plus as a Web Software Developer. Have a keen interest in tech, RPG games, and good stories.🤖',
   avatarUrl:
     'https://avatars.githubusercontent.com/u/15965200?s=400&u=f240353cd552d7409e345f8d367046014c99161b&v=4',
-  personalWebsiteUrl: 'https://www.brendatama.xyz/',
+  personalWebsiteUrl: 'https://www.brendatama.dev/',
   contact: {
     email: 'brendatamaa@gmail.com',
     tel: '+6282128947353',
@@ -92,7 +92,13 @@ export const RESUME_DATA = {
   projects: [
     {
       title: 'skenatify',
-      techStack: ['side project', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Spotify API'],
+      techStack: [
+        'side project',
+        'Next.js',
+        'TypeScript',
+        'Tailwind CSS',
+        'Spotify API',
+      ],
       description:
         'Music discovery app that recommends tracks based on your favorite artists using Spotify audio feature filters.',
       logo: '',
@@ -166,14 +172,7 @@ export const RESUME_DATA = {
     {
       title: 'AIR Tax',
       company: 'Icon Plus',
-      techStack: [
-        'work',
-        'Vue 3',
-        'Spring Boot',
-        'Kafka',
-        'JobRunr',
-        'Docker',
-      ],
+      techStack: ['work', 'Vue 3', 'Spring Boot', 'Kafka', 'JobRunr', 'Docker'],
       description:
         'Enterprise tax saas integrated with DJP. Covers tax invoicing, non-tax revenue reporting, and taxpayer status confirmation.',
       logo: '',
@@ -203,14 +202,7 @@ export const RESUME_DATA = {
     {
       title: 'Dashboard Revenue',
       company: 'Icon Plus',
-      techStack: [
-        'work',
-        'React',
-        'TypeScript',
-        'Go',
-        'GraphQL',
-        'PostgreSQL',
-      ],
+      techStack: ['work', 'React', 'TypeScript', 'Go', 'GraphQL', 'PostgreSQL'],
       description:
         'Real-time analytics dashboard tracking OTC and recurring revenue streams.',
       logo: '',
@@ -220,13 +212,7 @@ export const RESUME_DATA = {
     {
       title: 'EMI CRM',
       company: 'Icon Plus',
-      techStack: [
-        'work',
-        'Vue 3',
-        'TypeScript',
-        'Spring Boot',
-        'PostgreSQL',
-      ],
+      techStack: ['work', 'Vue 3', 'TypeScript', 'Spring Boot', 'PostgreSQL'],
       description:
         'CRM managing sales, procurement, stock, and automated accounting integration.',
       logo: '',
@@ -236,13 +222,7 @@ export const RESUME_DATA = {
     {
       title: 'cheSKP',
       company: 'Icon Plus',
-      techStack: [
-        'work',
-        'Vue 3',
-        'TypeScript',
-        'Spring Boot',
-        'PostgreSQL',
-      ],
+      techStack: ['work', 'Vue 3', 'TypeScript', 'Spring Boot', 'PostgreSQL'],
       description: 'Customer satisfaction survey platform.',
       logo: '',
       link: {

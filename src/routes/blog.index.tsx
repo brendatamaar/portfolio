@@ -24,7 +24,7 @@ export const Route = createFileRoute('/blog/')({
         property: 'og:description',
         content: 'Writing on software, design, and the web.',
       },
-      { property: 'og:url', content: 'https://www.brendatama.xyz/blog' },
+      { property: 'og:url', content: 'https://www.brendatama.dev/blog' },
       { name: 'twitter:title', content: 'Writing | Brendatama Akbar' },
       {
         name: 'twitter:description',
