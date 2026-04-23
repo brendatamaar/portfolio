@@ -5,7 +5,7 @@ import { createRouter } from './router'
 import type { RouteWithHead } from './types/router'
 
 const SITE_NAME = 'Brendatama Akbar - Web Software Developer'
-const SITE_URL = 'https://www.brendatama.xyz'
+const SITE_URL = 'https://www.brendatama.dev'
 const DEFAULT_IMAGE = `${SITE_URL}/images/meta_img.webp`
 const TWITTER_HANDLE = '@berkelomang'
 

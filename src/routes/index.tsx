@@ -78,7 +78,7 @@ export const Route = createFileRoute('/')({
         property: 'og:description',
         content: 'Brendatama Akbar - Web Software Developer',
       },
-      { property: 'og:url', content: 'https://www.brendatama.xyz' },
+      { property: 'og:url', content: 'https://www.brendatama.dev' },
       { property: 'og:site_name', content: SITE_NAME },
       { name: 'twitter:title', content: SITE_NAME },
       {

@@ -42,7 +42,7 @@ app.post('/login', async (c) => {
     sameSite: 'Strict',
     path: '/',
     maxAge: 60 * 60 * 24 * 30,
-    ...(isProduction && { domain: '.brendatama.xyz' }),
+    ...(isProduction && { domain: '.brendatama.dev' }),
   })
 
   return c.json({ ok: true })
@@ -52,7 +52,7 @@ app.post('/logout', (c) => {
   const isProduction = process.env.NODE_ENV === 'production'
   deleteCookie(c, 'admin_token', {
     path: '/',
-    ...(isProduction && { domain: '.brendatama.xyz' }),
+    ...(isProduction && { domain: '.brendatama.dev' }),
   })
   return c.json({ ok: true })
 })
