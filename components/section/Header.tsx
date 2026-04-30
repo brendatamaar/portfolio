@@ -34,12 +34,12 @@ export default function Header() {
         >
           {t('nav.writing')}
         </Link>
-        <Link
+        {/* <Link
           to="/collection"
           className="font-mono text-xs tracking-widest text-black uppercase hover:underline dark:text-white"
         >
           {t('nav.collection')}
-        </Link>
+        </Link> */}
         <LanguageSwitcher />
         <button
           onClick={toggleTheme}
