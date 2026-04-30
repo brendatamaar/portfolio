@@ -277,7 +277,7 @@ function HomePage() {
           </Reveal>
 
           {/* 04 — Reading */}
-          <Reveal delay={0.05}>
+          {/* <Reveal delay={0.05}>
             <section>
               <SectionLabel num="04" label={t('sections.reading')} />
               {featuredBook ? (
@@ -297,10 +297,10 @@ function HomePage() {
                 </p>
               )}
             </section>
-          </Reveal>
+          </Reveal> */}
 
           {/* 05 — Listening */}
-          <Reveal delay={0.05}>
+          {/* <Reveal delay={0.05}>
             <section>
               <SectionLabel num="05" label={t('sections.listening')} />
               {featuredAlbum ? (
@@ -323,7 +323,7 @@ function HomePage() {
                 </p>
               )}
             </section>
-          </Reveal>
+          </Reveal> */}
 
           {/* 06 — Connect */}
           <Reveal delay={0.05}>
