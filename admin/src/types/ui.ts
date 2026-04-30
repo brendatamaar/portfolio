@@ -8,6 +8,7 @@ export interface ImageGalleryProps {
 
 export interface PreviewProps {
   markdown: string
+  fullWidth?: boolean
 }
 
 export interface ToolbarProps {

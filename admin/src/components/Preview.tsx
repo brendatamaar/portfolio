@@ -3,7 +3,7 @@ import { parse } from '@portfolio/shared/markdown/parser.js'
 import type { PreviewProps } from '../types/ui'
 import { PREVIEW_DEBOUNCE_MS } from '../lib/constants.ts'
 
-export default function Preview({ markdown }: PreviewProps) {
+export default function Preview({ markdown, fullWidth = false }: PreviewProps) {
   const [html, setHtml] = useState('')
 
   useEffect(() => {
@@ -20,7 +20,9 @@ export default function Preview({ markdown }: PreviewProps) {
 
   return (
     <div
-      className="preview-content"
+      className={['preview-content', fullWidth && 'preview-content-full']
+        .filter(Boolean)
+        .join(' ')}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )
