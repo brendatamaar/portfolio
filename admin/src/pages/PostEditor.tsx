@@ -154,11 +154,23 @@ export default function PostEditor() {
     const pv = previewRef.current
     if (!ta || !pv) return
 
+    const scrollRatio = (el: HTMLElement) => {
+      const maxScroll = el.scrollHeight - el.clientHeight
+      return maxScroll > 0 ? el.scrollTop / maxScroll : 0
+    }
+    const syncPreviewToEditor = () => {
+      pv.scrollTop = scrollRatio(ta) * (pv.scrollHeight - pv.clientHeight)
+    }
+    const syncEditorToPreview = () => {
+      ta.scrollTop = scrollRatio(pv) * (ta.scrollHeight - ta.clientHeight)
+    }
+
+    syncPreviewToEditor()
+
     const onEditorScroll = () => {
       if (isSyncing.current) return
       isSyncing.current = true
-      const pct = ta.scrollTop / (ta.scrollHeight - ta.clientHeight) || 0
-      pv.scrollTop = pct * (pv.scrollHeight - pv.clientHeight)
+      syncPreviewToEditor()
       setTimeout(() => {
         isSyncing.current = false
       }, 50)
@@ -166,8 +178,7 @@ export default function PostEditor() {
     const onPreviewScroll = () => {
       if (isSyncing.current) return
       isSyncing.current = true
-      const pct = pv.scrollTop / (pv.scrollHeight - pv.clientHeight) || 0
-      ta.scrollTop = pct * (ta.scrollHeight - ta.clientHeight)
+      syncEditorToPreview()
       setTimeout(() => {
         isSyncing.current = false
       }, 50)
