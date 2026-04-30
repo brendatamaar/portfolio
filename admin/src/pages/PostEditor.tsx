@@ -731,7 +731,10 @@ export default function PostEditor() {
               ref={previewRef}
               className={`min-h-0 overflow-y-auto ${mode === 'split' ? 'w-1/2' : 'w-full'}`}
             >
-              <Preview markdown={deferredContent} />
+              <Preview
+                markdown={deferredContent}
+                fullWidth={mode === 'preview'}
+              />
             </div>
           )}
 

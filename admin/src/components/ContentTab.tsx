@@ -157,7 +157,7 @@ export default function ContentTab({
             ref={previewRef}
             className={`min-h-0 overflow-y-auto ${mode === 'split' ? 'w-1/2' : 'w-full'}`}
           >
-            <Preview markdown={activeContent} />
+            <Preview markdown={activeContent} fullWidth={mode === 'preview'} />
           </div>
         )}
       </div>
