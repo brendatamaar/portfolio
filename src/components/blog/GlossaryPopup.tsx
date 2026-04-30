@@ -26,10 +26,9 @@ export default function GlossaryPopup({
       findData,
     })
 
-  // Position popup above the reference
+  // Position popup above the reference without guessing its rendered height.
   const getPopupStyle = (x: number, y: number): React.CSSProperties => {
-    const { estimatedHeight, estimatedWidth, margin } =
-      POPUP_DIMENSIONS.glossary
+    const { estimatedWidth, margin } = POPUP_DIMENSIONS.glossary
 
     let left = x - estimatedWidth / 2
 
@@ -39,13 +38,10 @@ export default function GlossaryPopup({
       left = window.innerWidth - estimatedWidth - 8
     }
 
-    // Position above the reference
-    const top = y - estimatedHeight - margin
-
     return {
       position: 'fixed',
       left,
-      top: Math.max(8, top),
+      bottom: window.innerHeight - y + margin,
       zIndex: 50,
     }
   }

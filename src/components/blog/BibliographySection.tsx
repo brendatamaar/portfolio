@@ -65,7 +65,10 @@ export default function BibliographySection({
               <li
                 key={entry.key}
                 className="flex cursor-pointer items-baseline gap-3 border-l-3 border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-[#FFE600]/5"
-                onClick={() => scrollToRef(`[data-cite-id="${entry.key}"]`)}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('a')) return
+                  scrollToRef(`[data-cite-id="${entry.key}"]`)
+                }}
               >
                 <span className="inline-flex shrink-0 items-center border-[1.5px] border-black bg-[#FFE600] px-1.5 py-0.5 font-mono text-[10px] font-bold text-black">
                   {entry.num}
