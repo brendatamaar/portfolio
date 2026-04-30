@@ -55,12 +55,12 @@ html.dark .editor-textarea {
 
 .preview-content {
   padding: 1.25rem 2rem;
-  max-width: 65ch;
   color: #1a1a1a;
   font-size: 1rem;
   line-height: 1.75;
-  overflow-y: auto;
-  height: 100%;
+}
+.preview-content-full {
+  max-width: none;
 }
 html.dark .preview-content {
   color: #e0e0e0;
