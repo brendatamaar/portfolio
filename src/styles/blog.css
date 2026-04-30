@@ -664,6 +664,21 @@
 }
 
 /* Bibliography inline refs — 1, 2, etc. (brutalist yellow accent) */
+.bib-popup a,
+#bibliography-section a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: #ffe600;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+
+  &:hover {
+    background: #ffe600;
+    color: #000;
+  }
+}
+
 .cite-ref.bib-ref a {
   display: inline-block;
   font-family: var(--font-mono);
