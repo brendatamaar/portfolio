@@ -39,8 +39,12 @@ export default function BibliographyPopup({
       findData,
     })
 
-  // Position popup above the reference
-  const getPopupStyle = (x: number, y: number): React.CSSProperties => {
+  // Anchor above when there's room, otherwise flip below the reference.
+  const getPopupStyle = (
+    x: number,
+    y: number,
+    bottom: number,
+  ): React.CSSProperties => {
     const { estimatedHeight, estimatedWidth, margin } =
       POPUP_DIMENSIONS.bibliography
 
@@ -52,13 +56,14 @@ export default function BibliographyPopup({
       left = window.innerWidth - estimatedWidth - 8
     }
 
-    // Position above the reference
-    const top = y - estimatedHeight - margin
+    // Flip below if not enough space above
+    const flipBelow = y < estimatedHeight + margin
 
     return {
       position: 'fixed',
       left,
-      top: Math.max(8, top),
+      top: flipBelow ? bottom + margin : y - margin,
+      transform: flipBelow ? undefined : 'translateY(-100%)',
       zIndex: 50,
     }
   }
@@ -87,7 +92,11 @@ export default function BibliographyPopup({
         <div
           className="bib-popup"
           style={{
-            ...getPopupStyle(tooltipPosition.x, tooltipPosition.y),
+            ...getPopupStyle(
+              tooltipPosition.x,
+              tooltipPosition.y,
+              tooltipPosition.bottom,
+            ),
             pointerEvents: 'none',
           }}
         >
@@ -99,7 +108,11 @@ export default function BibliographyPopup({
       {popup && popupPosition && (
         <div
           className="bib-popup"
-          style={getPopupStyle(popupPosition.x, popupPosition.y)}
+          style={getPopupStyle(
+            popupPosition.x,
+            popupPosition.y,
+            popupPosition.bottom,
+          )}
         >
           <button
             className="bib-popup-close"
