@@ -10,8 +10,8 @@ interface UseInteractivePopupOptions<T> {
 interface UseInteractivePopupReturn<T> {
   tooltip: T | null
   popup: T | null
-  tooltipPosition: { x: number; y: number } | null
-  popupPosition: { x: number; y: number } | null
+  tooltipPosition: { x: number; y: number; bottom: number } | null
+  popupPosition: { x: number; y: number; bottom: number } | null
   clearPopup: () => void
 }
 
@@ -25,10 +25,12 @@ export function useInteractivePopup<T>(
   const [tooltipPosition, setTooltipPosition] = useState<{
     x: number
     y: number
+    bottom: number
   } | null>(null)
   const [popupPosition, setPopupPosition] = useState<{
     x: number
     y: number
+    bottom: number
   } | null>(null)
 
   const hideTimeoutRef = useRef<number | null>(null)
@@ -80,6 +82,7 @@ export function useInteractivePopup<T>(
       setTooltipPosition({
         x: rect.left + rect.width / 2,
         y: rect.top,
+        bottom: rect.bottom,
       })
     }
 
@@ -117,6 +120,7 @@ export function useInteractivePopup<T>(
         setPopupPosition({
           x: rect.left + rect.width / 2,
           y: rect.top,
+          bottom: rect.bottom,
         })
         setTooltip(null)
         setTooltipPosition(null)

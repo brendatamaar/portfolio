@@ -26,9 +26,14 @@ export default function GlossaryPopup({
       findData,
     })
 
-  // Position popup above the reference without guessing its rendered height.
-  const getPopupStyle = (x: number, y: number): React.CSSProperties => {
-    const { estimatedWidth, margin } = POPUP_DIMENSIONS.glossary
+  // Anchor above when there's room, otherwise flip below the reference.
+  const getPopupStyle = (
+    x: number,
+    y: number,
+    bottom: number,
+  ): React.CSSProperties => {
+    const { estimatedHeight, estimatedWidth, margin } =
+      POPUP_DIMENSIONS.glossary
 
     let left = x - estimatedWidth / 2
 
@@ -38,10 +43,14 @@ export default function GlossaryPopup({
       left = window.innerWidth - estimatedWidth - 8
     }
 
+    // Flip below if not enough space above
+    const flipBelow = y < estimatedHeight + margin
+
     return {
       position: 'fixed',
       left,
-      bottom: window.innerHeight - y + margin,
+      top: flipBelow ? bottom + margin : y - margin,
+      transform: flipBelow ? undefined : 'translateY(-100%)',
       zIndex: 50,
     }
   }
@@ -53,7 +62,11 @@ export default function GlossaryPopup({
         <div
           className="gloss-popup"
           style={{
-            ...getPopupStyle(tooltipPosition.x, tooltipPosition.y),
+            ...getPopupStyle(
+              tooltipPosition.x,
+              tooltipPosition.y,
+              tooltipPosition.bottom,
+            ),
             pointerEvents: 'none',
           }}
         >
@@ -66,7 +79,11 @@ export default function GlossaryPopup({
       {popup && popupPosition && (
         <div
           className="gloss-popup"
-          style={getPopupStyle(popupPosition.x, popupPosition.y)}
+          style={getPopupStyle(
+            popupPosition.x,
+            popupPosition.y,
+            popupPosition.bottom,
+          )}
         >
           <div className="gloss-popup-header">
             <div className="gloss-popup-term">{popup.term}</div>

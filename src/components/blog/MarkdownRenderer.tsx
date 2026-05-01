@@ -15,6 +15,7 @@ export default function MarkdownRenderer({
 }: MarkdownRendererProps) {
   const internalContentRef = useRef<HTMLDivElement>(null)
   const contentRef = externalContentRef || internalContentRef
+  const popupScopeRef = useRef<HTMLDivElement>(null)
   const [zoomedImg, setZoomedImg] = useState<string | null>(null)
 
   // Inject a "copy" button into every code block after the HTML mounts.
@@ -106,7 +107,10 @@ export default function MarkdownRenderer({
 
   return (
     <>
-      <div className="blog-layout flex w-full items-start gap-10">
+      <div
+        ref={popupScopeRef}
+        className="blog-layout flex w-full items-start gap-10"
+      >
         {/* Left: margin notes (desktop only, positioned by Sidenotes.tsx) */}
         <Sidenotes sidenotes={sidenotes} contentRef={contentRef} />
 
@@ -126,10 +130,13 @@ export default function MarkdownRenderer({
       </div>
 
       {/* Bibliography popup/tooltip */}
-      <BibliographyPopup bibliography={bibliography} contentRef={contentRef} />
+      <BibliographyPopup
+        bibliography={bibliography}
+        contentRef={popupScopeRef}
+      />
 
       {/* Glossary popup/tooltip */}
-      <GlossaryPopup glossary={glossary} contentRef={contentRef} />
+      <GlossaryPopup glossary={glossary} contentRef={popupScopeRef} />
 
       {/* Image zoom overlay */}
       {zoomedImg && (
