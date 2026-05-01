@@ -14,6 +14,10 @@ import {
 import { api } from '../lib/api.ts'
 import type { Post } from '../lib/api.ts'
 import { useTheme } from '../lib/theme.ts'
+import {
+  glossaryToMarkdown,
+  bibliographyToMarkdown,
+} from '../lib/glossaryBibliography.ts'
 import type { StatusFilter } from '../types/editor'
 
 function formatDate(ts: string, label: string) {
@@ -51,13 +55,22 @@ export default function PostList() {
     setPosts((p) => p.filter((x) => x.id !== id))
   }
 
-  function downloadPost(post: Post) {
-    const slug = post.slug
-    const blob = new Blob([post.content], { type: 'text/markdown' })
+  async function downloadPost(post: Post) {
+    const full = await api.posts.get(post.id)
+    const sections = [full.content]
+    if (full.glossaryEn.length > 0) {
+      sections.push(`## Glossary\n\n${glossaryToMarkdown(full.glossaryEn)}`)
+    }
+    if (full.bibliographyEn.length > 0) {
+      sections.push(
+        `## Bibliography\n\n${bibliographyToMarkdown(full.bibliographyEn)}`,
+      )
+    }
+    const blob = new Blob([sections.join('\n\n')], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${slug}.md`
+    a.download = `${full.slug}.md`
     a.click()
     URL.revokeObjectURL(url)
   }
