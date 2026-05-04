@@ -12,6 +12,7 @@ import { writeFile, unlink, existsSync, mkdirSync } from 'fs'
 import { promisify } from 'util'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { buildPostDetail } from '../lib/postDetail.js'
 
 const writeFileAsync = promisify(writeFile)
 const unlinkAsync = promisify(unlink)
@@ -161,6 +162,15 @@ app.get('/posts/:id', (c) => {
       ? JSON.parse(post.bibliographyId)
       : null,
   })
+})
+
+app.get('/posts/:id/preview', (c) => {
+  const id = Number(c.req.param('id'))
+  const lang = c.req.query('lang')
+  const post = db.select().from(posts).where(eq(posts.id, id)).get()
+  if (!post) return c.json({ error: 'Not found' }, 404)
+
+  return c.json(buildPostDetail(post, lang))
 })
 
 app.post('/posts', async (c) => {
