@@ -14,6 +14,7 @@ import {
   ArrowLeftIcon,
   SaveIcon,
   GlobeIcon,
+  EyeIcon,
   EyeOffIcon,
   SunIcon,
   MoonIcon,
@@ -90,6 +91,7 @@ export default function PostEditor() {
   const [showCoverGallery, setShowCoverGallery] = useState(false)
   const [showMeta, setShowMeta] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [previewing, setPreviewing] = useState(false)
   const [translating, setTranslating] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
@@ -286,6 +288,14 @@ export default function PostEditor() {
     document.execCommand('insertText', false, `![image](${url})`)
   }
 
+  function buildPreviewUrl(postId: number) {
+    const siteUrl =
+      import.meta.env.VITE_SITE_URL ??
+      window.location.origin.replace('admin.', 'www.').replace(':5174', ':5173')
+
+    return `${siteUrl.replace(/\/$/, '')}/blog/${encodeURIComponent(slug)}?preview=${postId}`
+  }
+
   async function save(toStatus?: 'draft' | 'published') {
     setSaving(true)
     setSaveMsg('')
@@ -310,18 +320,43 @@ export default function PostEditor() {
       if (isNew) {
         const post = await api.posts.create(payload)
         navigate(`/posts/${post.id}`, { replace: true })
+        setSaveMsg('')
+        setLastSavedAt(new Date())
+        localStorage.removeItem(draftKey)
+        return post
       } else {
-        await api.posts.update(Number(id), payload)
+        const post = await api.posts.update(Number(id), payload)
         if (toStatus) setStatus(toStatus)
+        setSaveMsg('')
+        setLastSavedAt(new Date())
+        localStorage.removeItem(draftKey)
+        return post
       }
-      setSaveMsg('')
-      setLastSavedAt(new Date())
-      localStorage.removeItem(draftKey)
     } catch (err) {
       setSaveMsg('Save failed')
       console.error(err)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function previewPost() {
+    const previewWindow = window.open('about:blank', '_blank')
+    setPreviewing(true)
+    try {
+      const savedPost = await save()
+      if (!savedPost) {
+        previewWindow?.close()
+        return
+      }
+      const previewUrl = buildPreviewUrl(savedPost.id)
+      if (previewWindow) {
+        previewWindow.location.href = previewUrl
+      } else {
+        window.open(previewUrl, '_blank', 'noopener,noreferrer')
+      }
+    } finally {
+      setPreviewing(false)
     }
   }
 
@@ -637,6 +672,15 @@ export default function PostEditor() {
               {savedAgo}
             </span>
           )}
+
+          <button
+            onClick={() => void previewPost()}
+            disabled={saving || previewing || !title || !slug}
+            className="flex items-center gap-1.5 border border-black/20 px-3 py-1.5 text-xs font-bold tracking-wide text-black/60 uppercase transition-colors hover:border-black/40 hover:text-black disabled:opacity-50 dark:border-white/20 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+          >
+            <EyeIcon size={12} />
+            {previewing ? 'Opening...' : 'Preview'}
+          </button>
 
           {status === 'published' ? (
             <button

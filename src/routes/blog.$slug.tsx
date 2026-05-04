@@ -1,6 +1,6 @@
 import '@/src/styles/blog.css'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import type { ShareButtonProps } from '@/src/types/blog'
+import type { BlogPostSearch, ShareButtonProps } from '@/src/types/blog'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Share2, Link2, Twitter, Linkedin, Facebook } from 'lucide-react'
 import { api } from '@/src/lib/api'
@@ -148,7 +148,15 @@ function readingTime(html: string) {
 }
 
 export const Route = createFileRoute('/blog/$slug')({
-  loader: async ({ params }) => {
+  validateSearch: (search: Record<string, unknown>): BlogPostSearch => ({
+    preview:
+      typeof search.preview === 'string'
+        ? Number(search.preview) || undefined
+        : undefined,
+  }),
+  loaderDeps: ({ search }) => ({ preview: search.preview }),
+  loader: async ({ params, deps }) => {
+    if (deps.preview) return null
     return await api.getPost(params.slug, 'en')
   },
   head: ({ loaderData }) => {
@@ -175,15 +183,32 @@ export const Route = createFileRoute('/blog/$slug')({
 
 function BlogPostPage() {
   const initialData = Route.useLoaderData() as PostDetail | null
+  const { preview: previewId } = Route.useSearch()
   const { lang, t } = useLang()
 
   const [data, setData] = useState<PostDetail | null>(initialData)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(!!previewId && !initialData)
   const mins = useMemo(() => (data ? readingTime(data.html) : 0), [data])
   const contentRef = useRef<HTMLDivElement>(null)
 
   // Re-fetch when lang changes client-side — AbortController prevents stale responses
   useEffect(() => {
+    if (previewId) {
+      const controller = new AbortController()
+      setLoading(true)
+      api
+        .getPostPreview(previewId, lang, controller.signal)
+        .then(setData)
+        .catch((err) => {
+          if (err instanceof Error && err.name !== 'AbortError') {
+            console.error('Failed to load post preview:', err)
+            setData(null)
+          }
+        })
+        .finally(() => setLoading(false))
+      return () => controller.abort()
+    }
+
     if (!initialData) return
     if (lang === 'en') {
       setData(initialData)
@@ -202,7 +227,20 @@ function BlogPostPage() {
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
-  }, [lang, initialData])
+  }, [lang, initialData, previewId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black">
+        <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
+          <Header />
+          <p className="font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
+            {t('blog.loading')}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (!data) {
     return (
@@ -225,19 +263,6 @@ function BlogPostPage() {
 
   const { post, html, toc, sidenotes, bibliography, glossary } = data
   const date = new Date(post.publishedAt ?? post.createdAt)
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-black">
-        <div className="mx-auto max-w-3xl px-6 py-10 sm:py-16">
-          <Header />
-          <p className="font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
-            {t('blog.loading')}
-          </p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">

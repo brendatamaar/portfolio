@@ -54,12 +54,16 @@ function path(base: string, params: Record<string, string | undefined>) {
   return qs ? `${base}?${qs}` : base
 }
 
-async function apiFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
+async function apiFetch<T>(
+  path: string,
+  signal?: AbortSignal,
+  init?: RequestInit,
+): Promise<T> {
   const url = `${BASE}${path}`
   const start = performance.now()
   logger.debug('→', path)
   try {
-    const res = await fetch(url, { signal })
+    const res = await fetch(url, { ...init, signal })
     const ms = Math.round(performance.now() - start)
     if (!res.ok) {
       logger.error(`${res.status} ${path} (${ms}ms)`)
@@ -79,6 +83,10 @@ export const api = {
     apiFetch<PostsResponse>(path('/posts', { lang }), signal),
   getPost: (slug: string, lang?: Lang, signal?: AbortSignal) =>
     apiFetch<PostDetail>(path(`/posts/${slug}`, { lang }), signal),
+  getPostPreview: (id: number, lang?: Lang, signal?: AbortSignal) =>
+    apiFetch<PostDetail>(path(`/admin/posts/${id}/preview`, { lang }), signal, {
+      credentials: 'include',
+    }),
   getBooks: () => apiFetch<BookItem[]>('/books'),
   getAlbums: () => apiFetch<AlbumItem[]>('/albums'),
   getFeaturedBook: () =>
