@@ -30,6 +30,7 @@ import Preview from '../components/Preview.tsx'
 import ImageGallery from '../components/ImageGallery.tsx'
 import GlossaryEditor from '../components/GlossaryEditor.tsx'
 import BibliographyEditor from '../components/BibliographyEditor.tsx'
+import PostPreviewModalContent from '../components/PostPreviewModalContent.tsx'
 import { useTheme } from '../lib/theme.ts'
 import type { Mode } from '../types/editor'
 import { DRAFT_AUTOSAVE_DEBOUNCE_MS } from '../lib/constants.ts'
@@ -89,9 +90,9 @@ export default function PostEditor() {
   const [syncScroll, setSyncScroll] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
   const [showCoverGallery, setShowCoverGallery] = useState(false)
+  const [showPostPreview, setShowPostPreview] = useState(false)
   const [showMeta, setShowMeta] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [previewing, setPreviewing] = useState(false)
   const [translating, setTranslating] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
@@ -288,14 +289,6 @@ export default function PostEditor() {
     document.execCommand('insertText', false, `![image](${url})`)
   }
 
-  function buildPreviewUrl(postId: number) {
-    const siteUrl =
-      import.meta.env.VITE_SITE_URL ??
-      window.location.origin.replace('admin.', 'www.').replace(':5174', ':5173')
-
-    return `${siteUrl.replace(/\/$/, '')}/blog/${encodeURIComponent(slug)}?preview=${postId}`
-  }
-
   async function save(toStatus?: 'draft' | 'published') {
     setSaving(true)
     setSaveMsg('')
@@ -337,26 +330,6 @@ export default function PostEditor() {
       console.error(err)
     } finally {
       setSaving(false)
-    }
-  }
-
-  async function previewPost() {
-    const previewWindow = window.open('about:blank', '_blank')
-    setPreviewing(true)
-    try {
-      const savedPost = await save()
-      if (!savedPost) {
-        previewWindow?.close()
-        return
-      }
-      const previewUrl = buildPreviewUrl(savedPost.id)
-      if (previewWindow) {
-        previewWindow.location.href = previewUrl
-      } else {
-        window.open(previewUrl, '_blank', 'noopener,noreferrer')
-      }
-    } finally {
-      setPreviewing(false)
     }
   }
 
@@ -560,6 +533,19 @@ export default function PostEditor() {
 
   const editorVisible = mode === 'split' || mode === 'editor'
   const previewVisible = mode === 'split' || mode === 'preview'
+  const previewTitle = langTab === 'id' ? titleId || title : title
+  const previewDescription =
+    langTab === 'id' ? descriptionId || description : description
+  const previewDate = publishedAt
+    ? new Date(publishedAt).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null
+  const previewTags = allTags.filter((tag) => selectedTagIds.includes(tag.id))
+  const previewGlossary = langTab === 'id' ? glossaryId : glossaryEn
+  const previewBibliography = langTab === 'id' ? bibliographyId : bibliographyEn
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
@@ -674,12 +660,12 @@ export default function PostEditor() {
           )}
 
           <button
-            onClick={() => void previewPost()}
-            disabled={saving || previewing || !title || !slug}
+            onClick={() => setShowPostPreview(true)}
+            disabled={!title && !titleId}
             className="flex items-center gap-1.5 border border-black/20 px-3 py-1.5 text-xs font-bold tracking-wide text-black/60 uppercase transition-colors hover:border-black/40 hover:text-black disabled:opacity-50 dark:border-white/20 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
           >
             <EyeIcon size={12} />
-            {previewing ? 'Opening...' : 'Preview'}
+            Preview
           </button>
 
           {status === 'published' ? (
@@ -1037,6 +1023,82 @@ export default function PostEditor() {
           onSelect={(url) => setCoverImageUrl(url)}
           onClose={() => setShowCoverGallery(false)}
         />
+      )}
+
+      {showPostPreview && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Post preview"
+          className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowPostPreview(false)
+          }}
+        >
+          <div className="flex w-full max-w-5xl flex-col overflow-hidden border border-black/15 bg-white text-black shadow-2xl dark:border-white/15 dark:bg-[#0a0a0a] dark:text-white">
+            <div className="flex h-12 shrink-0 items-center justify-between border-b border-black/10 px-4 dark:border-white/10">
+              <span className="font-mono text-[10px] tracking-widest text-black/40 uppercase dark:text-white/40">
+                {langTab.toUpperCase()} Preview
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowPostPreview(false)}
+                className="p-1.5 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+                aria-label="Close preview"
+              >
+                <XIcon size={16} />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {coverImageUrl && (
+                <div className="max-h-[360px] overflow-hidden border-b border-black/10 dark:border-white/10">
+                  <img
+                    src={coverImageUrl}
+                    alt=""
+                    className="h-full max-h-[360px] w-full object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="mx-auto max-w-3xl px-6 py-10">
+                {previewTags.length > 0 && (
+                  <div className="mb-5 flex flex-wrap gap-1.5">
+                    {previewTags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="border border-black/20 px-2 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black/50 uppercase dark:border-white/20 dark:text-white/50"
+                      >
+                        #{tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <h1 className="mb-4 text-5xl leading-[0.9] font-black tracking-tight text-black uppercase dark:text-white">
+                  {previewTitle}
+                </h1>
+
+                {previewDescription && (
+                  <p className="mb-6 text-xl leading-relaxed text-black/60 dark:text-white/60">
+                    {previewDescription}
+                  </p>
+                )}
+
+                <div className="flex items-center gap-3 border-b border-black/10 pb-8 font-mono text-[11px] tracking-widest text-black/30 uppercase dark:border-white/10 dark:text-white/30">
+                  <span>{previewDate}</span>
+                  <span>{status}</span>
+                </div>
+              </div>
+
+              <PostPreviewModalContent
+                markdown={activeContent}
+                glossaryEntries={previewGlossary}
+                bibliographyEntries={previewBibliography}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

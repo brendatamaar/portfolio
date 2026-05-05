@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@source "../../src/components/blog";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
