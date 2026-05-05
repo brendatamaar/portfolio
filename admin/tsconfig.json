@@ -14,9 +14,7 @@
     "jsx": "react-jsx",
     "strict": true,
     "paths": {
-      "@portfolio/shared/*": ["../shared/*"],
-      "react": ["./node_modules/@types/react"],
-      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"]
+      "@portfolio/shared/*": ["../shared/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
