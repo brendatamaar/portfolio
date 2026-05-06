@@ -23,6 +23,30 @@ function escapeHtml(value: string) {
     .replace(/"/g, '&quot;')
 }
 
+function getReadableText(value: string) {
+  return value
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/^\[\^[^\]]+]:\s.*$/gm, ' ')
+    .replace(/!\[[^\]]*]\([^)]+\)/g, ' ')
+    .replace(/\[[^\]]+]\([^)]+\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[#>*_~`[\]()\\-]/g, ' ')
+    .trim()
+}
+
+function getReadingTimeMinutes(readableParts: string[]) {
+  const wordCount = readableParts
+    .map(getReadableText)
+    .join(' ')
+    .split(/\s+/)
+    .filter(Boolean).length
+
+  if (wordCount === 0) return 0
+
+  return Math.max(1, Math.ceil(wordCount / 200))
+}
+
 function renderGlossaryFallback(html: string, glossMap: Map<string, number>) {
   return html.replace(/\[gloss:([^\]\s]+)\]/gi, (match, key: string) => {
     const num = glossMap.get(key)
@@ -327,32 +351,42 @@ export default function PostPreviewModalContent({
 }: PostPreviewModalContentProps) {
   const contentRef = useRef<HTMLDivElement>(null)
 
-  const { html, toc, sidenotes, glossary, bibliography } = useMemo(() => {
-    const bibliography: RenderBibliographyEntry[] = bibliographyEntries.map(
-      (entry, index) => ({
-        ...entry,
-        num: index + 1,
-      }),
-    )
+  const { html, toc, sidenotes, glossary, bibliography, readingTimeMinutes } =
+    useMemo(() => {
+      const bibliography: RenderBibliographyEntry[] = bibliographyEntries.map(
+        (entry, index) => ({
+          ...entry,
+          num: index + 1,
+        }),
+      )
 
-    const glossary: RenderGlossaryEntry[] = glossaryEntries
-      .map((entry, index) => ({
-        ...entry,
-        num: index + 1,
-      }))
-      .sort((a, b) => a.term.localeCompare(b.term))
+      const glossary: RenderGlossaryEntry[] = glossaryEntries
+        .map((entry, index) => ({
+          ...entry,
+          num: index + 1,
+        }))
+        .sort((a, b) => a.term.localeCompare(b.term))
 
-    const citeMap = new Map(bibliography.map((entry) => [entry.key, entry.num]))
-    const glossMap = new Map(glossary.map((entry) => [entry.key, entry.num]))
-    const parsed = parse(markdown, { citeMap, glossMap })
+      const citeMap = new Map(
+        bibliography.map((entry) => [entry.key, entry.num]),
+      )
+      const glossMap = new Map(glossary.map((entry) => [entry.key, entry.num]))
+      const parsed = parse(markdown, { citeMap, glossMap })
+      const readingTimeMinutes = getReadingTimeMinutes([
+        markdown,
+        ...parsed.sidenotes.map((sidenote) => sidenote.html),
+        ...glossary.flatMap((entry) => [entry.term, entry.definition]),
+        ...bibliography.map((entry) => entry.text),
+      ])
 
-    return {
-      ...parsed,
-      html: renderGlossaryFallback(parsed.html, glossMap),
-      glossary,
-      bibliography,
-    }
-  }, [bibliographyEntries, glossaryEntries, markdown])
+      return {
+        ...parsed,
+        html: renderGlossaryFallback(parsed.html, glossMap),
+        glossary,
+        bibliography,
+        readingTimeMinutes,
+      }
+    }, [bibliographyEntries, glossaryEntries, markdown])
 
   const glossaryPopup = useInlinePopup({
     contentRef,
@@ -376,11 +410,16 @@ export default function PostPreviewModalContent({
       <main className="mx-auto max-w-[72rem] px-6 pb-12">
         <div className="flex w-full items-start gap-10">
           <Sidenotes sidenotes={sidenotes} contentRef={contentRef} />
-          <div
-            ref={contentRef}
-            className="post-preview-content min-w-0 flex-1"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          <div className="min-w-0 flex-1">
+            <div className="mb-8 border-b border-black/10 pb-4 font-mono text-[11px] tracking-widest text-black/30 uppercase dark:border-white/10 dark:text-white/30">
+              {readingTimeMinutes} min read
+            </div>
+            <div
+              ref={contentRef}
+              className="post-preview-content"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          </div>
           {toc.length > 0 && (
             <nav className="sticky top-8 hidden w-48 shrink-0 lg:block">
               <p className="mb-3 font-mono text-[10px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
