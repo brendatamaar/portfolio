@@ -36,6 +36,18 @@ export type ResumeLocale = Lang
 const BASE = import.meta.env.VITE_API_URL
 const REQUEST_TIMEOUT = 10_000
 
+function resolveAssetUrl(url: string) {
+  if (!url.startsWith('/')) return url
+  return `${new URL(BASE).origin}${url}`
+}
+
+function normalizeImage(image: Image): Image {
+  return {
+    ...image,
+    url: resolveAssetUrl(image.url),
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -218,7 +230,10 @@ export const api = {
     }),
 
   images: {
-    list: () => req<Image[]>('GET', '/admin/images'),
+    list: async () => {
+      const images = await req<Image[]>('GET', '/admin/images')
+      return images.map(normalizeImage)
+    },
     upload: async (file: File) => {
       const fd = new FormData()
       fd.append('file', file)
@@ -243,11 +258,15 @@ export const api = {
         throw new ApiError(401, 'Unauthorized')
       }
       if (!res.ok) throw new ApiError(res.status, `Upload failed ${res.status}`)
-      return res.json() as Promise<{
+      const result = (await res.json()) as {
         id: number
         url: string
         filename: string
-      }>
+      }
+      return {
+        ...result,
+        url: resolveAssetUrl(result.url),
+      }
     },
     delete: (id: number) =>
       req<{ ok: boolean }>('DELETE', `/admin/images/${id}`),
