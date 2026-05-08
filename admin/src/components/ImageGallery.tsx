@@ -1,14 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { XIcon, Trash2Icon, UploadIcon } from 'lucide-react'
+import { CheckIcon, ImageIcon, Trash2Icon, UploadIcon, XIcon } from 'lucide-react'
 import { api } from '../lib/api.ts'
 import type { Image } from '../lib/api.ts'
 import type { ImageGalleryProps } from '../types/ui'
 import { useImageUpload } from '../hooks/useImageUpload.ts'
 
-export default function ImageGallery({ onSelect, onClose }: ImageGalleryProps) {
+export default function ImageGallery({
+  onSelect,
+  onClose,
+  enableInsertDetails = false,
+}: ImageGalleryProps) {
   const [images, setImages] = useState<Image[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<Image | null>(null)
+  const [altText, setAltText] = useState('')
+  const [caption, setCaption] = useState('')
   const closeRef = useRef<HTMLButtonElement>(null)
 
   // Return focus to the element that was active before this modal opened
