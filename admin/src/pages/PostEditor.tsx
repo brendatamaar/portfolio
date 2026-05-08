@@ -282,11 +282,23 @@ export default function PostEditor() {
     [uploadImages],
   )
 
-  function insertImageUrl(url: string) {
+  function escapeMarkdownImageText(text: string) {
+    return text.replace(/\\/g, '\\\\').replace(/]/g, '\\]')
+  }
+
+  function insertImageUrl(
+    url: string,
+    options?: { altText: string; caption: string },
+  ) {
     const ta = textareaRef.current
     if (!ta) return
+    const label = options?.caption || options?.altText || 'image'
     ta.focus()
-    document.execCommand('insertText', false, `![image](${url})`)
+    document.execCommand(
+      'insertText',
+      false,
+      `![${escapeMarkdownImageText(label)}](${url})`,
+    )
   }
 
   async function save(toStatus?: 'draft' | 'published') {
@@ -1014,6 +1026,7 @@ export default function PostEditor() {
         <ImageGallery
           onSelect={insertImageUrl}
           onClose={() => setShowGallery(false)}
+          enableInsertDetails
         />
       )}
 
