@@ -8,18 +8,14 @@ import { db } from '../db/index.js'
 import { posts, tags, postTags, images } from '../db/schema.js'
 import { eq, desc } from 'drizzle-orm'
 import { randomBytes } from 'crypto'
-import { writeFile, unlink, existsSync, mkdirSync } from 'fs'
+import { writeFile, unlink, existsSync } from 'fs'
 import { promisify } from 'util'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 import { buildPostDetail } from '../lib/postDetail.js'
+import { UPLOADS_DIR } from '../lib/uploads.js'
 
 const writeFileAsync = promisify(writeFile)
 const unlinkAsync = promisify(unlink)
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const UPLOADS_DIR = join(__dirname, '../../uploads')
-mkdirSync(UPLOADS_DIR, { recursive: true })
 
 const app = new Hono()
 
