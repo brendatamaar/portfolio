@@ -16,6 +16,7 @@ import { authMiddleware } from './middleware/auth.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { createRateLimit } from './middleware/rateLimit.js'
 import { logger } from './lib/logger.js'
+import { UPLOADS_DIR } from './lib/uploads.js'
 
 // Bootstrap
 
@@ -44,7 +45,13 @@ app.use(
 )
 
 // Static uploads
-app.use('/uploads/*', serveStatic({ root: './' }))
+app.use(
+  '/uploads/*',
+  serveStatic({
+    root: UPLOADS_DIR,
+    rewriteRequestPath: (path) => path.replace(/^\/uploads/, ''),
+  }),
+)
 
 // Rate limiters
 const loginLimiter = createRateLimit({ windowMs: 15 * 60 * 1000, max: 10 })
