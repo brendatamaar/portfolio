@@ -16,6 +16,7 @@ export default function ImageGallery({
   const [selectedImage, setSelectedImage] = useState<Image | null>(null)
   const [altText, setAltText] = useState('')
   const [caption, setCaption] = useState('')
+  const [uploadError, setUploadError] = useState('')
   const closeRef = useRef<HTMLButtonElement>(null)
 
   // Return focus to the element that was active before this modal opened
@@ -57,12 +58,16 @@ export default function ImageGallery({
     },
     onError: (_file, err) => {
       console.error('Upload failed:', err)
+      setUploadError(
+        err instanceof Error ? err.message : 'Upload failed. Try again.',
+      )
     },
   })
 
   const handleUpload = useCallback(
     async (files: FileList | null) => {
       if (!files?.length) return
+      setUploadError('')
       setUploading(true)
       await upload(Array.from(files))
       setUploading(false)
@@ -139,6 +144,12 @@ export default function ImageGallery({
               : 'Click an image to select it'}
           </span>
         </div>
+
+        {uploadError && (
+          <div className="border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-700 dark:text-red-300">
+            {uploadError}
+          </div>
+        )}
 
         <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px]">
           {/* Grid */}
