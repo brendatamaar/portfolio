@@ -2,8 +2,12 @@ import type { RefObject } from 'react'
 import type { Mode } from './editor'
 
 export interface ImageGalleryProps {
-  onSelect: (url: string) => void
+  onSelect: (
+    url: string,
+    options?: { altText: string; caption: string },
+  ) => void
   onClose: () => void
+  enableInsertDetails?: boolean
 }
 
 export interface PreviewProps {
