@@ -16,7 +16,9 @@ import {
   MinusIcon,
   LinkIcon,
   ImageIcon,
-  FootprintsIcon,
+  BookOpenTextIcon,
+  ScrollTextIcon,
+  StickyNoteIcon,
   BotIcon,
   Columns2Icon,
   PanelLeftIcon,
@@ -179,14 +181,11 @@ export default function Toolbar({
   function admonition(type: string) {
     insertBlock(ta(), `\n:::${type}\n\n:::\n`)
   }
-  function definitionList() {
-    insertBlock(ta(), '\nTerm\n: Definition\n')
-  }
   function glossaryRef() {
     wrap(ta(), '[gloss:', ']')
   }
-  function figureCaption() {
-    insertBlock(ta(), '\n![Caption text](image-url)\n')
+  function bibliographyRef() {
+    wrap(ta(), '[cite:', ']')
   }
 
   const btnBase =
@@ -300,16 +299,8 @@ export default function Toolbar({
         title="Footnote/sidenote"
         className={[labelBtnBase, btnInactive].join(' ')}
       >
-        <FootprintsIcon size={13} />
+        <StickyNoteIcon size={13} />
         <span>Note</span>
-      </button>
-      <button
-        type="button"
-        onClick={definitionList}
-        title="Glossary definition (Term / : Definition)"
-        className={[labelBtnBase, btnInactive].join(' ')}
-      >
-        <span className="font-mono text-[11px]">GL</span>
       </button>
       <button
         type="button"
@@ -317,16 +308,17 @@ export default function Toolbar({
         title="Glossary reference [gloss:term]"
         className={[labelBtnBase, btnInactive].join(' ')}
       >
-        <span className="font-mono text-[11px]">[G]</span>
+        <BookOpenTextIcon size={13} />
+        <span>Glossary</span>
       </button>
       <button
         type="button"
-        onClick={figureCaption}
-        title="Figure with caption"
+        onClick={bibliographyRef}
+        title="Bibliography reference [cite:key]"
         className={[labelBtnBase, btnInactive].join(' ')}
       >
-        <ImageIcon size={13} />
-        <span>Fig</span>
+        <ScrollTextIcon size={13} />
+        <span>Bibliography</span>
       </button>
       <Sep />
 
