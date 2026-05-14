@@ -8,13 +8,13 @@ import { db } from '../db/index.js'
 import { posts, tags, postTags, images } from '../db/schema.js'
 import { eq, desc } from 'drizzle-orm'
 import { randomBytes } from 'crypto'
-import { writeFile, unlink, existsSync } from 'fs'
+import { unlink, existsSync } from 'fs'
 import { promisify } from 'util'
 import { join } from 'path'
+import sharp from 'sharp'
 import { buildPostDetail } from '../lib/postDetail.js'
 import { UPLOADS_DIR } from '../lib/uploads.js'
 
-const writeFileAsync = promisify(writeFile)
 const unlinkAsync = promisify(unlink)
 
 const app = new Hono()
@@ -392,12 +392,40 @@ app.post('/upload', async (c) => {
   }
 
   const ext = EXT_MAP[detectedMime]
-  const filename = `${Date.now()}-${randomBytes(6).toString('hex')}${ext}`
+  const stem = `${Date.now()}-${randomBytes(6).toString('hex')}`
+  const filename = `${stem}${ext}`
   const filepath = join(UPLOADS_DIR, filename)
 
-  await writeFileAsync(filepath, buffer)
+  await Bun.write(filepath, buffer)
 
   const url = `/uploads/${filename}`
+  let webpUrl: string | null = null
+  let thumbUrl: string | null = null
+  let width: number | null = null
+  let height: number | null = null
+
+  // Generate webp variants for raster images (not gif/webp-animated)
+  if (detectedMime === 'image/jpeg' || detectedMime === 'image/png') {
+    const img = sharp(buffer)
+    const meta = await img.metadata()
+    width = meta.width ?? null
+    height = meta.height ?? null
+
+    const webpFilename = `${stem}.webp`
+    const thumbFilename = `${stem}-thumb.webp`
+    await img
+      .clone()
+      .webp({ quality: 80 })
+      .toFile(join(UPLOADS_DIR, webpFilename))
+    await img
+      .clone()
+      .resize({ width: 400, withoutEnlargement: true })
+      .webp({ quality: 75 })
+      .toFile(join(UPLOADS_DIR, thumbFilename))
+
+    webpUrl = `/uploads/${webpFilename}`
+    thumbUrl = `/uploads/${thumbFilename}`
+  }
 
   const row = db
     .insert(images)
@@ -407,11 +435,18 @@ app.post('/upload', async (c) => {
       mimeType: detectedMime,
       sizeBytes: file.size,
       url,
+      webpUrl,
+      thumbUrl,
+      width,
+      height,
     })
     .returning()
     .get()
 
-  return c.json({ id: row.id, url, filename }, 201)
+  return c.json(
+    { id: row.id, url, webpUrl, thumbUrl, width, height, filename },
+    201,
+  )
 })
 
 app.delete('/images/:id', async (c) => {
@@ -465,123 +500,6 @@ app.delete('/tags/:id', (c) => {
   if (!existing) return c.json({ error: 'Not found' }, 404)
   db.delete(tags).where(eq(tags.id, id)).run()
   return c.json({ ok: true })
-})
-
-// Translate
-
-function extractCode(text: string): { text: string; slots: string[] } {
-  const slots: string[] = []
-  let out = text
-  out = out.replace(/```[\s\S]*?```/g, (m) => {
-    slots.push(m)
-    return `[[${slots.length - 1}]]`
-  })
-  out = out.replace(/`[^`\n]+`/g, (m) => {
-    slots.push(m)
-    return `[[${slots.length - 1}]]`
-  })
-  return { text: out, slots }
-}
-
-function restoreCode(text: string, slots: string[]): string {
-  return text.replace(
-    /\[\[(\d+)\]\]/g,
-    (_, i) => slots[Number(i)] ?? `[[${i}]]`,
-  )
-}
-
-const translateBatchSchema = z.object({
-  texts: z.array(z.string()).min(1),
-  source: z.enum(['en', 'id']),
-  target: z.enum(['en', 'id']),
-})
-
-app.post('/translate', async (c) => {
-  const libreUrl = process.env.LIBRETRANSLATE_URL
-  if (!libreUrl)
-    return c.json({ error: 'LIBRETRANSLATE_URL not configured' }, 503)
-
-  const body = await c.req.json().catch(() => null)
-  if (body === null) return c.json({ error: 'Malformed JSON' }, 400)
-  const parsed = translateBatchSchema.safeParse(body)
-  if (!parsed.success)
-    return c.json(
-      {
-        error: 'Validation failed',
-        issues: parsed.error.issues.map((i) => ({
-          path: i.path.join('.'),
-          message: i.message,
-        })),
-      },
-      422,
-    )
-
-  const { texts, source, target } = parsed.data
-
-  const protected_ = texts.map(extractCode)
-  const nonEmpty = protected_
-    .map((p, i) => ({ i, text: p.text }))
-    .filter(({ text }) => text.trim().length > 0)
-
-  if (nonEmpty.length === 0) {
-    return c.json({ translatedTexts: texts.map(() => '') })
-  }
-
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 30_000)
-
-  let res: Response
-  try {
-    res = await fetch(`${libreUrl}/translate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        q: nonEmpty.map(({ text }) => text),
-        source,
-        target,
-        format: 'text',
-      }),
-      signal: controller.signal,
-    })
-  } catch (err: unknown) {
-    const isAbort = err instanceof Error && err.name === 'AbortError'
-    return c.json(
-      {
-        error: isAbort
-          ? 'Translation timed out'
-          : 'Failed to reach LibreTranslate',
-      },
-      502,
-    )
-  } finally {
-    clearTimeout(timeout)
-  }
-
-  if (!res.ok) {
-    const err = await res.text().catch(() => '')
-    return c.json({ error: `LibreTranslate error: ${err}` }, 502)
-  }
-
-  const data = (await res.json()) as unknown
-  if (
-    typeof data !== 'object' ||
-    data === null ||
-    !Array.isArray((data as { translatedText?: unknown }).translatedText) ||
-    (data as { translatedText: unknown[] }).translatedText.length !==
-      nonEmpty.length
-  ) {
-    return c.json({ error: 'Unexpected response from LibreTranslate' }, 502)
-  }
-
-  const translated = (data as { translatedText: string[] }).translatedText
-
-  const translatedTexts = texts.map((_, idx) => {
-    const slot = nonEmpty.findIndex(({ i }) => i === idx)
-    if (slot === -1) return ''
-    return restoreCode(translated[slot], protected_[idx].slots)
-  })
-
-  return c.json({ translatedTexts })
 })
 
 export default app

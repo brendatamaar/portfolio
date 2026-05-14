@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const posts = sqliteTable('posts', {
@@ -10,6 +10,8 @@ export const posts = sqliteTable('posts', {
   status: text('status', { enum: ['draft', 'published'] })
     .notNull()
     .default('draft'),
+  language: text('language').notNull().default('en'),
+  translationOfId: integer('translation_of_id'),
   titleId: text('title_id'),
   descriptionId: text('description_id'),
   contentId: text('content_id'),
@@ -49,6 +51,10 @@ export const images = sqliteTable('images', {
   mimeType: text('mime_type').notNull(),
   sizeBytes: integer('size_bytes').notNull(),
   url: text('url').notNull(),
+  webpUrl: text('webp_url'),
+  thumbUrl: text('thumb_url'),
+  width: integer('width'),
+  height: integer('height'),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -66,6 +72,19 @@ export const adminUsers = sqliteTable('admin_users', {
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
+})
+
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => adminUsers.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  userAgent: text('user_agent'),
+  ip: text('ip'),
 })
 
 export const books = sqliteTable('books', {
