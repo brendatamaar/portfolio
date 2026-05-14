@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install server deps
+        run: cd server && bun install
+
+      - name: Typecheck server
+        run: cd server && bun run tsc --noEmit
+
+      - name: Install portfolio deps
+        run: bun install
+
+      - name: Typecheck portfolio
+        run: bun run tsc --noEmit
+
+      - name: Install admin deps
+        run: cd admin && bun install
+
+      - name: Typecheck admin
+        run: cd admin && bun run tsc --noEmit
+
+      - name: Test shared/markdown
+        run: bun test shared/markdown
