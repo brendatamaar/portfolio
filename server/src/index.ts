@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { serveStatic } from '@hono/node-server/serve-static'
-import { serve } from '@hono/node-server'
+import { join } from 'path'
 import { runMigrations } from './db/migrate.js'
 import { initJwtSecret } from './lib/init.js'
 import { db } from './db/index.js'
@@ -33,7 +32,6 @@ app.use(
   '*',
   cors({
     origin: (origin) => {
-      // Allow localhost in dev; lock down in production via env
       const allowed = process.env.CORS_ORIGINS?.split(',') ?? [
         'http://localhost:5173',
         'http://localhost:5174',
@@ -44,14 +42,13 @@ app.use(
   }),
 )
 
-// Static uploads
-app.use(
-  '/uploads/*',
-  serveStatic({
-    root: UPLOADS_DIR,
-    rewriteRequestPath: (path) => path.replace(/^\/uploads/, ''),
-  }),
-)
+// Static uploads served via Bun's native file API
+app.get('/uploads/*', async (c) => {
+  const filePath = c.req.path.replace(/^\/uploads\//, '')
+  const file = Bun.file(join(UPLOADS_DIR, filePath))
+  if (!(await file.exists())) return c.notFound()
+  return new Response(file)
+})
 
 // Rate limiters
 const loginLimiter = createRateLimit({ windowMs: 15 * 60 * 1000, max: 10 })
@@ -89,10 +86,7 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal server error' }, 500)
 })
 
-// Server
-
+// Bun.serve — no build step needed
 const PORT = Number(process.env.PORT ?? 3001)
-
-serve({ fetch: app.fetch, port: PORT }, () => {
-  logger.info(`Server running on http://localhost:${PORT}`)
-})
+Bun.serve({ fetch: app.fetch, port: PORT })
+logger.info(`Server running on http://localhost:${PORT}`)
