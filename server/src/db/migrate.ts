@@ -1,8 +1,3 @@
-/**
- * Runs schema creation inline (no migration files needed for initial setup).
- * Called once at server startup.
- */
-
 import { sqlite } from './index.js'
 
 export function runMigrations(): void {
@@ -180,16 +175,15 @@ export function runMigrations(): void {
     }
   }
 
-  // Item 46: Make bilingual post columns nullable (NULL = no translation, '' was ambiguous)
-  // Uses a version key so this destructive recreation only runs once.
+  // Make bilingual post columns nullable (NULL = no translation, '' was ambiguous)
   const bilingualMigrated = sqlite
     .prepare(
       "SELECT value FROM app_settings WHERE key = 'schema_posts_bilingual_nullable_v1'",
     )
-    .get() as { value: string } | undefined
+    .get() as { value: string } | null
 
   if (!bilingualMigrated) {
-    sqlite.pragma('foreign_keys = OFF')
+    sqlite.run('PRAGMA foreign_keys = OFF')
     sqlite.exec(`
       BEGIN;
       CREATE TABLE posts_new (
@@ -216,7 +210,7 @@ export function runMigrations(): void {
       ALTER TABLE posts_new RENAME TO posts;
       COMMIT;
     `)
-    sqlite.pragma('foreign_keys = ON')
+    sqlite.run('PRAGMA foreign_keys = ON')
     sqlite
       .prepare(
         "INSERT INTO app_settings (key, value) VALUES ('schema_posts_bilingual_nullable_v1', '1')",
@@ -224,15 +218,15 @@ export function runMigrations(): void {
       .run()
   }
 
-  // Item 45: Add ON DELETE CASCADE to post_tags.tag_id FK (was missing in initial migration)
+  // Add ON DELETE CASCADE to post_tags.tag_id FK (was missing in initial migration)
   const ptCascadeMigrated = sqlite
     .prepare(
       "SELECT value FROM app_settings WHERE key = 'schema_post_tags_cascade_v1'",
     )
-    .get() as { value: string } | undefined
+    .get() as { value: string } | null
 
   if (!ptCascadeMigrated) {
-    sqlite.pragma('foreign_keys = OFF')
+    sqlite.run('PRAGMA foreign_keys = OFF')
     sqlite.exec(`
       BEGIN;
       CREATE TABLE post_tags_new (
@@ -245,7 +239,7 @@ export function runMigrations(): void {
       ALTER TABLE post_tags_new RENAME TO post_tags;
       COMMIT;
     `)
-    sqlite.pragma('foreign_keys = ON')
+    sqlite.run('PRAGMA foreign_keys = ON')
     sqlite
       .prepare(
         "INSERT INTO app_settings (key, value) VALUES ('schema_post_tags_cascade_v1', '1')",
@@ -253,10 +247,59 @@ export function runMigrations(): void {
       .run()
   }
 
-  // Indexes for hot filter/sort columns
+  // Add language + translation linking to posts
+  for (const col of [
+    "language TEXT NOT NULL DEFAULT 'en'",
+    'translation_of_id INTEGER REFERENCES posts(id)',
+  ]) {
+    try {
+      sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (!message.includes('duplicate column')) throw err
+    }
+  }
+
+  // Add webp/thumb/dimensions to images
+  for (const col of [
+    'webp_url TEXT',
+    'thumb_url TEXT',
+    'width INTEGER',
+    'height INTEGER',
+  ]) {
+    try {
+      sqlite.exec(`ALTER TABLE images ADD COLUMN ${col}`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (!message.includes('duplicate column')) throw err
+    }
+  }
+
+  // Sessions table for cookie-based auth
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id         TEXT PRIMARY KEY,
+      user_id    INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      expires_at INTEGER NOT NULL,
+      user_agent TEXT,
+      ip         TEXT
+    );
+  `)
+
+  // Indexes
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_posts_status_published_at
       ON posts(status, published_at DESC);
+
+    CREATE INDEX IF NOT EXISTS idx_posts_language
+      ON posts(language);
+
+    CREATE INDEX IF NOT EXISTS idx_sessions_user_id
+      ON sessions(user_id);
+
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires_at
+      ON sessions(expires_at);
 
     CREATE INDEX IF NOT EXISTS idx_resume_work_locale
       ON resume_work(locale);

@@ -1,0 +1,117 @@
+---
+import { ViewTransitions } from 'astro:transitions'
+import ThemeToggle from '../components/ThemeToggle.astro'
+import '../globals.css'
+
+interface Props {
+  title?: string
+  description?: string
+  ogType?: string
+  canonicalUrl?: string
+}
+
+const {
+  title = 'Brendatama Akbar — Web Software Developer',
+  description = 'Web Software Developer based in Jakarta, Indonesia.',
+  ogType = 'website',
+  canonicalUrl = Astro.url.href,
+} = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
+    <link rel="icon" type="image/x-icon" href="/images/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/images/favicon/site.webmanifest" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="Brendatama Akbar" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- API prefetch -->
+    <link rel="preconnect" href="https://api.brendatama.dev" />
+
+    <!--
+      Inline theme script — must execute before <body> renders to prevent FOUC.
+      Not bundled by Astro (is:inline), so keep it minimal.
+    -->
+    <script is:inline>
+      ;(function () {
+        var s = localStorage.getItem('theme')
+        var d = window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (s === 'dark' || (s === null && d)) {
+          document.documentElement.classList.add('dark')
+        }
+      })()
+    </script>
+
+    <ViewTransitions />
+
+    <slot name="head" />
+  </head>
+  <body class="bg-white text-black dark:bg-black dark:text-white">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:border-2 focus:border-black focus:bg-[#FFE600] focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:font-bold focus:tracking-widest focus:text-black focus:uppercase"
+    >
+      Skip to main content
+    </a>
+
+    <div class="mx-auto max-w-3xl px-6 py-10 sm:py-16">
+      <header
+        class="mb-16 flex items-center justify-between border-b-2 border-black pb-5 dark:border-white"
+      >
+        <a
+          href="/"
+          class="font-mono text-xs font-bold tracking-widest text-black uppercase dark:text-white"
+        >
+          home
+        </a>
+        <nav class="flex items-center gap-5">
+          <a
+            href="/blog"
+            class="font-mono text-xs tracking-widest text-black uppercase hover:underline dark:text-white"
+          >
+            writing
+          </a>
+          <ThemeToggle />
+        </nav>
+      </header>
+
+      <main id="main">
+        <slot />
+      </main>
+
+      <footer class="mt-24 border-t-2 border-black pt-6 pb-10 dark:border-white">
+        <div class="flex items-center justify-between">
+          <span
+            class="font-mono text-[11px] tracking-widest text-black/60 uppercase dark:text-white/60"
+          >
+            © {new Date().getFullYear()} Brendatama Akbar Ramadan
+          </span>
+          <span
+            class="font-mono text-[11px] tracking-widest text-black/60 uppercase dark:text-white/60"
+          >
+            Jakarta, Indonesia
+          </span>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
