@@ -5,7 +5,8 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
 
-  let posts = $derived<AdminPostSummary[]>(data.posts)
+  let posts = $state<AdminPostSummary[]>(data.posts ?? [])
+  $effect(() => { posts = data.posts ?? [] })
   let filterStatus = $state<'all' | 'draft' | 'published'>('all')
 
   let filtered = $derived(
