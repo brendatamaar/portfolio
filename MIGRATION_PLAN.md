@@ -113,9 +113,13 @@ Each phase ships independently on its own branch. Trunk stays green throughout.
   FROM oven/bun:1-alpine
   WORKDIR /app
   RUN apk add --no-cache vips-dev   # sharp native dep on alpine
+  RUN wget -qO /usr/local/bin/pnpm https://github.com/pnpm/pnpm/releases/download/v10.18.3/pnpm-linuxstatic-x64 \
+      && chmod +x /usr/local/bin/pnpm
+  COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+  COPY shared/package.json ./shared/
+  COPY server/package.json ./server/
+  RUN pnpm install --frozen-lockfile --filter portfolio-server... --prod
   COPY shared/ ./shared/
-  COPY server/package.json server/bun.lockb ./server/
-  RUN cd server && bun install --production
   COPY server/ ./server/
   EXPOSE 3001
   HEALTHCHECK --interval=30s CMD wget -qO- http://localhost:3001/api/health || exit 1
@@ -252,18 +256,23 @@ Each phase ships independently on its own branch. Trunk stays green throughout.
   ```dockerfile
   FROM oven/bun:1-alpine AS build
   WORKDIR /app
-  COPY shared/ ./shared/
-  COPY web/package.json web/bun.lockb ./web/
-  RUN cd web && bun install
+  RUN wget -qO /usr/local/bin/pnpm https://github.com/pnpm/pnpm/releases/download/v10.18.3/pnpm-linuxstatic-x64 \
+      && chmod +x /usr/local/bin/pnpm
+  COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+  COPY shared/package.json ./shared/
+  COPY web/package.json ./web/
+  RUN pnpm install --frozen-lockfile --filter web...
   ARG VITE_API_URL
   ENV VITE_API_URL=$VITE_API_URL
+  COPY shared/ ./shared/
   COPY web/ ./web/
-  RUN cd web && bun run build
+  RUN pnpm --filter web build
 
   FROM oven/bun:1-alpine
   WORKDIR /app
   COPY --from=build /app/web/dist ./dist
   COPY --from=build /app/web/node_modules ./node_modules
+  COPY --from=build /app/node_modules ./node_modules
   EXPOSE 3000
   HEALTHCHECK --interval=30s CMD wget -qO- http://localhost:3000/ || exit 1
   CMD ["bun", "run", "dist/server/entry.mjs"]
@@ -274,18 +283,23 @@ Each phase ships independently on its own branch. Trunk stays green throughout.
   ```dockerfile
   FROM oven/bun:1-alpine AS build
   WORKDIR /app
-  COPY shared/ ./shared/
-  COPY admin/package.json admin/bun.lockb ./admin/
-  RUN cd admin && bun install
+  RUN wget -qO /usr/local/bin/pnpm https://github.com/pnpm/pnpm/releases/download/v10.18.3/pnpm-linuxstatic-x64 \
+      && chmod +x /usr/local/bin/pnpm
+  COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+  COPY shared/package.json ./shared/
+  COPY admin/package.json ./admin/
+  RUN pnpm install --frozen-lockfile --filter portfolio-admin-new...
   ARG PUBLIC_API_URL
   ENV PUBLIC_API_URL=$PUBLIC_API_URL
+  COPY shared/ ./shared/
   COPY admin/ ./admin/
-  RUN cd admin && bun run build
+  RUN pnpm --filter portfolio-admin-new build
 
   FROM oven/bun:1-alpine
   WORKDIR /app
   COPY --from=build /app/admin/build ./build
   COPY --from=build /app/admin/node_modules ./node_modules
+  COPY --from=build /app/node_modules ./node_modules
   COPY --from=build /app/admin/package.json ./
   EXPOSE 3000
   HEALTHCHECK --interval=30s CMD wget -qO- http://localhost:3000/ || exit 1
