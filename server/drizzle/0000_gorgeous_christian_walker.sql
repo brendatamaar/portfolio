@@ -1,4 +1,4 @@
-CREATE TABLE `admin_users` (
+﻿CREATE TABLE IF NOT EXISTS `admin_users` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`username` text NOT NULL,
 	`password_hash` text NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE `admin_users` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `admin_users_username_unique` ON `admin_users` (`username`);--> statement-breakpoint
-CREATE TABLE `albums` (
+CREATE TABLE IF NOT EXISTS `albums` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`title` text NOT NULL,
 	`artist` text NOT NULL,
@@ -16,12 +16,12 @@ CREATE TABLE `albums` (
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `app_settings` (
+CREATE TABLE IF NOT EXISTS `app_settings` (
 	`key` text PRIMARY KEY NOT NULL,
 	`value` text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `books` (
+CREATE TABLE IF NOT EXISTS `books` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`title` text NOT NULL,
 	`author` text NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE `books` (
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `images` (
+CREATE TABLE IF NOT EXISTS `images` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`filename` text NOT NULL,
 	`original_name` text NOT NULL,
@@ -47,14 +47,14 @@ CREATE TABLE `images` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `images_filename_unique` ON `images` (`filename`);--> statement-breakpoint
-CREATE TABLE `post_tags` (
+CREATE TABLE IF NOT EXISTS `post_tags` (
 	`post_id` integer NOT NULL,
 	`tag_id` integer NOT NULL,
 	FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`tag_id`) REFERENCES `tags`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE TABLE `posts` (
+CREATE TABLE IF NOT EXISTS `posts` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`title` text NOT NULL,
 	`slug` text NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE `posts` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `posts_slug_unique` ON `posts` (`slug`);--> statement-breakpoint
-CREATE TABLE `profile` (
+CREATE TABLE IF NOT EXISTS `profile` (
 	`locale` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`initials` text DEFAULT '' NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE `profile` (
 	`social` text DEFAULT '[]' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `resume_education` (
+CREATE TABLE IF NOT EXISTS `resume_education` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`locale` text NOT NULL,
 	`school` text NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE `resume_education` (
 	`sort_order` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `resume_projects` (
+CREATE TABLE IF NOT EXISTS `resume_projects` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`locale` text NOT NULL,
 	`title` text NOT NULL,
@@ -120,14 +120,14 @@ CREATE TABLE `resume_projects` (
 	`sort_order` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `resume_skills` (
+CREATE TABLE IF NOT EXISTS `resume_skills` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
 	`sort_order` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `resume_skills_name_unique` ON `resume_skills` (`name`);--> statement-breakpoint
-CREATE TABLE `resume_work` (
+CREATE TABLE IF NOT EXISTS `resume_work` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`locale` text NOT NULL,
 	`company` text NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE `resume_work` (
 	`sort_order` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `sessions` (
+CREATE TABLE IF NOT EXISTS `sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` integer NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
@@ -150,7 +150,7 @@ CREATE TABLE `sessions` (
 	FOREIGN KEY (`user_id`) REFERENCES `admin_users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE TABLE `tags` (
+CREATE TABLE IF NOT EXISTS `tags` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
 	`slug` text NOT NULL
