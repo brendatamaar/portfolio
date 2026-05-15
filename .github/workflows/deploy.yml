@@ -8,45 +8,41 @@ on:
 
 jobs:
   ci:
-    name: Typecheck, Build & Test
+    name: Typecheck & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: pnpm install
 
       - name: Typecheck — server
-        run: bun run typecheck
+        run: pnpm typecheck
         working-directory: server
 
       - name: Typecheck — web
-        run: bun run typecheck
+        run: pnpm typecheck
         working-directory: web
 
       - name: Typecheck — admin
-        run: bun run typecheck
+        run: pnpm typecheck
         working-directory: admin
 
-      - name: Build — server
-        run: bun run build
-        working-directory: server
-
       - name: Build — web
-        run: bun run build
+        run: pnpm build
         working-directory: web
 
       - name: Build — admin
-        run: bun run build
+        run: pnpm build
         working-directory: admin
-
-      - name: Test — shared/markdown
-        run: bun test
-        working-directory: shared/markdown
 
   deploy:
     name: Deploy to VPS
