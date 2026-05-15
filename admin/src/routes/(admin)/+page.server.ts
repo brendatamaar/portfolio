@@ -1,7 +1,7 @@
-import type { PageServerLoad, Actions } from './$types'
+﻿import type { PageServerLoad, Actions } from './$types'
 import { fail } from '@sveltejs/kit'
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3001'
+const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001'
 
 async function serverFetch<T>(
   path: string,
