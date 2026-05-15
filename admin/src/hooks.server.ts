@@ -1,7 +1,6 @@
 ﻿import type { Handle } from '@sveltejs/kit'
 
-const API_URL =
-  (process.env.API_INTERNAL_URL ?? 'http://localhost:3001') + '/api'
+const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api'
 const PUBLIC = ['/login']
 
 export const handle: Handle = async ({ event, resolve }) => {

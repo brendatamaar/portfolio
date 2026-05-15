@@ -1,8 +1,7 @@
 ﻿import { redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
 
-const API_URL =
-  (process.env.API_INTERNAL_URL ?? 'http://localhost:3001') + '/api'
+const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api'
 
 export const actions: Actions = {
   default: async ({ cookies }) => {
