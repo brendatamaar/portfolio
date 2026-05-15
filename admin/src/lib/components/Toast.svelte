@@ -1,5 +1,8 @@
-<script lang="ts">
+<script context="module" lang="ts">
   export type ToastType = 'success' | 'error' | 'info'
+</script>
+
+<script lang="ts">
   interface Toast { id: number; message: string; type: ToastType }
 
   let toasts = $state<Toast[]>([])
