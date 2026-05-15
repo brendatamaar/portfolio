@@ -1,0 +1,24 @@
+---
+import type { Sidenote } from '../lib/types'
+
+interface Props {
+  sidenotes: Sidenote[]
+}
+
+const { sidenotes } = Astro.props
+
+if (!sidenotes.length) return
+---
+
+<div
+  class="sidenotes relative hidden w-52 shrink-0 lg:block"
+  aria-label="Sidenotes"
+>
+  {sidenotes.map(({ id, html }) => (
+    <aside
+      data-sidenote={id}
+      class="absolute right-0 left-0 border-l-2 border-black/20 pl-3 text-[11px] leading-relaxed text-black/50 dark:border-white/20 dark:text-white/50"
+      set:html={`<sup class="font-bold mr-1">[${id}]</sup>${html}`}
+    />
+  ))}
+</div>

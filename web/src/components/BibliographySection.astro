@@ -1,0 +1,82 @@
+---
+import type { BibliographyEntry } from '../lib/types'
+
+interface Props {
+  bibliography: BibliographyEntry[]
+}
+
+const { bibliography } = Astro.props
+
+if (!bibliography.length) return
+---
+
+<section
+  id="bibliography-section"
+  class="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+  aria-label="Bibliography"
+>
+  <button
+    id="bibliography-toggle"
+    class="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[#FFE600]/10"
+    aria-expanded="false"
+    aria-controls="bibliography-body"
+  >
+    <span class="flex items-center gap-3">
+      <span class="font-mono text-[11px] font-black tracking-widest text-black uppercase dark:text-white">
+        Bibliography
+      </span>
+      <span class="inline-flex items-center border-2 border-black bg-[#FFE600] px-2 py-0.5 font-mono text-[10px] font-bold text-black">
+        {bibliography.length}
+      </span>
+    </span>
+    <span id="bibliography-chevron" class="font-mono text-sm font-black text-black dark:text-white">+</span>
+  </button>
+
+  <div id="bibliography-body" class="overflow-hidden" style="max-height: 0">
+    <div class="border-t-2 border-black px-5 py-4 dark:border-white">
+      <ol class="m-0 list-none space-y-3 p-0">
+        {bibliography.map((entry) => (
+          <li
+            class="bib-section-entry flex cursor-pointer items-baseline gap-3 border-l-[3px] border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-[#FFE600]/5"
+            data-cite-key={entry.key}
+          >
+            <span class="inline-flex shrink-0 items-center border-[1.5px] border-black bg-[#FFE600] px-1.5 py-0.5 font-mono text-[10px] font-bold text-black">
+              {entry.num}
+            </span>
+            <span class="text-[14px] leading-relaxed text-black/70 dark:text-white/70" set:html={entry.text} />
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initBibliographySection() {
+    const toggle = document.getElementById('bibliography-toggle')
+    const body = document.getElementById('bibliography-body')
+    const chevron = document.getElementById('bibliography-chevron')
+    if (!toggle || !body || !chevron) return
+
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true'
+      toggle.setAttribute('aria-expanded', String(!open))
+      chevron.textContent = open ? '+' : '−'
+      body.style.maxHeight = open ? '0' : `${body.scrollHeight}px`
+    })
+
+    document.querySelectorAll<HTMLElement>('.bib-section-entry').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) return
+        const key = el.dataset.citeKey
+        if (!key) return
+        const ref = document.querySelector<HTMLElement>(`[data-cite-id="${key}"]`)
+        if (!ref) return
+        ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    })
+  }
+
+  initBibliographySection()
+  document.addEventListener('astro:page-load', initBibliographySection)
+</script>
