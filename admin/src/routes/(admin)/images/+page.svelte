@@ -5,6 +5,7 @@
 
   let { data }: { data: PageData } = $props()
   let images = $state<AdminImage[]>(data.images)
+  $effect(() => { images = data.images })
   let uploading = $state(false)
   let error = $state('')
   let copied = $state<number | null>(null)

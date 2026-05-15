@@ -378,7 +378,7 @@
           <div class="flex min-h-0 flex-1 flex-col">
             <textarea
               bind:this={textareaRef}
-              bind:value={langTab === 'en' ? content : contentId}
+              value={langTab === 'en' ? content : contentId}
               oninput={(e) => { if (langTab === 'en') content = (e.target as HTMLTextAreaElement).value; else contentId = (e.target as HTMLTextAreaElement).value }}
               ondrop={handleDrop}
               onpaste={handlePaste}
