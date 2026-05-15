@@ -74,7 +74,7 @@ jobs:
             docker compose up -d --build
 
             echo "→ Running migrations"
-            docker compose exec -T server bun run drizzle-kit migrate
+            docker compose exec -T server sh -c "cd server && bun run db:migrate"
 
             echo "→ Smoke test"
             sleep 5
