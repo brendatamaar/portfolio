@@ -23,17 +23,25 @@ jobs:
       - name: Typecheck server
         run: cd server && bun run tsc --noEmit
 
-      - name: Install portfolio deps
-        run: bun install
-
-      - name: Typecheck portfolio
-        run: bun run tsc --noEmit
-
-      - name: Install admin deps
-        run: cd admin && bun install
-
-      - name: Typecheck admin
-        run: cd admin && bun run tsc --noEmit
-
       - name: Test shared/markdown
         run: bun test shared/markdown
+
+      - name: Install web deps
+        run: cd web && npm install
+
+      - name: Typecheck web (Astro)
+        run: cd web && npm run check
+
+      - name: Build web
+        run: cd web && npm run build
+        env:
+          VITE_API_URL: http://localhost:3001
+
+      - name: Install admin deps
+        run: cd admin-new && npm install --legacy-peer-deps
+
+      - name: Sync admin types
+        run: cd admin-new && npx svelte-kit sync
+
+      - name: Typecheck admin
+        run: cd admin-new && npx svelte-check --tsconfig ./tsconfig.json
