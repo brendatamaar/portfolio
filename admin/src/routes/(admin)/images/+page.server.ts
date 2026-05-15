@@ -7,6 +7,6 @@ export const load: PageServerLoad = async ({ cookies }) => {
   const res = await fetch(`${API_URL}/admin/images`, {
     headers: { Cookie: `session=${session}` },
   })
-  const data = res.ok ? await res.json() : { data: [] }
-  return { images: data.data }
+  const images = res.ok ? await res.json() : []
+  return { images }
 }

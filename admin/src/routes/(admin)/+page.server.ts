@@ -26,15 +26,15 @@ export const load: PageServerLoad = async ({ cookies }) => {
   console.log('Dashboard load running, session:', !!session)
 
   try {
-    const [postsData, tags] = await Promise.all([
-      serverFetch<{ data: import('$lib/types').AdminPostSummary[] }>(
+    const [posts, tags] = await Promise.all([
+      serverFetch<import('$lib/types').AdminPostSummary[]>(
         '/admin/posts',
         cookie,
       ),
       serverFetch<import('$lib/types').PostTag[]>('/admin/tags', cookie),
     ])
-    console.log('Posts fetched:', postsData.data?.length, 'Tags:', tags?.length)
-    return { posts: postsData.data ?? [], tags: tags ?? [] }
+    console.log('Posts fetched:', posts?.length, 'Tags:', tags?.length)
+    return { posts: posts ?? [], tags: tags ?? [] }
   } catch (e) {
     console.error('Dashboard load error:', e)
     return { posts: [], tags: [] }
