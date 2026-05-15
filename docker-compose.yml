@@ -7,8 +7,11 @@ services:
       - "3003:3001"
     environment:
       - PORT=3001
+      - NODE_ENV=production
       - CORS_ORIGINS=${CORS_ORIGINS}
       - UPLOADS_DIR=/app/server/uploads
+      - DB_PATH=${DB_PATH}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN}
     volumes:
       - ./server/data:/app/server/data
       - ./server/uploads:/app/server/uploads
@@ -38,7 +41,8 @@ services:
       - "3001:3000"
     environment:
       - PORT=3000
-      - API_URL=${API_URL:-http://server:3001}
+      - API_INTERNAL_URL=${API_INTERNAL_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     depends_on:
       server:
         condition: service_healthy
@@ -62,13 +66,12 @@ services:
     build:
       context: .
       dockerfile: admin/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-        VITE_SITE_URL: ${VITE_SITE_URL:-http://localhost:3001}
     ports:
       - "3002:3000"
     environment:
-      - API_URL=${API_URL:-http://server:3001}
+      - PORT=3000
+      - API_INTERNAL_URL=${API_INTERNAL_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     depends_on:
       server:
         condition: service_healthy
@@ -83,7 +86,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 256M
+          memory: 384M
         reservations:
           cpus: '0.1'
-          memory: 64M
+          memory: 128M
