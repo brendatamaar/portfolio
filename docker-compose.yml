@@ -8,11 +8,17 @@ services:
     environment:
       - PORT=3001
       - CORS_ORIGINS=${CORS_ORIGINS}
-      - LIBRETRANSLATE_URL=${LIBRETRANSLATE_URL}
-      - DB_PATH=${DB_PATH}
+      - UPLOADS_DIR=/app/server/uploads
     volumes:
-      - ./server/data:/app/dist/server/data
+      - ./server/data:/app/server/data
+      - ./server/uploads:/app/server/uploads
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -21,21 +27,28 @@ services:
         reservations:
           cpus: '0.25'
           memory: 128M
+
   portfolio:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: web/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
     ports:
       - "3001:3000"
     environment:
       - PORT=3000
-      - VITE_API_INTERNAL_URL=${VITE_API_INTERNAL_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+      - API_URL=${API_URL:-http://server:3001}
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -44,17 +57,28 @@ services:
         reservations:
           cpus: '0.1'
           memory: 128M
+
   admin:
     build:
       context: .
       dockerfile: admin/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
+        VITE_SITE_URL: ${VITE_SITE_URL:-http://localhost:3001}
     ports:
-      - "3002:80"
+      - "3002:3000"
+    environment:
+      - API_URL=${API_URL:-http://server:3001}
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
     deploy:
       resources:
         limits:

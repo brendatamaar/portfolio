@@ -44,3 +44,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# migration / dev logs
+preview.log
+preview.err.log
+start.log
+start.err.log
+vite-report.html
+localhost_*.report.html
+REPORT.md

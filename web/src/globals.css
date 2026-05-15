@@ -1,0 +1,87 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: currentColor;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* View transitions */
+
+::view-transition-group(root) {
+  animation-timing-function: ease;
+}
+::view-transition-old(root) {
+  animation: fade-out 0.4s ease forwards;
+}
+::view-transition-new(root) {
+  animation: circle-in 0.5s ease forwards;
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes circle-in {
+  from {
+    clip-path: circle(0% at 50% 50%);
+  }
+  to {
+    clip-path: circle(150% at 50% 50%);
+  }
+}
+
+/* Cassette / vinyl animations */
+
+@keyframes reel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.reel-animate {
+  animation: reel-spin 2s linear infinite;
+  animation-play-state: paused;
+}
+
+.group:hover .reel-animate {
+  animation-play-state: running;
+}
+
+.vinyl-spin {
+  animation: reel-spin 3s linear infinite;
+  animation-play-state: paused;
+}
+
+.group:hover .vinyl-spin {
+  animation-play-state: running;
+}

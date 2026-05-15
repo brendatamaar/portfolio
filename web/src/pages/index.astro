@@ -1,0 +1,232 @@
+---
+import Base from '../layouts/Base.astro'
+import SectionLabel from '../components/SectionLabel.astro'
+import PostCard from '../components/PostCard.astro'
+import ProjectCard from '../components/ProjectCard.astro'
+import { api } from '../lib/api'
+import type { PostSummary, ResumeData, ResumeProjectItem } from '../lib/types'
+
+const BLOG_PREVIEW = 3
+const PROJECT_PREVIEW = 4
+
+const [postsRes, resumeRes] = await Promise.allSettled([
+  api.getPosts('en').then((r) => r.data.slice(0, BLOG_PREVIEW)),
+  api.getResumeData('en'),
+])
+
+const posts: PostSummary[] = postsRes.status === 'fulfilled' ? postsRes.value : []
+const resume: ResumeData = resumeRes.status === 'fulfilled'
+  ? resumeRes.value
+  : { profile: null, work: [], education: [], skills: [], projects: [] }
+
+const sideProjects: ResumeProjectItem[] = resume.projects.filter((p) => p.type === 'side_project')
+const workProjectsByCompany: Record<string, ResumeProjectItem[]> = {}
+for (const p of resume.projects) {
+  if (p.type === 'work' && p.company) {
+    if (!workProjectsByCompany[p.company]) workProjectsByCompany[p.company] = []
+    workProjectsByCompany[p.company].push(p)
+  }
+}
+
+const visibleProjects = sideProjects.slice(0, PROJECT_PREVIEW)
+const remaining = sideProjects.length - PROJECT_PREVIEW
+const profile = resume.profile
+---
+
+<Base
+  title="Brendatama Akbar — Web Software Developer"
+  description="Web Software Developer based in Jakarta, Indonesia."
+>
+  <!-- Hero -->
+  {profile && (
+    <section class="mb-20">
+      <div class="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start">
+        <div class="flex flex-1 flex-col items-start gap-5">
+          <h1 class="text-4xl leading-[0.92] font-black tracking-tighter text-black uppercase sm:text-5xl lg:text-6xl dark:text-white">
+            {profile.name}
+          </h1>
+          <a
+            href="/pdf/Resume Brendatama Akbar (2026) - English.pdf"
+            download
+            class="inline-flex items-center gap-2 border-2 border-black bg-[#FFE600] px-5 py-2.5 font-mono text-[10px] font-black tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] dark:border-white dark:shadow-[4px_4px_0px_#fff]"
+          >
+            Download Resume
+          </a>
+        </div>
+
+        <div class="shrink-0 self-start border-2 border-black shadow-[4px_4px_0px_#000] sm:w-44 dark:border-white dark:shadow-[4px_4px_0px_#fff]">
+          <div class="border-b-2 border-black px-4 py-3 dark:border-white">
+            <p class="mb-1 font-mono text-[9px] font-bold tracking-widest text-black/60 uppercase dark:text-white/60">Role</p>
+            <p class="text-xs font-black tracking-tight text-black uppercase dark:text-white">{profile.currentJob}</p>
+          </div>
+          <div class="px-4 py-3">
+            <p class="mb-1 font-mono text-[9px] font-bold tracking-widest text-black/60 uppercase dark:text-white/60">Location</p>
+            <p class="text-xs font-black tracking-tight text-black uppercase dark:text-white">{profile.location}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t-2 border-black pt-6 dark:border-white">
+        <p class="text-base leading-relaxed text-black/60 dark:text-white/60">{profile.summary}</p>
+      </div>
+    </section>
+  )}
+
+  <div class="space-y-20">
+    <!-- 01 — Projects -->
+    <section>
+      <SectionLabel num="01" label="Projects" />
+      <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
+        {visibleProjects.map((project, i) => (
+          <ProjectCard project={project} index={i} />
+        ))}
+      </div>
+      {remaining > 0 && (
+        <div class="mt-6">
+          <button
+            id="show-more-projects"
+            data-remaining={remaining}
+            class="border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
+          >
+            +{remaining} more projects
+          </button>
+          <div id="extra-projects" class="mt-4 hidden grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
+            {sideProjects.slice(PROJECT_PREVIEW).map((project, i) => (
+              <ProjectCard project={project} index={PROJECT_PREVIEW + i} />
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+
+    <!-- 02 — Work -->
+    <section>
+      <SectionLabel num="02" label="Work" />
+      <div>
+        {resume.work.map((work, i) => {
+          const companyProjects = workProjectsByCompany[work.company]
+          const isLast = i === resume.work.length - 1
+          return (
+            <div class={isLast ? '' : 'border-b-2 border-black dark:border-white'}>
+              <div class="flex items-start justify-between gap-6 py-5">
+                <div class="min-w-0 flex-1">
+                  <div class="mb-1 flex items-baseline gap-3">
+                    <span class="text-sm font-black tracking-tight text-black uppercase dark:text-white">{work.company}</span>
+                    <span class="font-mono text-[10px] font-bold tracking-widest text-black/40 uppercase dark:text-white/40">{work.title}</span>
+                  </div>
+                  <p class="text-sm text-black/60 dark:text-white/60">{work.description}</p>
+                  {companyProjects && (
+                    <button
+                      class="work-toggle mt-2 inline-flex items-center gap-1 font-mono text-[11px] font-bold tracking-widest text-black/50 uppercase transition-colors hover:text-black dark:text-white/50 dark:hover:text-white"
+                      data-company={work.company}
+                      aria-expanded="false"
+                    >
+                      see projects
+                      <svg class="h-3 w-3 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                  )}
+                </div>
+                <span class="shrink-0 font-mono text-[11px] text-black/50 tabular-nums dark:text-white/50">
+                  {work.start}–{work.end}
+                </span>
+              </div>
+              {companyProjects && (
+                <div
+                  class="work-projects overflow-hidden"
+                  data-company={work.company}
+                  style="max-height: 0"
+                >
+                  <div class="grid grid-cols-1 items-stretch gap-4 pb-5 sm:grid-cols-2">
+                    {companyProjects.map((project, j) => (
+                      <ProjectCard project={project} index={j} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+
+    <!-- 03 — Writing -->
+    <section>
+      <SectionLabel num="03" label="Writing" />
+      {posts.length > 0 ? (
+        <div class="flex flex-col gap-4">
+          {posts.map((post) => <PostCard post={post} />)}
+        </div>
+      ) : (
+        <p class="py-4 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
+          No posts yet.
+        </p>
+      )}
+      <div class="mt-6">
+        <a
+          href="/blog"
+          class="inline-block border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:bg-white dark:hover:text-black"
+        >
+          All posts →
+        </a>
+      </div>
+    </section>
+
+    <!-- 04 — Connect -->
+    {profile?.social && profile.social.length > 0 && (
+      <section>
+        <SectionLabel num="04" label="Connect" />
+        <p class="mb-8 text-base leading-relaxed text-black/60 dark:text-white/60">
+          I'm always open to interesting conversations, collaborations, and opportunities.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          {profile.social.map((link) => (
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="border-2 border-black px-5 py-2.5 font-mono text-xs tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] transition-colors hover:border-black hover:bg-[#FFE600] dark:border-white dark:text-white dark:shadow-[4px_4px_0px_#fff] dark:hover:border-[#FFE600] dark:hover:bg-[#FFE600] dark:hover:text-black"
+            >
+              {link.name} ↗
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</Base>
+
+<script>
+  function initHomepage() {
+    // Show more projects toggle
+    const showMoreBtn = document.getElementById('show-more-projects')
+    const extraProjects = document.getElementById('extra-projects')
+    if (showMoreBtn && extraProjects) {
+      let expanded = false
+      showMoreBtn.addEventListener('click', () => {
+        expanded = !expanded
+        extraProjects.classList.toggle('hidden', !expanded)
+        const remaining = showMoreBtn.dataset.remaining ?? '0'
+        showMoreBtn.textContent = expanded ? 'Show less' : `+${remaining} more projects`
+      })
+    }
+
+    // Work expand/collapse
+    document.querySelectorAll<HTMLButtonElement>('.work-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const company = btn.dataset.company!
+        const panel = document.querySelector<HTMLElement>(`.work-projects[data-company="${CSS.escape(company)}"]`)
+        if (!panel) return
+        const open = btn.getAttribute('aria-expanded') === 'true'
+        btn.setAttribute('aria-expanded', String(!open))
+        const svg = btn.querySelector('svg')
+        if (svg) svg.style.transform = open ? '' : 'rotate(180deg)'
+        const label = btn.childNodes[0] as Text
+        if (label) label.textContent = open ? 'see projects' : 'hide projects'
+        panel.style.maxHeight = open ? '0' : `${panel.scrollHeight}px`
+      })
+    })
+  }
+
+  initHomepage()
+  document.addEventListener('astro:page-load', initHomepage)
+</script>
