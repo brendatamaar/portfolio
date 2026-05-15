@@ -1,6 +1,7 @@
 import { copyFileSync, mkdirSync, readdirSync, rmSync, statSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { Database } from 'bun:sqlite'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, '../data')
@@ -9,6 +10,10 @@ const BACKUP_DIR = join(DATA_DIR, 'backups')
 const KEEP_LAST = 7
 
 mkdirSync(BACKUP_DIR, { recursive: true })
+
+const db = new Database(DB_PATH, { readonly: false })
+db.run('PRAGMA wal_checkpoint(TRUNCATE)')
+db.close()
 
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
 const dest = join(BACKUP_DIR, `app-${timestamp}.db`)
