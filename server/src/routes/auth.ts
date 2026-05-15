@@ -29,9 +29,17 @@ app.post('/login', async (c) => {
     .from(adminUsers)
     .where(eq(adminUsers.username, username))
     .get()
+  console.debug('[login] user found:', !!user)
   if (!user) return c.json({ error: 'Invalid credentials' }, 401)
 
-  const valid = await verifyPassword(password, user.passwordHash)
+  let valid = false
+  try {
+    valid = await verifyPassword(password, user.passwordHash)
+  } catch (err) {
+    console.debug('[login] verifyPassword threw:', err)
+    return c.json({ error: 'Invalid credentials' }, 401)
+  }
+  console.debug('[login] password valid:', valid)
   if (!valid) return c.json({ error: 'Invalid credentials' }, 401)
 
   const isProduction = process.env.NODE_ENV === 'production'
