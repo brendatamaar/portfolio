@@ -1,0 +1,86 @@
+---
+import type { GlossaryEntry } from '../lib/types'
+
+interface Props {
+  glossary: GlossaryEntry[]
+}
+
+const { glossary } = Astro.props
+
+if (!glossary.length) return
+
+const sorted = [...glossary].sort((a, b) => a.num - b.num)
+---
+
+<section
+  id="glossary-section"
+  class="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+  aria-label="Glossary"
+>
+  <button
+    id="glossary-toggle"
+    class="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[#FFE600]/10"
+    aria-expanded="false"
+    aria-controls="glossary-body"
+  >
+    <span class="flex items-center gap-3">
+      <span class="font-mono text-[11px] font-black tracking-widest text-black uppercase dark:text-white">
+        Glossary
+      </span>
+      <span class="inline-flex items-center border-2 border-black bg-[#FFE600] px-2 py-0.5 font-mono text-[10px] font-bold text-black">
+        {glossary.length}
+      </span>
+    </span>
+    <span id="glossary-chevron" class="font-mono text-sm font-black text-black dark:text-white">+</span>
+  </button>
+
+  <div id="glossary-body" class="overflow-hidden" style="max-height: 0">
+    <div class="border-t-2 border-black px-5 py-4 dark:border-white">
+      <dl class="m-0 space-y-3 p-0">
+        {sorted.map((entry) => (
+          <div
+            class="glossary-entry cursor-pointer border-l-[3px] border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-[#FFE600]/5"
+            data-gloss-key={entry.key}
+          >
+            <dt class="mb-1 flex items-baseline gap-2 font-mono text-[13px] font-bold text-black dark:text-white">
+              <span class="inline-flex items-center bg-black px-1.5 py-0.5 font-mono text-[10px] font-black text-white dark:bg-white dark:text-black">
+                {entry.num}
+              </span>
+              {entry.term}
+            </dt>
+            <dd class="m-0 pl-0 text-[14px] leading-relaxed text-black/70 dark:text-white/70" set:html={entry.definition} />
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initGlossarySection() {
+    const toggle = document.getElementById('glossary-toggle')
+    const body = document.getElementById('glossary-body')
+    const chevron = document.getElementById('glossary-chevron')
+    if (!toggle || !body || !chevron) return
+
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true'
+      toggle.setAttribute('aria-expanded', String(!open))
+      chevron.textContent = open ? '+' : '−'
+      body.style.maxHeight = open ? '0' : `${body.scrollHeight}px`
+    })
+
+    document.querySelectorAll<HTMLElement>('.glossary-entry').forEach((el) => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.glossKey
+        if (!key) return
+        const ref = document.querySelector<HTMLElement>(`[data-gloss-key="${key}"]`)
+        if (!ref || ref === el) return
+        ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    })
+  }
+
+  initGlossarySection()
+  document.addEventListener('astro:page-load', initGlossarySection)
+</script>

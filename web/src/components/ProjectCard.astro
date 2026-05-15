@@ -1,0 +1,72 @@
+---
+import type { ResumeProjectItem } from '../lib/types'
+
+interface Props {
+  project: ResumeProjectItem
+  index: number
+}
+
+const { project, index } = Astro.props
+const hasLink = !!project.link
+const type = project.techStack[0]
+const tech = project.techStack.slice(1)
+const color = type === 'work' ? 'bg-blue-500' : 'bg-orange-500'
+const num = String(index + 1).padStart(2, '0')
+const MAX_TECH = 5
+---
+
+{hasLink ? (
+  <a href={project.link!.href} target="_blank" rel="noopener noreferrer" class="block h-full">
+    <div class={`group flex h-full flex-col border-2 border-black bg-white p-5 shadow-[4px_4px_0px_#000] transition-all duration-150 hover:-translate-x-px hover:-translate-y-px hover:shadow-[6px_6px_0px_#000] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]`}>
+      <div class="mb-5 flex items-center justify-between">
+        <span class={`${color} inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-widest text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]`}>
+          {type}
+        </span>
+        <span class="font-mono text-[11px] font-bold text-black/60 dark:text-white/60">{num}</span>
+      </div>
+      <div class="mb-3 flex items-start justify-between gap-2">
+        <h3 class="text-xl leading-tight font-black tracking-tight text-black uppercase decoration-2 underline-offset-4 group-hover:underline dark:text-white">
+          {project.title}
+        </h3>
+        <svg class="mt-1 h-4 w-4 shrink-0 text-black transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+      </div>
+      <p class="text-sm leading-relaxed font-medium text-black/60 dark:text-white/60">{project.description}</p>
+      {tech.length > 0 && (
+        <div class="mt-auto flex flex-wrap gap-1.5 pt-5">
+          {tech.slice(0, MAX_TECH).map((t) => (
+            <span class="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  </a>
+) : (
+  <div class="h-full">
+    <div class="group flex h-full flex-col border-2 border-black bg-white p-5 shadow-[4px_4px_0px_#000] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_#fff]">
+      <div class="mb-5 flex items-center justify-between">
+        <span class={`${color} inline-flex items-center border-2 border-black px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-widest text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]`}>
+          {type}
+        </span>
+        <span class="font-mono text-[11px] font-bold text-black/60 dark:text-white/60">{num}</span>
+      </div>
+      <div class="mb-3 flex items-start justify-between gap-2">
+        <h3 class="text-xl leading-tight font-black tracking-tight text-black uppercase dark:text-white">
+          {project.title}
+        </h3>
+        <svg class="mt-1 h-4 w-4 shrink-0 text-black/20 dark:text-white/20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+      </div>
+      <p class="text-sm leading-relaxed font-medium text-black/60 dark:text-white/60">{project.description}</p>
+      {tech.length > 0 && (
+        <div class="mt-auto flex flex-wrap gap-1.5 pt-5">
+          {tech.slice(0, MAX_TECH).map((t) => (
+            <span class="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+)}

@@ -1,0 +1,79 @@
+---
+import type { TocItem } from '../lib/types'
+
+interface Props {
+  toc: TocItem[]
+  hasGlossary?: boolean
+  hasBibliography?: boolean
+}
+
+const { toc, hasGlossary = false, hasBibliography = false } = Astro.props
+
+if (!toc.length && !hasGlossary && !hasBibliography) return
+
+const minLevel = toc.length ? Math.min(...toc.map((t) => t.level)) : 2
+
+const counters = new Array(7).fill(0)
+const numbered = toc.map((item) => {
+  counters[item.level]++
+  for (let l = item.level + 1; l <= 6; l++) counters[l] = 0
+  const num = counters.slice(minLevel, item.level + 1).join('.')
+  return { ...item, num }
+})
+---
+
+<nav
+  class="toc sticky top-8 hidden w-48 shrink-0 lg:block"
+  aria-label="Table of contents"
+>
+  {toc.length > 0 && (
+    <>
+      <p class="mb-3 font-mono text-[10px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
+        Contents
+      </p>
+      <ul class="space-y-1.5">
+        {numbered.map((item) => (
+          <li style={`padding-left: ${(item.level - minLevel) * 10}px`}>
+            <a
+              href={`#${item.id}`}
+              data-toc-link={item.id}
+              class="block text-[12px] leading-snug text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+            >
+              <span class="mr-1.5 font-mono text-[10px] opacity-50">{item.num}</span>
+              {item.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  {(hasGlossary || hasBibliography) && (
+    <div class:list={['pt-3', toc.length ? 'mt-4 border-t border-black/10 dark:border-white/10' : '']}>
+      <ul class="space-y-1.5">
+        {hasGlossary && (
+          <li>
+            <a
+              href="#glossary-section"
+              data-toc-link="glossary-section"
+              class="block text-[12px] leading-snug text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+            >
+              Glossary
+            </a>
+          </li>
+        )}
+        {hasBibliography && (
+          <li>
+            <a
+              href="#bibliography-section"
+              data-toc-link="bibliography-section"
+              class="block text-[12px] leading-snug text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+            >
+              Bibliography
+            </a>
+          </li>
+        )}
+      </ul>
+    </div>
+  )}
+</nav>

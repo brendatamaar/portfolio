@@ -1,0 +1,124 @@
+---
+import BlogPost from '../../../layouts/BlogPost.astro'
+import TOC from '../../../components/TOC.astro'
+import Sidenotes from '../../../components/Sidenotes.astro'
+import GlossarySection from '../../../components/GlossarySection.astro'
+import BibliographySection from '../../../components/BibliographySection.astro'
+import { api } from '../../../lib/api'
+import { formatDate, readingTime } from '../../../lib/utils'
+
+const { slug } = Astro.params
+
+let data
+try {
+  data = await api.getPost(slug!, 'id')
+} catch {
+  // Fall back to English if no Indonesian translation
+  try {
+    data = await api.getPost(slug!, 'en')
+  } catch {
+    return Astro.redirect('/id/blog', 302)
+  }
+}
+
+const { post, html, toc, sidenotes, bibliography, glossary } = data
+const date = new Date(post.publishedAt ?? post.createdAt)
+const mins = readingTime(html)
+const title = `${post.title} | Brendatama Akbar`
+const description = post.description ?? 'Baca di brendatama.dev'
+const canonicalUrl = `https://www.brendatama.dev/id/blog/${post.slug}`
+---
+
+<BlogPost {title} {description} {canonicalUrl}>
+  <div slot="header" class="mb-10 border-b-2 border-black pb-10 dark:border-white">
+    <a
+      href="/id/blog"
+      class="mb-8 inline-block font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+    >
+      ← Tulisan
+    </a>
+
+    {post.tags.length > 0 && (
+      <div class="mb-5 flex flex-wrap gap-1.5">
+        {post.tags.map((tag) => (
+          <span class="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+            #{tag.name}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <h1 class="mb-4 text-5xl leading-[0.9] font-black tracking-tighter text-black uppercase sm:text-6xl dark:text-white">
+      {post.title}
+    </h1>
+
+    {post.description && (
+      <p class="mb-8 max-w-2xl text-xl leading-relaxed text-black/60 dark:text-white/60">
+        {post.description}
+      </p>
+    )}
+
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="font-mono text-[11px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
+        {formatDate(date)}
+      </span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">{mins} menit baca</span>
+    </div>
+  </div>
+
+  <div class="blog-layout flex w-full items-start gap-10">
+    <Sidenotes sidenotes={sidenotes} />
+    <div class="blog-content prose-custom min-w-0 flex-1" set:html={html} />
+    <TOC toc={toc} hasGlossary={glossary.length > 0} hasBibliography={bibliography.length > 0} />
+  </div>
+
+  <div slot="footer" class="space-y-4">
+    <div
+      id="blog-data"
+      data-glossary={JSON.stringify(glossary)}
+      data-bibliography={JSON.stringify(bibliography)}
+      hidden
+    ></div>
+    <GlossarySection glossary={glossary} />
+    <BibliographySection bibliography={bibliography} />
+    <div class="border-t-2 border-black pt-6 dark:border-white">
+      <a
+        href="/id/blog"
+        class="font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+      >
+        ← Semua tulisan
+      </a>
+    </div>
+  </div>
+</BlogPost>
+
+<script>
+  import { initScrollProgress, initBackToTop, initShareMenu } from '../../../scripts/postpage'
+  import { initScrollspy } from '../../../scripts/scrollspy'
+  import { initSidenotes } from '../../../scripts/sidenotes'
+  import { initCodeblocks, initImageZoom } from '../../../scripts/codeblocks'
+  import { initGlossaryPopups, initBibliographyPopups } from '../../../scripts/popups'
+
+  function init() {
+    const title = document.querySelector<HTMLHeadingElement>('h1')?.textContent ?? ''
+    initScrollProgress()
+    initBackToTop()
+    initShareMenu(title)
+    initScrollspy()
+    initSidenotes()
+    initCodeblocks()
+    initImageZoom()
+
+    const el = document.getElementById('blog-data')
+    if (el) {
+      const glossary = JSON.parse(el.dataset.glossary ?? '[]')
+      const bibliography = JSON.parse(el.dataset.bibliography ?? '[]')
+      if (glossary.length) initGlossaryPopups(glossary)
+      if (bibliography.length) initBibliographyPopups(bibliography)
+    }
+  }
+
+  init()
+  document.addEventListener('astro:page-load', init)
+</script>

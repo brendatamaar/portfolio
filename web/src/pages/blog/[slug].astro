@@ -1,0 +1,168 @@
+---
+import BlogPost from '../../layouts/BlogPost.astro'
+import TOC from '../../components/TOC.astro'
+import Sidenotes from '../../components/Sidenotes.astro'
+import GlossarySection from '../../components/GlossarySection.astro'
+import BibliographySection from '../../components/BibliographySection.astro'
+import { api } from '../../lib/api'
+import { formatDate, readingTime } from '../../lib/utils'
+
+const { slug } = Astro.params
+
+let data
+try {
+  data = await api.getPost(slug!, 'en')
+} catch {
+  return Astro.redirect('/blog', 302)
+}
+
+const { post, html, toc, sidenotes, bibliography, glossary } = data
+const date = new Date(post.publishedAt ?? post.createdAt)
+const mins = readingTime(html)
+const title = `${post.title} | Brendatama Akbar`
+const description = post.description ?? 'Read on brendatama.dev'
+const canonicalUrl = `https://www.brendatama.dev/blog/${post.slug}`
+---
+
+<BlogPost {title} {description} {canonicalUrl}>
+  <!-- Post header -->
+  <div slot="header" class="mb-10 border-b-2 border-black pb-10 dark:border-white">
+    <a
+      href="/blog"
+      class="mb-8 inline-block font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+    >
+      ← Writing
+    </a>
+
+    {post.tags.length > 0 && (
+      <div class="mb-5 flex flex-wrap gap-1.5">
+        {post.tags.map((tag) => (
+          <span class="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+            #{tag.name}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <h1 class="mb-4 text-5xl leading-[0.9] font-black tracking-tighter text-black uppercase sm:text-6xl dark:text-white">
+      {post.title}
+    </h1>
+
+    {post.description && (
+      <p class="mb-8 max-w-2xl text-xl leading-relaxed text-black/60 dark:text-white/60">
+        {post.description}
+      </p>
+    )}
+
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="font-mono text-[11px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
+        {formatDate(date)}
+      </span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">{mins} min read</span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+
+      <!-- Share menu -->
+      <div class="relative">
+        <button
+          id="share-trigger"
+          class="flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-label="Share post"
+        >
+          <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          Share
+        </button>
+        <div
+          id="share-menu"
+          class="hidden absolute top-full left-0 z-50 mt-2 min-w-[168px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+          role="menu"
+          aria-label="Share options"
+        >
+          <button id="share-copy" role="menuitem" class="flex w-full items-center gap-2 px-3 py-2 font-mono text-[10px] font-bold tracking-wide uppercase text-black transition-colors hover:bg-[#FFE600] dark:text-white dark:hover:bg-[#FFE600] dark:hover:text-black">
+            Copy link
+          </button>
+          <button id="share-twitter" role="menuitem" class="flex w-full items-center gap-2 px-3 py-2 font-mono text-[10px] font-bold tracking-wide uppercase text-black transition-colors hover:bg-[#FFE600] dark:text-white dark:hover:bg-[#FFE600] dark:hover:text-black">
+            Twitter
+          </button>
+          <button id="share-linkedin" role="menuitem" class="flex w-full items-center gap-2 px-3 py-2 font-mono text-[10px] font-bold tracking-wide uppercase text-black transition-colors hover:bg-[#FFE600] dark:text-white dark:hover:bg-[#FFE600] dark:hover:text-black">
+            LinkedIn
+          </button>
+          <button id="share-facebook" role="menuitem" class="flex w-full items-center gap-2 px-3 py-2 font-mono text-[10px] font-bold tracking-wide uppercase text-black transition-colors hover:bg-[#FFE600] dark:text-white dark:hover:bg-[#FFE600] dark:hover:text-black">
+            Facebook
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data island for client scripts -->
+  <div
+    id="blog-data"
+    data-glossary={JSON.stringify(glossary)}
+    data-bibliography={JSON.stringify(bibliography)}
+    hidden
+  ></div>
+
+  <!-- 3-column layout -->
+  <div class="blog-layout flex w-full items-start gap-10">
+    <Sidenotes sidenotes={sidenotes} />
+    <div class="blog-content prose-custom min-w-0 flex-1" set:html={html} />
+    <TOC toc={toc} hasGlossary={glossary.length > 0} hasBibliography={bibliography.length > 0} />
+  </div>
+
+  <!-- Footer section: glossary, bibliography, back link -->
+  <div slot="footer" class="space-y-4">
+    <GlossarySection glossary={glossary} />
+    <BibliographySection bibliography={bibliography} />
+    <div class="border-t-2 border-black pt-6 dark:border-white">
+      <a
+        href="/blog"
+        class="font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+      >
+        ← All posts
+      </a>
+    </div>
+  </div>
+</BlogPost>
+
+<script>
+  import { initScrollProgress, initBackToTop, initShareMenu } from '../../scripts/postpage'
+  import { initScrollspy } from '../../scripts/scrollspy'
+  import { initSidenotes } from '../../scripts/sidenotes'
+  import { initCodeblocks, initImageZoom } from '../../scripts/codeblocks'
+
+  function init() {
+    const title = document.querySelector<HTMLHeadingElement>('.blog-content h1, h1')?.textContent ?? ''
+    initScrollProgress()
+    initBackToTop()
+    initShareMenu(title)
+    initScrollspy()
+    initSidenotes()
+    initCodeblocks()
+    initImageZoom()
+  }
+
+  init()
+  document.addEventListener('astro:page-load', init)
+</script>
+
+<script>
+  import { initGlossaryPopups, initBibliographyPopups } from '../../scripts/popups'
+
+  function initPopups() {
+    const el = document.getElementById('blog-data')
+    if (!el) return
+    const glossary = JSON.parse(el.dataset.glossary ?? '[]')
+    const bibliography = JSON.parse(el.dataset.bibliography ?? '[]')
+    if (glossary.length) initGlossaryPopups(glossary)
+    if (bibliography.length) initBibliographyPopups(bibliography)
+  }
+
+  initPopups()
+  document.addEventListener('astro:page-load', initPopups)
+</script>
