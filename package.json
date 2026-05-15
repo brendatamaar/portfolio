@@ -3,10 +3,18 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  },
   "scripts": {
-    "dev": "concurrently -k -n server,web,admin -c yellow,cyan,magenta \"npm run dev --prefix server\" \"npm run dev --prefix web\" \"npm run dev --prefix admin\"",
-    "build:web": "npm run build --prefix web",
-    "build:admin": "npm run build --prefix admin",
+    "dev": "concurrently -k -n server,web,admin -c yellow,cyan,magenta \"pnpm -C server dev\" \"pnpm -C web dev\" \"pnpm -C admin dev\"",
+    "dev:web": "concurrently -k -n web,admin -c cyan,magenta \"pnpm -C web dev\" \"pnpm -C admin dev\"",
+    "build:web": "pnpm -C web build",
+    "build:admin": "pnpm -C admin build",
     "lint": "eslint .",
     "format": "prettier --write \"shared/**/*.ts\" \"server/src/**/*.ts\"",
     "prepare": "husky"
