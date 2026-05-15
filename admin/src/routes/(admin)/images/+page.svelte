@@ -5,7 +5,9 @@
 
   let { data }: { data: PageData } = $props()
   let images = $state<AdminImage[]>(data.images)
-  $effect(() => { images = data.images })
+  $effect(() => {
+    images = data.images
+  })
   let uploading = $state(false)
   let error = $state('')
   let copied = $state<number | null>(null)
@@ -56,31 +58,50 @@
 
 <div class="mx-auto max-w-6xl px-6 py-8">
   <div class="mb-8 flex items-center justify-between">
-    <h1 class="text-2xl font-black uppercase tracking-tight">Images</h1>
-    <label class="cursor-pointer border-2 border-black bg-[#ffe600] px-4 py-2 text-xs font-black uppercase tracking-widest shadow-[3px_3px_0px_#000] hover:bg-black hover:text-[#ffe600]">
+    <h1 class="text-2xl font-black uppercase tracking-tight dark:text-white">Images</h1>
+    <label
+      class="cursor-pointer border-2 border-black bg-[#ffe600] px-4 py-2 text-xs font-black uppercase tracking-widest shadow-[3px_3px_0px_#000] hover:bg-black hover:text-[#ffe600] dark:shadow-[3px_3px_0px_#fff]"
+    >
       {uploading ? 'Uploading…' : '+ Upload'}
-      <input type="file" accept="image/*" class="hidden" disabled={uploading} onchange={handleUpload} />
+      <input
+        type="file"
+        accept="image/*"
+        class="hidden"
+        disabled={uploading}
+        onchange={handleUpload}
+      />
     </label>
   </div>
 
   {#if error}
-    <div class="mb-4 border-2 border-red-600 bg-red-50 p-3 text-sm font-bold text-red-600">{error}</div>
+    <div class="mb-4 border-2 border-red-600 bg-red-50 p-3 text-sm font-bold text-red-600">
+      {error}
+    </div>
   {/if}
 
   {#if images.length === 0}
-    <p class="py-16 text-center text-xs font-bold uppercase tracking-widest text-black/40">No images uploaded yet.</p>
+    <p class="py-16 text-center text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40">
+      No images uploaded yet.
+    </p>
   {:else}
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {#each images as img (img.id)}
-        <div class="group border-2 border-black bg-white">
-          <img src={img.url} alt={img.filename} class="aspect-square w-full object-cover" loading="lazy" />
-          <div class="border-t-2 border-black p-2">
-            <p class="truncate text-[10px] font-bold">{img.filename}</p>
-            <p class="mb-2 text-[10px] text-black/50">{fmtSize(img.size)}{img.width ? ` · ${img.width}×${img.height}` : ''}</p>
+        <div class="group border-2 border-black bg-white dark:border-white dark:bg-[#111]">
+          <img
+            src={img.url}
+            alt={img.filename}
+            class="aspect-square w-full object-cover"
+            loading="lazy"
+          />
+          <div class="border-t-2 border-black p-2 dark:border-white">
+            <p class="truncate text-[10px] font-bold dark:text-white">{img.filename}</p>
+            <p class="mb-2 text-[10px] text-black/50 dark:text-white/50">
+              {fmtSize(img.size)}{img.width ? ` · ${img.width}×${img.height}` : ''}
+            </p>
             <div class="flex gap-1">
               <button
                 onclick={() => copyUrl(img)}
-                class="flex-1 border border-black bg-[#f5f5f5] py-1 text-[10px] font-bold uppercase hover:bg-black hover:text-white"
+                class="flex-1 border border-black bg-[#f5f5f5] py-1 text-[10px] font-bold uppercase hover:bg-black hover:text-white dark:border-white dark:bg-[#1a1a1a] dark:text-white dark:hover:bg-white dark:hover:text-black"
               >
                 {copied === img.id ? 'Copied!' : 'Copy URL'}
               </button>
