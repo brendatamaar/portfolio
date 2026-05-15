@@ -64,7 +64,10 @@ jobs:
             git pull origin main
 
             echo "→ Backing up database"
-            docker compose exec -T server bun run server/scripts/backup-db.ts
+            docker compose exec -T server bun run server/scripts/backup-db.ts || \
+              cp -f ~/apps/portfolio/server/data/app.db \
+                    ~/apps/portfolio/server/data/app.db.bak.$(date +%Y%m%d_%H%M%S) 2>/dev/null || \
+              echo "Backup skipped (no existing container or db)"
 
             echo "→ Restarting containers"
             docker compose down
