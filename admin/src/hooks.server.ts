@@ -12,7 +12,8 @@ export const handle: Handle = async ({ event, resolve }) => {
         headers: { Cookie: `session=${session}` },
       })
       event.locals.user = res.ok ? { username: 'admin' } : null
-    } catch {
+    } catch (e) {
+      console.error('Session check error:', e)
       event.locals.user = null
     }
   } else {

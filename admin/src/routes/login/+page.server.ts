@@ -20,7 +20,8 @@ export const actions: Actions = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-    } catch {
+    } catch (e) {
+      console.error('Login fetch error:', e)
       return fail(500, { error: 'Cannot reach API server.' })
     }
 
