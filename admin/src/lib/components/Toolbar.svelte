@@ -1,4 +1,30 @@
 <script lang="ts">
+  import {
+    Bold,
+    Italic,
+    Underline,
+    Strikethrough,
+    Code,
+    Code2,
+    Heading1,
+    Heading2,
+    Heading3,
+    Quote,
+    List,
+    ListOrdered,
+    Minus,
+    Link2,
+    Image,
+    StickyNote,
+    BookOpenText,
+    ScrollText,
+    Bot,
+    PanelLeft,
+    Columns2,
+    Eye,
+    PanelRight,
+  } from 'lucide-svelte'
+
   type ViewMode = 'editor' | 'split' | 'preview'
 
   interface Props {
@@ -8,115 +34,171 @@
     onLinePrefix: (prefix: string) => void
     onInsert: (text: string) => void
     onGallery: () => void
-    onDownload: () => void
+    onMetaToggle: () => void
+    metaOpen: boolean
   }
 
-  let { viewMode, onViewMode, onFormat, onLinePrefix, onInsert, onGallery, onDownload }: Props =
-    $props()
+  let {
+    viewMode,
+    onViewMode,
+    onFormat,
+    onLinePrefix,
+    onInsert,
+    onGallery,
+    onMetaToggle,
+    metaOpen,
+  }: Props = $props()
 
-  type Btn = { label: string; title: string; action: () => void; mono?: boolean }
-
-  const groups: Btn[][] = [
-    [
-      { label: 'H2', title: 'Heading 2', mono: true, action: () => onLinePrefix('## ') },
-      { label: 'H3', title: 'Heading 3', mono: true, action: () => onLinePrefix('### ') },
-    ],
-    [
-      { label: 'B', title: 'Bold (Ctrl+B)', action: () => onFormat('**', '**', 'bold') },
-      { label: 'I', title: 'Italic (Ctrl+I)', action: () => onFormat('*', '*', 'italic') },
-      { label: 'S', title: 'Strikethrough', action: () => onFormat('~~', '~~', 'text') },
-      { label: '`', title: 'Inline code', mono: true, action: () => onFormat('`', '`', 'code') },
-    ],
-    [
-      { label: '•', title: 'Bullet list', action: () => onLinePrefix('- ') },
-      { label: '1.', title: 'Numbered list', mono: true, action: () => onLinePrefix('1. ') },
-      { label: '"', title: 'Blockquote', action: () => onLinePrefix('> ') },
-    ],
-    [
-      {
-        label: 'Link',
-        title: 'Link (Ctrl+K)',
-        action: () => onFormat('[', '](url)', 'link text'),
-      },
-      { label: 'Fn', title: 'Footnote', action: () => onInsert('^[footnote]') },
-      {
-        label: '```',
-        title: 'Code block',
-        mono: true,
-        action: () => onInsert('\n```\n\n```\n'),
-      },
-      { label: 'IMG', title: 'Insert image from gallery', action: onGallery },
-    ],
-    [
-      {
-        label: 'Note',
-        title: 'Note admonition',
-        action: () => onInsert('\n:::note Note\n\n:::\n'),
-      },
-      { label: 'Tip', title: 'Tip admonition', action: () => onInsert('\n:::tip Tip\n\n:::\n') },
-      {
-        label: 'Warn',
-        title: 'Warning admonition',
-        action: () => onInsert('\n:::warning Warning\n\n:::\n'),
-      },
-      {
-        label: 'Danger',
-        title: 'Danger admonition',
-        action: () => onInsert('\n:::danger Danger\n\n:::\n'),
-      },
-      {
-        label: 'Details',
-        title: 'Details / spoiler block',
-        action: () => onInsert('\n:::details Summary\n\n:::\n'),
-      },
-    ],
+  const ADMONITION_TYPES = [
+    'note', 'tip', 'warning', 'danger', 'info',
+    'tldr', 'update', 'definition', 'ai', 'details',
   ]
+  let admonitionOpen = $state(false)
+
+  const base = 'flex items-center justify-center w-7 h-7 rounded transition-colors'
+  const active = 'bg-black/20 dark:bg-white/20 text-black dark:text-white'
+  const inactive = 'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
+  const labelBase = 'flex items-center gap-1 px-2 h-7 font-mono text-[10px] uppercase tracking-widest rounded transition-colors'
 </script>
 
 <div
-  class="flex items-center justify-between border-b-2 border-black bg-[#f0f0f0] px-2 py-1 dark:border-white dark:bg-[#1a1a1a]"
+  class="relative flex h-10 items-center gap-0.5 overflow-x-auto border-b border-black/10 bg-[#f0f0f0] px-3 dark:border-white/10 dark:bg-[#111]"
 >
-  <!-- Formatting buttons -->
-  <div class="flex items-center gap-0 overflow-x-auto">
-    {#each groups as group, gi}
-      {#if gi > 0}
-        <div class="mx-1.5 h-4 w-px shrink-0 bg-black/20 dark:bg-white/20"></div>
-      {/if}
-      {#each group as btn}
-        <button
-          type="button"
-          title={btn.title}
-          onclick={btn.action}
-          class="shrink-0 rounded-none px-2 py-1 text-[11px] font-bold uppercase tracking-wide hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:hover:text-black {btn.mono ? 'font-mono' : ''}"
-        >
-          {btn.label}
-        </button>
-      {/each}
-    {/each}
-  </div>
+  <!-- Bold -->
+  <button type="button" title="Bold (Ctrl+B)" onclick={() => onFormat('**', '**', 'bold')} class="{base} {inactive}">
+    <Bold size={13} />
+  </button>
+  <!-- Italic -->
+  <button type="button" title="Italic (Ctrl+I)" onclick={() => onFormat('*', '*', 'italic')} class="{base} {inactive}">
+    <Italic size={13} />
+  </button>
+  <!-- Underline -->
+  <button type="button" title="Underline" onclick={() => onFormat('<u>', '</u>', 'text')} class="{base} {inactive}">
+    <Underline size={13} />
+  </button>
+  <!-- Strikethrough -->
+  <button type="button" title="Strikethrough" onclick={() => onFormat('~~', '~~', 'text')} class="{base} {inactive}">
+    <Strikethrough size={13} />
+  </button>
+  <!-- Inline code -->
+  <button type="button" title="Inline code" onclick={() => onFormat('`', '`', 'code')} class="{base} {inactive}">
+    <Code size={13} />
+  </button>
+  <!-- Code block -->
+  <button type="button" title="Code block" onclick={() => onInsert('\n```\n\n```\n')} class="{base} {inactive}">
+    <Code2 size={13} />
+  </button>
 
-  <!-- Right: download + view mode -->
-  <div class="flex shrink-0 items-center gap-2 pl-3">
+  <div class="mx-0.5 h-4 w-px shrink-0 bg-black/15 dark:bg-white/15"></div>
+
+  <!-- H1 -->
+  <button type="button" title="Heading 1" onclick={() => onLinePrefix('# ')} class="{base} {inactive}">
+    <Heading1 size={13} />
+  </button>
+  <!-- H2 -->
+  <button type="button" title="Heading 2" onclick={() => onLinePrefix('## ')} class="{base} {inactive}">
+    <Heading2 size={13} />
+  </button>
+  <!-- H3 -->
+  <button type="button" title="Heading 3" onclick={() => onLinePrefix('### ')} class="{base} {inactive}">
+    <Heading3 size={13} />
+  </button>
+
+  <div class="mx-0.5 h-4 w-px shrink-0 bg-black/15 dark:bg-white/15"></div>
+
+  <!-- Blockquote -->
+  <button type="button" title="Blockquote" onclick={() => onLinePrefix('> ')} class="{base} {inactive}">
+    <Quote size={13} />
+  </button>
+  <!-- Bullet list -->
+  <button type="button" title="Bullet list" onclick={() => onLinePrefix('- ')} class="{base} {inactive}">
+    <List size={13} />
+  </button>
+  <!-- Ordered list -->
+  <button type="button" title="Numbered list" onclick={() => onLinePrefix('1. ')} class="{base} {inactive}">
+    <ListOrdered size={13} />
+  </button>
+  <!-- HR -->
+  <button type="button" title="Horizontal rule" onclick={() => onInsert('\n---\n')} class="{base} {inactive}">
+    <Minus size={13} />
+  </button>
+
+  <div class="mx-0.5 h-4 w-px shrink-0 bg-black/15 dark:bg-white/15"></div>
+
+  <!-- Link -->
+  <button type="button" title="Link (Ctrl+K)" onclick={() => onFormat('[', '](url)', 'link text')} class="{base} {inactive}">
+    <Link2 size={13} />
+  </button>
+  <!-- Image -->
+  <button type="button" title="Insert image" onclick={onGallery} class="{base} {inactive}">
+    <Image size={13} />
+  </button>
+  <!-- Footnote -->
+  <button type="button" title="Footnote/sidenote" onclick={() => onInsert('^[note]')} class="{labelBase} {inactive}">
+    <StickyNote size={13} />
+    <span>Note</span>
+  </button>
+  <!-- Glossary ref -->
+  <button type="button" title="Glossary reference [gloss:term]" onclick={() => onFormat('[gloss:', ']', 'term')} class="{labelBase} {inactive}">
+    <BookOpenText size={13} />
+    <span>Glossary</span>
+  </button>
+  <!-- Cite ref -->
+  <button type="button" title="Bibliography reference [cite:key]" onclick={() => onFormat('[cite:', ']', 'key')} class="{labelBase} {inactive}">
+    <ScrollText size={13} />
+    <span>Bibliography</span>
+  </button>
+
+  <div class="mx-0.5 h-4 w-px shrink-0 bg-black/15 dark:bg-white/15"></div>
+
+  <!-- Admonition dropdown -->
+  <div class="relative">
     <button
       type="button"
-      title="Download as Markdown"
-      onclick={onDownload}
-      class="px-2 py-1 text-[11px] font-bold uppercase tracking-wide hover:bg-black hover:text-white dark:text-white dark:hover:bg-white dark:hover:text-black"
+      title="Admonition"
+      onclick={() => (admonitionOpen = !admonitionOpen)}
+      class="{labelBase} {admonitionOpen ? active : inactive}"
     >
-      ↓ MD
+      <Bot size={13} />
+      <span>Admonition</span>
     </button>
-    <div class="flex border-2 border-black dark:border-white">
-      {#each (['editor', 'split', 'preview'] as const) as mode}
-        <button
-          type="button"
-          onclick={() => onViewMode(mode)}
-          class="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest transition-colors {viewMode === mode
-            ? 'bg-black text-white dark:bg-white dark:text-black'
-            : 'dark:text-white dark:hover:bg-white/10 hover:bg-black/10'}"
-        >
-          {mode === 'editor' ? 'Edit' : mode === 'split' ? 'Split' : 'Preview'}
-        </button>
-      {/each}
-    </div>
+    {#if admonitionOpen}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="absolute top-full left-0 z-50 mt-1 flex min-w-max flex-col border border-black/20 bg-[#f0f0f0] shadow-xl dark:border-white/20 dark:bg-[#1a1a1a]"
+        onmousedown={(e) => e.stopPropagation()}
+      >
+        {#each ADMONITION_TYPES as t}
+          <button
+            type="button"
+            onclick={() => { onInsert(`\n:::${t}\n\n:::\n`); admonitionOpen = false }}
+            class="px-3 py-1.5 text-left font-mono text-[11px] text-black/60 transition-colors hover:bg-black/10 hover:text-black dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            :::{t}
+          </button>
+        {/each}
+      </div>
+    {/if}
   </div>
+
+  <!-- Spacer -->
+  <div class="flex-1"></div>
+
+  <!-- View mode -->
+  <button type="button" title="Editor only" onclick={() => onViewMode('editor')} class="{base} {viewMode === 'editor' ? active : inactive}">
+    <PanelLeft size={13} />
+  </button>
+  <button type="button" title="Split view" onclick={() => onViewMode('split')} class="{base} {viewMode === 'split' ? active : inactive}">
+    <Columns2 size={13} />
+  </button>
+  <button type="button" title="Preview only" onclick={() => onViewMode('preview')} class="{base} {viewMode === 'preview' ? active : inactive}">
+    <Eye size={13} />
+  </button>
+
+  <div class="mx-0.5 h-4 w-px shrink-0 bg-black/15 dark:bg-white/15"></div>
+
+  <!-- Meta sidebar toggle -->
+  <button type="button" title="Post settings" onclick={onMetaToggle} class="{base} {metaOpen ? active : inactive}">
+    <PanelRight size={13} />
+  </button>
 </div>

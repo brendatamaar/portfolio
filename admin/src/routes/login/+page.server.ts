@@ -1,7 +1,8 @@
 ﻿import { redirect, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001'
+const API_URL =
+  (process.env.API_INTERNAL_URL ?? 'http://localhost:3001') + '/api'
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) redirect(302, '/')

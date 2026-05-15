@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import { enhance } from '$app/forms'
   import type { PageData, ActionData } from './$types'
   import type { AdminPostSummary } from '$lib/types'
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
 
-  let posts = $state<AdminPostSummary[]>(data.posts ?? [])
+  let posts = $state<AdminPostSummary[]>(untrack(() => data.posts ?? []))
   $effect(() => {
     posts = data.posts ?? []
   })
@@ -15,127 +16,145 @@
     filterStatus === 'all' ? posts : posts.filter((p) => p.status === filterStatus),
   )
 
-  function fmt(date: string | null) {
-    if (!date) return '—'
-    return new Date(date).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
+  function fmt(date: string | null, label: string) {
+    if (!date) return ''
+    return `${label} ${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`
   }
 
   let deletingId = $state<number | null>(null)
+
+  const draftCount = $derived(posts.filter((p) => p.status === 'draft').length)
+  const publishedCount = $derived(posts.filter((p) => p.status === 'published').length)
+
+  const tabs = $derived([
+    { key: 'all' as const, label: 'All', count: posts.length },
+    { key: 'draft' as const, label: 'Draft', count: draftCount },
+    { key: 'published' as const, label: 'Published', count: publishedCount },
+  ])
 </script>
 
 <svelte:head>
   <title>Posts — Admin</title>
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-6 py-8">
-  <div class="mb-8 flex items-center justify-between">
-    <h1 class="text-2xl font-black uppercase tracking-tight dark:text-white">Posts</h1>
-    <a
-      href="/posts/new"
-      class="border-2 border-black bg-[#ffe600] px-4 py-2 text-xs font-black uppercase tracking-widest shadow-[3px_3px_0px_#000] transition-all hover:-translate-y-px hover:shadow-[4px_4px_0px_#000] dark:shadow-[3px_3px_0px_#fff] dark:hover:shadow-[4px_4px_0px_#fff]"
-    >
-      + New Post
-    </a>
-  </div>
+<div class="min-h-screen bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
+  <main class="mx-auto max-w-4xl px-6 py-8">
+    <h1 class="mb-6 text-3xl font-black tracking-tighter uppercase">Posts</h1>
 
-  {#if form?.error}
-    <div class="mb-4 border-2 border-red-600 bg-red-50 p-3 text-sm font-bold text-red-600">
-      {form.error}
-    </div>
-  {/if}
+    {#if form?.error}
+      <div class="mb-4 border border-red-500 p-2 font-mono text-xs text-red-500">
+        {form.error}
+      </div>
+    {/if}
 
-  <!-- Filter -->
-  <div class="mb-6 flex gap-2">
-    {#each (['all', 'published', 'draft'] as const) as s}
-      <button
-        onclick={() => (filterStatus = s)}
-        class="border-2 border-black px-3 py-1 text-[11px] font-bold uppercase tracking-widest transition-colors {filterStatus === s
-          ? 'bg-black text-white dark:bg-white dark:text-black'
-          : 'bg-white hover:bg-black/5 dark:border-white dark:bg-[#111] dark:text-white dark:hover:bg-white/10'}"
-      >
-        {s}
-      </button>
-    {/each}
-  </div>
+    <!-- Filter tabs -->
+    {#if posts.length > 0}
+      <div class="mb-4 flex items-center gap-1 border-b border-black/10 dark:border-white/10">
+        {#each tabs as tab}
+          <button
+            onclick={() => (filterStatus = tab.key)}
+            class={[
+              '-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 font-mono text-[10px] tracking-widest uppercase transition-colors',
+              filterStatus === tab.key
+                ? 'border-black text-black dark:border-white dark:text-white'
+                : 'border-transparent text-black/30 hover:text-black/60 dark:text-white/30 dark:hover:text-white/60',
+            ].join(' ')}
+          >
+            {tab.label}
+            <span
+              class={[
+                'px-1 py-px text-[9px]',
+                filterStatus === tab.key ? 'bg-black/15 dark:bg-white/15' : 'bg-black/5 dark:bg-white/5',
+              ].join(' ')}
+            >
+              {tab.count}
+            </span>
+          </button>
+        {/each}
+        <a
+          href="/posts/new"
+          class="ml-auto flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+        >
+          + New post
+        </a>
+      </div>
+    {:else}
+      <div class="mb-4 flex justify-end">
+        <a
+          href="/posts/new"
+          class="flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+        >
+          + New post
+        </a>
+      </div>
+    {/if}
 
-  <div class="border-2 border-black bg-white dark:border-white dark:bg-[#111]">
     {#if filtered.length === 0}
-      <p class="p-8 text-center text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40">
-        No posts.
+      <p class="font-mono text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+        {posts.length === 0 ? 'No posts yet.' : `No ${filterStatus} posts.`}
       </p>
     {:else}
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="border-b-2 border-black bg-[#f5f5f5] dark:border-white dark:bg-[#1a1a1a]">
-            <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest dark:text-white">Title</th>
-            <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest dark:text-white">Tags</th>
-            <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest dark:text-white">Status</th>
-            <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest dark:text-white">Published</th>
-            <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest dark:text-white">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each filtered as post (post.id)}
-            <tr class="border-b border-black/10 hover:bg-black/[0.02] dark:border-white/10 dark:hover:bg-white/[0.03]">
-              <td class="px-4 py-3 font-medium dark:text-white">{post.title}</td>
-              <td class="px-4 py-3">
-                <div class="flex flex-wrap gap-1">
-                  {#each post.tags as tag}
-                    <span class="border border-black px-2 py-0.5 text-[10px] font-bold uppercase dark:border-white dark:text-white">{tag.name}</span>
-                  {/each}
-                </div>
-              </td>
-              <td class="px-4 py-3">
+      <div class="divide-y divide-black/10 border border-black/10 dark:divide-white/10 dark:border-white/10">
+        {#each filtered as post (post.id)}
+          <div class="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
+            <div class="min-w-0 flex-1">
+              <div class="mb-0.5 flex items-center gap-2">
                 <span
-                  class="px-2 py-0.5 text-[10px] font-black uppercase tracking-widest {post.status === 'published'
-                    ? 'border border-green-600 bg-green-100 text-green-700'
-                    : 'border border-yellow-600 bg-yellow-100 text-yellow-700'}"
+                  class={[
+                    'px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-widest uppercase',
+                    post.status === 'published'
+                      ? 'border border-green-500/30 bg-green-500/20 text-green-600 dark:text-green-400'
+                      : 'border border-black/20 bg-black/10 text-black/40 dark:border-white/20 dark:bg-white/10 dark:text-white/40',
+                  ].join(' ')}
                 >
                   {post.status}
                 </span>
-              </td>
-              <td class="px-4 py-3 text-xs text-black/60 dark:text-white/60">{fmt(post.publishedAt)}</td>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                  <a
-                    href="/posts/{post.id}"
-                    class="text-xs font-bold uppercase tracking-widest underline hover:no-underline dark:text-white"
-                    >Edit</a
-                  >
-                  <form
-                    method="POST"
-                    action="?/delete"
-                    use:enhance={() => {
-                      deletingId = post.id
-                      return async ({ update }) => {
-                        posts = posts.filter((p) => p.id !== post.id)
-                        deletingId = null
-                        await update({ reset: false })
-                      }
-                    }}
-                  >
-                    <input type="hidden" name="id" value={post.id} />
-                    <button
-                      type="submit"
-                      disabled={deletingId === post.id}
-                      onclick={(e) => {
-                        if (!confirm('Delete this post?')) e.preventDefault()
-                      }}
-                      class="text-xs font-bold uppercase tracking-widest text-red-600 underline hover:no-underline disabled:opacity-40"
-                    >
-                      Delete
-                    </button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+                <span class="font-mono text-[10px] text-black/30 dark:text-white/30">
+                  {post.status === 'published' && post.publishedAt
+                    ? fmt(post.publishedAt, 'Published')
+                    : fmt(post.createdAt, 'Created')}
+                </span>
+              </div>
+              <p class="truncate text-sm font-bold">{post.title}</p>
+            </div>
+
+            <div class="flex shrink-0 items-center gap-1">
+              <a
+                href="/posts/{post.id}"
+                class="p-1.5 text-black/30 transition-all hover:bg-black hover:text-white dark:text-white/30 dark:hover:bg-white dark:hover:text-black"
+                title="Edit"
+              >
+                ✎
+              </a>
+              <form
+                method="POST"
+                action="?/delete"
+                use:enhance={() => {
+                  deletingId = post.id
+                  return async ({ update }) => {
+                    posts = posts.filter((p) => p.id !== post.id)
+                    deletingId = null
+                    await update({ reset: false })
+                  }
+                }}
+              >
+                <input type="hidden" name="id" value={post.id} />
+                <button
+                  type="submit"
+                  disabled={deletingId === post.id}
+                  onclick={(e) => {
+                    if (!confirm('Delete this post?')) e.preventDefault()
+                  }}
+                  class="p-1.5 text-black/30 transition-all hover:bg-red-500 hover:text-white dark:text-white/30 dark:hover:bg-red-500 dark:hover:text-white disabled:opacity-40"
+                  title="Delete"
+                >
+                  ✕
+                </button>
+              </form>
+            </div>
+          </div>
+        {/each}
+      </div>
     {/if}
-  </div>
+  </main>
 </div>

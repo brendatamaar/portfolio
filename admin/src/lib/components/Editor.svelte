@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount, untrack } from 'svelte'
+  import { ArrowLeft, Save, Globe, EyeOff, Sun, Moon, Image as ImageIcon, X, RefreshCw } from 'lucide-svelte'
   import { api } from '$lib/api'
   import type {
     AdminPost,
@@ -21,41 +23,54 @@
 
   type ViewMode = 'editor' | 'split' | 'preview'
 
+  // --- Theme ---
+  let dark = $state(false)
+  onMount(() => {
+    dark = localStorage.getItem('admin-theme') === 'dark'
+  })
+  function toggleTheme() {
+    dark = !dark
+    document.documentElement.classList.toggle('dark', dark)
+    localStorage.setItem('admin-theme', dark ? 'dark' : 'light')
+  }
+
   // --- Form state ---
   let langTab = $state<'en' | 'id'>('en')
   let activeTab = $state<'content' | 'glossary' | 'bibliography'>('content')
   let viewMode = $state<ViewMode>('editor')
 
-  let title = $state(post?.title ?? '')
-  let slug = $state(post?.slug ?? '')
-  let description = $state(post?.description ?? '')
-  let content = $state(post?.content ?? '')
-  let titleId = $state(post?.titleId ?? '')
-  let descriptionId = $state(post?.descriptionId ?? '')
-  let contentId = $state(post?.contentId ?? '')
-  let status = $state<'draft' | 'published'>(post?.status ?? 'draft')
-  let coverImageUrl = $state(post?.coverImageUrl ?? '')
-  let publishedAt = $state(
+  let title = $state(untrack(() => post?.title ?? ''))
+  let slug = $state(untrack(() => post?.slug ?? ''))
+  let description = $state(untrack(() => post?.description ?? ''))
+  let content = $state(untrack(() => post?.content ?? ''))
+  let titleId = $state(untrack(() => post?.titleId ?? ''))
+  let descriptionId = $state(untrack(() => post?.descriptionId ?? ''))
+  let contentId = $state(untrack(() => post?.contentId ?? ''))
+  let status = $state<'draft' | 'published'>(untrack(() => post?.status ?? 'draft'))
+  let coverImageUrl = $state(untrack(() => post?.coverImageUrl ?? ''))
+  let publishedAt = $state(untrack(() =>
     post?.publishedAt
       ? new Date(post.publishedAt).toISOString().slice(0, 10)
       : new Date().toISOString().slice(0, 10),
-  )
+  ))
 
-  let selectedTagIds = $state<number[]>(post?.tags.map((t) => t.id) ?? [])
-  let allTags = $state<PostTag[]>(initialTags)
+  let selectedTagIds = $state<number[]>(untrack(() => post?.tags.map((t) => t.id) ?? []))
+  let allTags = $state<PostTag[]>(untrack(() => initialTags))
   let newTagName = $state('')
 
-  let glossaryEn = $state<GlossaryEntry[]>(post?.glossaryEn ?? [])
-  let glossaryId = $state<GlossaryEntry[]>(post?.glossaryId ?? [])
-  let bibliographyEn = $state<BibliographyEntry[]>(post?.bibliographyEn ?? [])
-  let bibliographyId = $state<BibliographyEntry[]>(post?.bibliographyId ?? [])
+  let glossaryEn = $state<GlossaryEntry[]>(untrack(() => post?.glossaryEn ?? []))
+  let glossaryId = $state<GlossaryEntry[]>(untrack(() => post?.glossaryId ?? []))
+  let bibliographyEn = $state<BibliographyEntry[]>(untrack(() => post?.bibliographyEn ?? []))
+  let bibliographyId = $state<BibliographyEntry[]>(untrack(() => post?.bibliographyId ?? []))
 
   let saving = $state(false)
   let savedAt = $state<Date | null>(null)
-  let postId = $state<number | null>(post?.id ?? null)
+  let saveMsg = $state('')
+  let postId = $state<number | null>(untrack(() => post?.id ?? null))
 
   let showMeta = $state(false)
   let showGallery = $state(false)
+  let showCoverGallery = $state(false)
   let galleryTarget = $state<'content' | 'cover'>('content')
 
   let textareaRef = $state<HTMLTextAreaElement | null>(null)
@@ -65,8 +80,9 @@
     )
 
   // Auto-generate slug from title (only for new posts)
+  let slugTouched = false
   $effect(() => {
-    if (!postId && title) {
+    if (!postId && !slugTouched && title) {
       slug = title
         .toLowerCase()
         .replace(/[^\w\s-]/g, '')
@@ -79,45 +95,41 @@
   let autosaveTimer = 0
   $effect(() => {
     const _ = [
-      title,
-      description,
-      content,
-      titleId,
-      descriptionId,
-      contentId,
-      status,
-      coverImageUrl,
-      publishedAt,
+      title, description, content,
+      titleId, descriptionId, contentId,
+      status, coverImageUrl, publishedAt,
       selectedTagIds.join(),
-      JSON.stringify(glossaryEn),
-      JSON.stringify(glossaryId),
-      JSON.stringify(bibliographyEn),
-      JSON.stringify(bibliographyId),
+      JSON.stringify(glossaryEn), JSON.stringify(glossaryId),
+      JSON.stringify(bibliographyEn), JSON.stringify(bibliographyId),
     ]
     clearTimeout(autosaveTimer)
     autosaveTimer = window.setTimeout(() => save(true), 5000)
     return () => clearTimeout(autosaveTimer)
   })
 
-  async function save(silent = false) {
+  async function save(silent = false, toStatus?: 'draft' | 'published') {
     if (!title.trim()) {
       if (!silent) toastRef?.show('Title is required', 'error')
       return
     }
     saving = true
+    saveMsg = ''
+    const resolvedStatus = toStatus ?? status
     const payload: PostPayload = {
       title,
       slug,
       description,
       content,
-      titleId,
-      descriptionId,
-      contentId,
-      status,
+      titleId: titleId ?? '',
+      descriptionId: descriptionId ?? '',
+      contentId: contentId ?? '',
+      status: resolvedStatus,
       coverImageUrl: coverImageUrl || null,
       tagIds: selectedTagIds,
       publishedAt:
-        status === 'published' && publishedAt ? new Date(publishedAt).toISOString() : null,
+        resolvedStatus === 'published' && publishedAt
+          ? new Date(publishedAt).toISOString()
+          : null,
       glossaryEn,
       glossaryId,
       bibliographyEn,
@@ -131,9 +143,11 @@
         postId = created.id
         history.replaceState({}, '', `/posts/${created.id}`)
       }
+      if (toStatus) status = toStatus
       savedAt = new Date()
       if (!silent) toastRef?.show('Saved!', 'success')
     } catch (e) {
+      saveMsg = 'Save failed'
       toastRef?.show(`Save failed: ${e}`, 'error')
     } finally {
       saving = false
@@ -222,11 +236,7 @@
   // --- Image insertion ---
   function handleGallerySelect(url: string) {
     showGallery = false
-    if (galleryTarget === 'cover') {
-      coverImageUrl = url
-    } else {
-      insertAtCursor(`\n![](${url})\n`)
-    }
+    insertAtCursor(`\n![](${url})\n`)
   }
 
   function handleDrop(e: DragEvent) {
@@ -256,109 +266,6 @@
     }
   }
 
-  // --- Download as Markdown ---
-  function downloadMarkdown() {
-    const currentTitle = langTab === 'en' ? title : titleId
-    const currentDesc = langTab === 'en' ? description : descriptionId
-    const currentContent = langTab === 'en' ? content : contentId
-    const tagNames = allTags
-      .filter((t) => selectedTagIds.includes(t.id))
-      .map((t) => t.name)
-      .join(', ')
-
-    const fm = [
-      '---',
-      `title: "${currentTitle}"`,
-      `slug: "${slug}"`,
-      currentDesc ? `description: "${currentDesc}"` : '',
-      `status: ${status}`,
-      `language: ${langTab}`,
-      tagNames ? `tags: [${tagNames}]` : '',
-      '---',
-    ]
-      .filter(Boolean)
-      .join('\n')
-
-    const md = fm + '\n\n' + currentContent
-    const blob = new Blob([md], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${slug || 'post'}.md`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  // --- Glossary helpers ---
-  function addGlossEntry(lang: 'en' | 'id') {
-    const blank: GlossaryEntry = { key: '', term: '', definition: '' }
-    if (lang === 'en') glossaryEn = [...glossaryEn, blank]
-    else glossaryId = [...glossaryId, blank]
-  }
-  function removeGlossEntry(lang: 'en' | 'id', idx: number) {
-    if (lang === 'en') glossaryEn = glossaryEn.filter((_, i) => i !== idx)
-    else glossaryId = glossaryId.filter((_, i) => i !== idx)
-  }
-  function updateGlossEntry(
-    lang: 'en' | 'id',
-    idx: number,
-    field: keyof GlossaryEntry,
-    val: string,
-  ) {
-    if (lang === 'en') {
-      glossaryEn = glossaryEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
-    } else {
-      glossaryId = glossaryId.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
-    }
-  }
-
-  // --- Bibliography helpers ---
-  const BIB_TYPES: BibSourceType[] = [
-    'web',
-    'docs',
-    'journal',
-    'article',
-    'book',
-    'video',
-    'podcast',
-    'repo',
-    'other',
-  ]
-  function addBibEntry(lang: 'en' | 'id') {
-    const blank: BibliographyEntry = { key: '', text: '', sourceType: 'web' }
-    if (lang === 'en') bibliographyEn = [...bibliographyEn, blank]
-    else bibliographyId = [...bibliographyId, blank]
-  }
-  function removeBibEntry(lang: 'en' | 'id', idx: number) {
-    if (lang === 'en') bibliographyEn = bibliographyEn.filter((_, i) => i !== idx)
-    else bibliographyId = bibliographyId.filter((_, i) => i !== idx)
-  }
-  function updateBibEntry(
-    lang: 'en' | 'id',
-    idx: number,
-    field: keyof BibliographyEntry,
-    val: string,
-  ) {
-    if (lang === 'en') {
-      bibliographyEn = bibliographyEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
-    } else {
-      bibliographyId = bibliographyId.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
-    }
-  }
-
-  // --- Live preview ---
-  let previewHtml = $derived.by(() => {
-    try {
-      return parse(getContent(), { glossMap: new Map(), citeMap: new Map() }).html
-    } catch {
-      return ''
-    }
-  })
-
-  let savedAgoText = $derived(
-    savedAt ? `Saved ${Math.round((Date.now() - savedAt.getTime()) / 1000)}s ago` : '',
-  )
-
   // --- Keyboard shortcuts ---
   function handleKeydown(e: KeyboardEvent) {
     const ctrl = e.ctrlKey || e.metaKey
@@ -383,400 +290,646 @@
     }
   }
 
+  // --- Live preview ---
+  let previewHtml = $derived.by(() => {
+    try {
+      return parse(getContent(), { glossMap: new Map(), citeMap: new Map() }).html
+    } catch {
+      return ''
+    }
+  })
+
+  // --- Saved ago ---
+  let savedAgoText = $derived(
+    savedAt ? `Saved ${Math.round((Date.now() - savedAt.getTime()) / 1000)}s ago` : '',
+  )
+
+  // --- Word count ---
+  let wordCount = $derived(
+    getContent().trim() ? getContent().trim().split(/\s+/).length : 0,
+  )
+
+  // --- Heading outline ---
+  let headings = $derived(
+    [...getContent().matchAll(/^(#{1,6})\s+(.+)$/gm)].map((m) => ({
+      level: m[1].length,
+      text: m[2].trim(),
+      index: m.index ?? 0,
+    })),
+  )
+
+  function jumpToHeading(charIndex: number) {
+    const ta = textareaRef
+    if (!ta) return
+    ta.focus()
+    ta.setSelectionRange(charIndex, charIndex)
+    const linesBefore = getContent().slice(0, charIndex).split('\n').length - 1
+    const lineHeight = ta.scrollHeight / Math.max(getContent().split('\n').length, 1)
+    ta.scrollTop = linesBefore * lineHeight - ta.clientHeight / 3
+  }
+
+  // --- Glossary helpers ---
+  const BIB_TYPES: BibSourceType[] = ['web', 'docs', 'journal', 'article', 'book', 'video', 'podcast', 'repo', 'other']
+
+  function addGlossEntry(lang: 'en' | 'id') {
+    const blank: GlossaryEntry = { key: '', term: '', definition: '' }
+    if (lang === 'en') glossaryEn = [...glossaryEn, blank]
+    else glossaryId = [...glossaryId, blank]
+  }
+  function removeGlossEntry(lang: 'en' | 'id', idx: number) {
+    if (lang === 'en') glossaryEn = glossaryEn.filter((_, i) => i !== idx)
+    else glossaryId = glossaryId.filter((_, i) => i !== idx)
+  }
+  function updateGlossEntry(lang: 'en' | 'id', idx: number, field: keyof GlossaryEntry, val: string) {
+    if (lang === 'en') glossaryEn = glossaryEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
+    else glossaryId = glossaryId.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
+  }
+
+  function addBibEntry(lang: 'en' | 'id') {
+    const blank: BibliographyEntry = { key: '', text: '', sourceType: 'web' }
+    if (lang === 'en') bibliographyEn = [...bibliographyEn, blank]
+    else bibliographyId = [...bibliographyId, blank]
+  }
+  function removeBibEntry(lang: 'en' | 'id', idx: number) {
+    if (lang === 'en') bibliographyEn = bibliographyEn.filter((_, i) => i !== idx)
+    else bibliographyId = bibliographyId.filter((_, i) => i !== idx)
+  }
+  function updateBibEntry(lang: 'en' | 'id', idx: number, field: keyof BibliographyEntry, val: string) {
+    if (lang === 'en') bibliographyEn = bibliographyEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
+    else bibliographyId = bibliographyId.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
+  }
+
+  // --- Raw (markdown) mode for glossary / bibliography ---
+  // Format: entries separated by blank lines
+  // Glossary:  "key :: Term\ndefinition…"
+  // Bib:       "key [sourceType]\ncitation text…"
+
+  let rawGlossMode = $state(false)
+  let rawBibMode = $state(false)
+  let rawGlossText = $state('')
+  let rawBibText = $state('')
+
+  function glossToRaw(entries: GlossaryEntry[]): string {
+    return entries.map(e => `${e.key} :: ${e.term}\n${e.definition}`).join('\n\n')
+  }
+  function rawToGloss(raw: string): GlossaryEntry[] {
+    return raw.split(/\n{2,}/).flatMap(block => {
+      const trimmed = block.trim()
+      if (!trimmed) return []
+      const lines = trimmed.split('\n')
+      const first = lines[0] ?? ''
+      const sep = first.indexOf(' :: ')
+      const key = sep >= 0 ? first.slice(0, sep).trim() : first.trim()
+      const term = sep >= 0 ? first.slice(sep + 4).trim() : ''
+      const definition = lines.slice(1).join('\n').trim()
+      return [{ key, term, definition }]
+    })
+  }
+
+  function bibToRaw(entries: BibliographyEntry[]): string {
+    return entries.map(e => `${e.key} [${e.sourceType}]\n${e.text}`).join('\n\n')
+  }
+  function rawToBib(raw: string): BibliographyEntry[] {
+    return raw.split(/\n{2,}/).flatMap(block => {
+      const trimmed = block.trim()
+      if (!trimmed) return []
+      const lines = trimmed.split('\n')
+      const first = lines[0] ?? ''
+      const m = first.match(/^(.+?)\s+\[(\w+)\]$/)
+      const key = m ? m[1].trim() : first.trim()
+      const sourceType = (m ? m[2] : 'web') as BibSourceType
+      const text = lines.slice(1).join('\n').trim()
+      return [{ key, text, sourceType }]
+    })
+  }
+
+  function toggleGlossRaw() {
+    if (!rawGlossMode) {
+      const entries = langTab === 'en' ? glossaryEn : glossaryId
+      rawGlossText = glossToRaw(entries)
+    } else {
+      const parsed = rawToGloss(rawGlossText)
+      if (langTab === 'en') glossaryEn = parsed
+      else glossaryId = parsed
+    }
+    rawGlossMode = !rawGlossMode
+  }
+
+  function toggleBibRaw() {
+    if (!rawBibMode) {
+      const entries = langTab === 'en' ? bibliographyEn : bibliographyId
+      rawBibText = bibToRaw(entries)
+    } else {
+      const parsed = rawToBib(rawBibText)
+      if (langTab === 'en') bibliographyEn = parsed
+      else bibliographyId = parsed
+    }
+    rawBibMode = !rawBibMode
+  }
+
+  // Reset raw mode when switching lang tabs
+  $effect(() => {
+    const _lang = langTab
+    rawGlossMode = false
+    rawBibMode = false
+  })
+
   const previewUrl = $derived(
     postId ? `${import.meta.env.VITE_SITE_URL ?? 'http://localhost:4321'}/blog/${slug}` : null,
   )
+
+  const glossaryCount = $derived((langTab === 'id' ? glossaryId : glossaryEn).length)
+  const bibliographyCount = $derived((langTab === 'id' ? bibliographyId : bibliographyEn).length)
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
-
 <Toast bind:this={toastRef} />
 <ImageGallery open={showGallery} onselect={handleGallerySelect} onclose={() => (showGallery = false)} />
+<ImageGallery open={showCoverGallery} onselect={(url) => { coverImageUrl = url; showCoverGallery = false }} onclose={() => (showCoverGallery = false)} />
 
-<div class="flex h-screen flex-col overflow-hidden bg-white dark:bg-[#111]">
-  <!-- Top bar -->
-  <div
-    class="flex items-center justify-between border-b-2 border-black bg-white px-4 py-2 dark:border-white dark:bg-[#111]"
-  >
-    <div class="flex items-center gap-4">
-      <a
-        href="/"
-        class="text-xs font-bold uppercase tracking-widest hover:underline dark:text-white"
-        >← Posts</a
-      >
-      <span class="text-xs text-black/40 dark:text-white/40">{savedAgoText}</span>
+<div class="flex h-screen flex-col overflow-hidden bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
+
+  <!-- Header -->
+  <header class="flex h-14 shrink-0 items-center gap-3 border-b border-black/10 px-4 dark:border-white/10">
+    <a
+      href="/"
+      class="shrink-0 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+      aria-label="Back to posts"
+    >
+      <ArrowLeft size={15} />
+    </a>
+
+    <!-- Language tabs -->
+    <div class="flex shrink-0 gap-0.5 border border-black/10 dark:border-white/10">
+      {#each (['en', 'id'] as const) as l}
+        <button
+          onclick={() => (langTab = l)}
+          class={[
+            'px-2.5 py-1 font-mono text-[9px] tracking-widest uppercase transition-colors',
+            langTab === l
+              ? 'bg-black text-white dark:bg-white dark:text-black'
+              : 'text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white',
+          ].join(' ')}
+        >
+          {l}
+        </button>
+      {/each}
     </div>
-    <div class="flex items-center gap-2">
+
+    <!-- Title input -->
+    <div class="flex min-w-0 flex-1 items-center gap-2.5">
+      <input
+        value={langTab === 'id' ? titleId : title}
+        oninput={(e) =>
+          langTab === 'id'
+            ? (titleId = (e.target as HTMLInputElement).value)
+            : (title = (e.target as HTMLInputElement).value)}
+        placeholder={langTab === 'id' ? 'Judul tulisan... (ID)' : 'Post title...'}
+        class="min-w-0 flex-1 border-none bg-transparent text-base font-black tracking-tight text-black uppercase placeholder-black/20 outline-none dark:text-white dark:placeholder-white/20"
+      />
+      <!-- Status badge -->
+      <span
+        class={[
+          'shrink-0 border px-1.5 py-0.5 font-mono text-[9px] tracking-widest uppercase',
+          status === 'published'
+            ? 'border-green-500/40 bg-green-500/10 text-green-600 dark:text-green-400'
+            : 'border-black/15 text-black/30 dark:border-white/15 dark:text-white/30',
+        ].join(' ')}
+      >
+        {status}
+      </span>
+    </div>
+
+    <!-- Right actions -->
+    <div class="flex shrink-0 items-center gap-2">
+      {#if saveMsg}
+        <span class="font-mono text-[10px] tracking-widest text-red-500 uppercase">{saveMsg}</span>
+      {:else if savedAgoText}
+        <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">{savedAgoText}</span>
+      {/if}
+
       {#if previewUrl}
         <a
           href={previewUrl}
           target="_blank"
-          class="border border-black px-3 py-1.5 text-xs font-bold uppercase tracking-widest hover:bg-black/5 dark:border-white dark:text-white dark:hover:bg-white/10"
-          >Preview</a
+          class="flex items-center gap-1.5 border border-black/20 px-3 py-1.5 text-xs font-bold tracking-wide text-black/60 uppercase transition-colors hover:border-black/40 hover:text-black dark:border-white/20 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
         >
+          Preview ↗
+        </a>
       {/if}
-      <button
-        onclick={() => (showMeta = !showMeta)}
-        class="border border-black px-3 py-1.5 text-xs font-bold uppercase tracking-widest hover:bg-black/5 dark:border-white dark:text-white dark:hover:bg-white/10"
-      >
-        Meta
-      </button>
+
+      {#if status === 'published'}
+        <button
+          onclick={() => save(false, 'draft')}
+          disabled={saving}
+          class="flex items-center gap-1.5 border border-black/20 px-3 py-1.5 text-xs font-bold tracking-wide text-black/60 uppercase transition-colors hover:border-black/40 hover:text-black disabled:opacity-50 dark:border-white/20 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+        >
+          <EyeOff size={12} />
+          Unpublish
+        </button>
+      {:else}
+        <button
+          onclick={() => save(false, 'published')}
+          disabled={saving}
+          class="flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+        >
+          <Globe size={12} />
+          Publish
+        </button>
+      {/if}
+
       <button
         onclick={() => save()}
         disabled={saving}
-        class="border-2 border-black bg-[#ffe600] px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[2px_2px_0px_#000] hover:bg-black hover:text-[#ffe600] disabled:opacity-50 dark:shadow-[2px_2px_0px_#fff]"
+        class="flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
       >
+        <Save size={12} />
         {saving ? 'Saving…' : 'Save'}
       </button>
+
+      <button
+        onclick={toggleTheme}
+        class="p-1.5 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+        title="Toggle theme"
+      >
+        {#if dark}
+          <Sun size={15} />
+        {:else}
+          <Moon size={15} />
+        {/if}
+      </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Meta drawer -->
-  {#if showMeta}
-    <div
-      class="border-b-2 border-black bg-[#f9f9f9] px-6 py-5 dark:border-white dark:bg-[#1a1a1a]"
-    >
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        <div>
-          <label class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-            >Slug</label
-          >
-          <input
-            bind:value={slug}
-            class="border-2 border-black bg-white px-2 py-1.5 text-sm dark:border-white dark:bg-[#111] dark:text-white"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-            >Status</label
-          >
-          <select
-            bind:value={status}
-            class="border-2 border-black bg-white px-2 py-1.5 text-sm dark:border-white dark:bg-[#111] dark:text-white"
-          >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-          </select>
-        </div>
-        <div>
-          <label class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-            >Published At</label
-          >
-          <input
-            type="date"
-            bind:value={publishedAt}
-            class="border-2 border-black bg-white px-2 py-1.5 text-sm dark:border-white dark:bg-[#111] dark:text-white"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-            >Cover Image</label
-          >
-          <div class="flex gap-1">
-            <input
-              bind:value={coverImageUrl}
-              placeholder="URL"
-              class="border-2 border-black bg-white px-2 py-1.5 text-xs dark:border-white dark:bg-[#111] dark:text-white"
-            />
-            <button
-              onclick={() => {
-                galleryTarget = 'cover'
-                showGallery = true
-              }}
-              class="shrink-0 border-2 border-black bg-white px-2 py-1.5 text-xs font-bold hover:bg-black/5 dark:border-white dark:bg-[#111] dark:text-white dark:hover:bg-white/10"
-              >Pick</button
-            >
-          </div>
-        </div>
-      </div>
-
-      <!-- Tags -->
-      <div class="mt-4">
-        <label class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-          >Tags</label
-        >
-        <div class="flex flex-wrap gap-2">
-          {#each allTags as tag (tag.id)}
-            <button
-              onclick={() => toggleTag(tag.id)}
-              class="border-2 border-black px-2 py-0.5 text-[11px] font-bold uppercase tracking-widest transition-colors {selectedTagIds.includes(tag.id)
-                ? 'bg-black text-white dark:bg-white dark:text-black'
-                : 'bg-white hover:bg-black/5 dark:border-white dark:bg-[#111] dark:text-white dark:hover:bg-white/10'}"
-            >
-              {tag.name}
-            </button>
-          {/each}
-          <div class="flex gap-1">
-            <input
-              bind:value={newTagName}
-              placeholder="New tag…"
-              class="w-28 border-2 border-black bg-white px-2 py-0.5 text-[11px] dark:border-white dark:bg-[#111] dark:text-white"
-              onkeydown={(e) => e.key === 'Enter' && addTag()}
-            />
-            <button
-              onclick={addTag}
-              class="border-2 border-black bg-white px-2 py-0.5 text-[11px] font-bold hover:bg-black/5 dark:border-white dark:bg-[#111] dark:text-white dark:hover:bg-white/10"
-              >+</button
-            >
-          </div>
-        </div>
-      </div>
-    </div>
-  {/if}
-
-  <!-- Lang tabs + content tabs -->
-  <div
-    class="flex items-center gap-0 border-b-2 border-black bg-white dark:border-white dark:bg-[#111]"
-  >
-    <div class="flex border-r-2 border-black dark:border-white">
-      {#each (['en', 'id'] as const) as lang}
-        <button
-          onclick={() => (langTab = lang)}
-          class="px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-colors {langTab === lang
+  <!-- Content tabs -->
+  <div class="flex border-b border-black/10 dark:border-white/10">
+    {#each (['content', 'glossary', 'bibliography'] as const) as tab}
+      <button
+        onclick={() => (activeTab = tab)}
+        class={[
+          'px-4 py-2 font-mono text-[11px] tracking-widest uppercase transition-colors',
+          activeTab === tab
             ? 'bg-black text-white dark:bg-white dark:text-black'
-            : 'hover:bg-black/5 dark:text-white dark:hover:bg-white/10'}"
-        >
-          {lang.toUpperCase()}
-        </button>
-      {/each}
-    </div>
-    <div class="flex">
-      {#each (['content', 'glossary', 'bibliography'] as const) as tab}
-        <button
-          onclick={() => (activeTab = tab)}
-          class="px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors {activeTab === tab
-            ? 'border-b-2 border-black font-black dark:border-white dark:text-white'
-            : 'text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white'}"
-        >
-          {tab}
-        </button>
-      {/each}
-    </div>
+            : 'text-black/40 hover:bg-black/5 hover:text-black dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white',
+        ].join(' ')}
+      >
+        {tab === 'content' ? 'Content' : tab === 'glossary' ? `Glossary (${glossaryCount})` : `Bibliography (${bibliographyCount})`}
+      </button>
+    {/each}
   </div>
+
+  <!-- Toolbar (content tab only) -->
+  {#if activeTab === 'content'}
+    <Toolbar
+      {viewMode}
+      onViewMode={(m) => (viewMode = m)}
+      onFormat={wrapSelection}
+      onLinePrefix={insertLinePrefix}
+      onInsert={insertAtCursor}
+      onGallery={() => { galleryTarget = 'content'; showGallery = true }}
+      onMetaToggle={() => (showMeta = !showMeta)}
+      metaOpen={showMeta}
+    />
+  {/if}
 
   <!-- Main area -->
   <div class="flex min-h-0 flex-1">
-    {#if activeTab === 'content'}
-      <div class="flex w-full flex-col">
-        <!-- Formatting toolbar -->
-        <Toolbar
-          {viewMode}
-          onViewMode={(m) => (viewMode = m)}
-          onFormat={wrapSelection}
-          onLinePrefix={insertLinePrefix}
-          onInsert={insertAtCursor}
-          onGallery={() => {
-            galleryTarget = 'content'
-            showGallery = true
-          }}
-          onDownload={downloadMarkdown}
-        />
+    <!-- Content pane -->
+    <div class="flex min-h-0 flex-1 flex-col">
 
-        <!-- Title + Description -->
-        <div
-          class="border-b-2 border-black bg-white px-4 py-3 dark:border-white dark:bg-[#111]"
-        >
-          <input
-            value={langTab === 'en' ? title : titleId}
-            oninput={(e) => {
-              if (langTab === 'en') title = (e.target as HTMLInputElement).value
-              else titleId = (e.target as HTMLInputElement).value
-            }}
-            placeholder={langTab === 'en' ? 'Title (EN)' : 'Title (ID)'}
-            class="w-full border-none bg-transparent text-2xl font-black outline-none placeholder:text-black/20 dark:text-white dark:placeholder:text-white/20"
-          />
-          <input
-            value={langTab === 'en' ? description : descriptionId}
-            oninput={(e) => {
-              if (langTab === 'en') description = (e.target as HTMLInputElement).value
-              else descriptionId = (e.target as HTMLInputElement).value
-            }}
-            placeholder={langTab === 'en' ? 'Description (EN)' : 'Description (ID)'}
-            class="mt-1 w-full border-none bg-transparent text-sm text-black/60 outline-none placeholder:text-black/20 dark:text-white/60 dark:placeholder:text-white/20"
-          />
-        </div>
-
-        <!-- Editor / Preview split -->
-        <div class="flex min-h-0 flex-1">
+      {#if activeTab === 'content'}
+        <div class="flex min-h-0 flex-1 divide-x divide-black/10 dark:divide-white/10">
           {#if viewMode !== 'preview'}
-            <textarea
-              bind:this={textareaRef}
-              value={langTab === 'en' ? content : contentId}
-              oninput={(e) => setContent((e.target as HTMLTextAreaElement).value)}
-              ondrop={handleDrop}
-              onpaste={handlePaste}
-              placeholder="Write markdown here… (drag/paste images to upload)"
-              spellcheck="false"
-              class="min-h-0 resize-none border-none bg-white p-4 font-mono text-sm leading-relaxed outline-none dark:bg-[#0d0d0d] dark:text-white dark:caret-white {viewMode === 'split'
-                ? 'w-1/2 border-r-2 border-black dark:border-white'
-                : 'flex-1'}"
-            ></textarea>
+            <div class={viewMode === 'split' ? 'flex min-h-0 w-1/2 flex-col' : 'flex min-h-0 w-full flex-col'}>
+              <textarea
+                bind:this={textareaRef}
+                value={langTab === 'en' ? content : contentId}
+                oninput={(e) => setContent((e.target as HTMLTextAreaElement).value)}
+                ondrop={handleDrop}
+                onpaste={handlePaste}
+                placeholder={langTab === 'id' ? 'Mulai menulis dalam markdown... (ID)' : 'Start writing in markdown...'}
+                spellcheck="false"
+                class="editor-textarea editor-pane h-full w-full resize-none border-none bg-transparent p-4 font-mono text-sm leading-relaxed text-black outline-none dark:text-white"
+              ></textarea>
+            </div>
           {/if}
           {#if viewMode !== 'editor'}
-            <div
-              class="prose-preview flex-1 overflow-y-auto bg-white p-6 dark:bg-[#0d0d0d] dark:text-white"
-            >
+            <div class={viewMode === 'split' ? 'prose-preview min-h-0 w-1/2 overflow-y-auto p-6' : 'prose-preview min-h-0 w-full overflow-y-auto p-6'}>
               {@html previewHtml}
             </div>
           {/if}
         </div>
-      </div>
 
-    {:else if activeTab === 'glossary'}
-      <div class="flex-1 overflow-y-auto bg-[#f5f5f5] p-6 dark:bg-[#0a0a0a]">
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-sm font-black uppercase tracking-widest dark:text-white">
-            Glossary — {langTab.toUpperCase()}
-          </h3>
-          <button
-            onclick={() => addGlossEntry(langTab)}
-            class="border-2 border-black bg-[#ffe600] px-3 py-1 text-xs font-black uppercase tracking-widest shadow-[2px_2px_0px_#000] hover:bg-black hover:text-[#ffe600] dark:shadow-[2px_2px_0px_#fff]"
-          >
-            + Add Entry
-          </button>
-        </div>
-        {#each langTab === 'en' ? glossaryEn : glossaryId as entry, idx}
-          <div
-            class="mb-4 border-2 border-black bg-white p-4 dark:border-white dark:bg-[#111]"
-          >
-            <div class="mb-2 flex items-center justify-between">
-              <span class="text-xs font-bold text-black/40 dark:text-white/40">Entry {idx + 1}</span
-              >
-              <button
-                onclick={() => removeGlossEntry(langTab, idx)}
-                class="text-xs font-bold text-red-600 hover:underline">Remove</button
-              >
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-                  >Key</label
-                >
-                <input
-                  value={entry.key}
-                  oninput={(e) =>
-                    updateGlossEntry(langTab, idx, 'key', (e.target as HTMLInputElement).value)}
-                  class="border-2 border-black px-2 py-1.5 text-sm dark:border-white"
-                />
+      {:else if activeTab === 'glossary'}
+        <div class="flex min-h-0 w-full flex-col">
+          <!-- Glossary header -->
+          <div class="flex shrink-0 items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
+            <h3 class="font-mono text-[11px] tracking-widest uppercase dark:text-white">
+              Glossary — {langTab.toUpperCase()}
+            </h3>
+            <div class="flex items-center gap-2">
+              <!-- Raw/Form toggle -->
+              <div class="flex border border-black/10 dark:border-white/10">
+                <button
+                  type="button"
+                  onclick={rawGlossMode ? toggleGlossRaw : undefined}
+                  class={['px-2.5 py-1 font-mono text-[9px] tracking-widest uppercase transition-colors', !rawGlossMode ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white'].join(' ')}
+                >Form</button>
+                <button
+                  type="button"
+                  onclick={!rawGlossMode ? toggleGlossRaw : undefined}
+                  class={['px-2.5 py-1 font-mono text-[9px] tracking-widest uppercase transition-colors', rawGlossMode ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white'].join(' ')}
+                >Raw</button>
               </div>
-              <div>
-                <label
-                  class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-                  >Term</label
-                >
-                <input
-                  value={entry.term}
-                  oninput={(e) =>
-                    updateGlossEntry(langTab, idx, 'term', (e.target as HTMLInputElement).value)}
-                  class="border-2 border-black px-2 py-1.5 text-sm dark:border-white"
-                />
-              </div>
-            </div>
-            <div class="mt-3">
-              <label
-                class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-                >Definition</label
-              >
-              <textarea
-                value={entry.definition}
-                oninput={(e) =>
-                  updateGlossEntry(
-                    langTab,
-                    idx,
-                    'definition',
-                    (e.target as HTMLTextAreaElement).value,
-                  )}
-                rows="3"
-                class="border-2 border-black px-2 py-1.5 text-sm dark:border-white"
-              ></textarea>
+              {#if !rawGlossMode}
+                <button
+                  onclick={() => addGlossEntry(langTab)}
+                  class="bg-black px-3 py-1 text-xs font-bold tracking-wide text-white uppercase hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                >+ Add Entry</button>
+              {/if}
             </div>
           </div>
-        {/each}
-        {#if (langTab === 'en' ? glossaryEn : glossaryId).length === 0}
-          <p class="text-sm font-bold text-black/40 dark:text-white/40">No glossary entries.</p>
-        {/if}
-      </div>
 
-    {:else}
-      <div class="flex-1 overflow-y-auto bg-[#f5f5f5] p-6 dark:bg-[#0a0a0a]">
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-sm font-black uppercase tracking-widest dark:text-white">
-            Bibliography — {langTab.toUpperCase()}
-          </h3>
-          <button
-            onclick={() => addBibEntry(langTab)}
-            class="border-2 border-black bg-[#ffe600] px-3 py-1 text-xs font-black uppercase tracking-widest shadow-[2px_2px_0px_#000] hover:bg-black hover:text-[#ffe600] dark:shadow-[2px_2px_0px_#fff]"
-          >
-            + Add Entry
-          </button>
-        </div>
-        {#each langTab === 'en' ? bibliographyEn : bibliographyId as entry, idx}
-          <div
-            class="mb-4 border-2 border-black bg-white p-4 dark:border-white dark:bg-[#111]"
-          >
-            <div class="mb-2 flex items-center justify-between">
-              <span class="text-xs font-bold text-black/40 dark:text-white/40">Entry {idx + 1}</span
-              >
-              <button
-                onclick={() => removeBibEntry(langTab, idx)}
-                class="text-xs font-bold text-red-600 hover:underline">Remove</button
-              >
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-                  >Key</label
-                >
-                <input
-                  value={entry.key}
-                  oninput={(e) =>
-                    updateBibEntry(langTab, idx, 'key', (e.target as HTMLInputElement).value)}
-                  class="border-2 border-black px-2 py-1.5 text-sm dark:border-white"
-                />
-              </div>
-              <div>
-                <label
-                  class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-                  >Source Type</label
-                >
-                <select
-                  value={entry.sourceType}
-                  onchange={(e) =>
-                    updateBibEntry(
-                      langTab,
-                      idx,
-                      'sourceType',
-                      (e.target as HTMLSelectElement).value,
-                    )}
-                  class="border-2 border-black px-2 py-1.5 text-sm dark:border-white"
-                >
-                  {#each BIB_TYPES as t}
-                    <option value={t}>{t}</option>
-                  {/each}
-                </select>
-              </div>
-            </div>
-            <div class="mt-3">
-              <label
-                class="mb-1 block text-[10px] font-black uppercase tracking-widest dark:text-white"
-                >Citation Text</label
-              >
+          {#if rawGlossMode}
+            <!-- Raw markdown textarea -->
+            <div class="flex min-h-0 flex-1 flex-col p-3">
+              <p class="mb-2 shrink-0 font-mono text-[10px] text-black/30 dark:text-white/30">
+                Each entry: <code class="bg-black/5 px-1 dark:bg-white/5">key :: Term Name</code> on first line, definition below. Blank line between entries. Markdown supported.
+              </p>
               <textarea
-                value={entry.text}
-                oninput={(e) =>
-                  updateBibEntry(langTab, idx, 'text', (e.target as HTMLTextAreaElement).value)}
-                rows="3"
-                class="border-2 border-black px-2 py-1.5 text-sm dark:border-white"
+                bind:value={rawGlossText}
+                spellcheck="false"
+                placeholder={"my-term :: My Term Name\nDefinition supporting **markdown**.\n\nanother-term :: Another Term\nAnother definition."}
+                class="editor-textarea min-h-0 flex-1 resize-none border border-black/10 bg-transparent p-3 font-mono text-sm leading-relaxed text-black outline-none focus:border-black/30 dark:border-white/10 dark:text-white dark:focus:border-white/30"
               ></textarea>
+              <button
+                type="button"
+                onclick={toggleGlossRaw}
+                class="mt-2 shrink-0 self-start bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+              >Apply & switch to Form</button>
+            </div>
+          {:else}
+            <!-- Form view -->
+            <div class="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+              {#each langTab === 'en' ? glossaryEn : glossaryId as entry, idx}
+                <div class="mb-4 border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-[#111]">
+                  <div class="mb-2 flex items-center justify-between">
+                    <span class="font-mono text-[10px] text-black/40 dark:text-white/40">Entry {idx + 1}</span>
+                    <button onclick={() => removeGlossEntry(langTab, idx)} class="font-mono text-[10px] text-red-600 hover:underline">Remove</button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <span class="mb-1 block font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Key</span>
+                      <input value={entry.key} oninput={(e) => updateGlossEntry(langTab, idx, 'key', (e.target as HTMLInputElement).value)} class="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40" />
+                    </div>
+                    <div>
+                      <span class="mb-1 block font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Term</span>
+                      <input value={entry.term} oninput={(e) => updateGlossEntry(langTab, idx, 'term', (e.target as HTMLInputElement).value)} class="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40" />
+                    </div>
+                  </div>
+                  <div class="mt-3">
+                    <span class="mb-1 block font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Definition</span>
+                    <textarea
+                      value={entry.definition}
+                      oninput={(e) => updateGlossEntry(langTab, idx, 'definition', (e.target as HTMLTextAreaElement).value)}
+                      rows="3"
+                      class="w-full resize-none border border-black/10 bg-transparent p-2 font-mono text-xs text-black/70 outline-none focus:border-black/30 dark:border-white/10 dark:text-white/70 dark:focus:border-white/30"
+                    ></textarea>
+                  </div>
+                </div>
+              {/each}
+              {#if (langTab === 'en' ? glossaryEn : glossaryId).length === 0}
+                <p class="font-mono text-xs text-black/40 dark:text-white/40">No glossary entries. Add one or switch to Raw mode.</p>
+              {/if}
+            </div>
+          {/if}
+        </div>
+
+      {:else}
+        <div class="flex min-h-0 w-full flex-col">
+          <!-- Bibliography header -->
+          <div class="flex shrink-0 items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
+            <h3 class="font-mono text-[11px] tracking-widest uppercase dark:text-white">
+              Bibliography — {langTab.toUpperCase()}
+            </h3>
+            <div class="flex items-center gap-2">
+              <div class="flex border border-black/10 dark:border-white/10">
+                <button
+                  type="button"
+                  onclick={rawBibMode ? toggleBibRaw : undefined}
+                  class={['px-2.5 py-1 font-mono text-[9px] tracking-widest uppercase transition-colors', !rawBibMode ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white'].join(' ')}
+                >Form</button>
+                <button
+                  type="button"
+                  onclick={!rawBibMode ? toggleBibRaw : undefined}
+                  class={['px-2.5 py-1 font-mono text-[9px] tracking-widest uppercase transition-colors', rawBibMode ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white'].join(' ')}
+                >Raw</button>
+              </div>
+              {#if !rawBibMode}
+                <button
+                  onclick={() => addBibEntry(langTab)}
+                  class="bg-black px-3 py-1 text-xs font-bold tracking-wide text-white uppercase hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                >+ Add Entry</button>
+              {/if}
             </div>
           </div>
-        {/each}
-        {#if (langTab === 'en' ? bibliographyEn : bibliographyId).length === 0}
-          <p class="text-sm font-bold text-black/40 dark:text-white/40">No bibliography entries.</p>
-        {/if}
+
+          {#if rawBibMode}
+            <div class="flex min-h-0 flex-1 flex-col p-3">
+              <p class="mb-2 shrink-0 font-mono text-[10px] text-black/30 dark:text-white/30">
+                Each entry: <code class="bg-black/5 px-1 dark:bg-white/5">key [sourceType]</code> on first line, citation text below. Blank line between entries. Types: {BIB_TYPES.join(', ')}.
+              </p>
+              <textarea
+                bind:value={rawBibText}
+                spellcheck="false"
+                placeholder={"my-source [web]\nCitation text with **markdown** and a [link](url).\n\nanother-ref [book]\nAnother citation."}
+                class="editor-textarea min-h-0 flex-1 resize-none border border-black/10 bg-transparent p-3 font-mono text-sm leading-relaxed text-black outline-none focus:border-black/30 dark:border-white/10 dark:text-white dark:focus:border-white/30"
+              ></textarea>
+              <button
+                type="button"
+                onclick={toggleBibRaw}
+                class="mt-2 shrink-0 self-start bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+              >Apply & switch to Form</button>
+            </div>
+          {:else}
+            <div class="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+              {#each langTab === 'en' ? bibliographyEn : bibliographyId as entry, idx}
+                <div class="mb-4 border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-[#111]">
+                  <div class="mb-2 flex items-center justify-between">
+                    <span class="font-mono text-[10px] text-black/40 dark:text-white/40">Entry {idx + 1}</span>
+                    <button onclick={() => removeBibEntry(langTab, idx)} class="font-mono text-[10px] text-red-600 hover:underline">Remove</button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <span class="mb-1 block font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Key</span>
+                      <input value={entry.key} oninput={(e) => updateBibEntry(langTab, idx, 'key', (e.target as HTMLInputElement).value)} class="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40" />
+                    </div>
+                    <div>
+                      <span class="mb-1 block font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Source Type</span>
+                      <select
+                        value={entry.sourceType}
+                        onchange={(e) => updateBibEntry(langTab, idx, 'sourceType', (e.target as HTMLSelectElement).value)}
+                        class="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40"
+                      >
+                        {#each BIB_TYPES as t}
+                          <option value={t}>{t}</option>
+                        {/each}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="mt-3">
+                    <span class="mb-1 block font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Citation Text</span>
+                    <textarea
+                      value={entry.text}
+                      oninput={(e) => updateBibEntry(langTab, idx, 'text', (e.target as HTMLTextAreaElement).value)}
+                      rows="3"
+                      class="w-full resize-none border border-black/10 bg-transparent p-2 font-mono text-xs text-black/70 outline-none focus:border-black/30 dark:border-white/10 dark:text-white/70 dark:focus:border-white/30"
+                    ></textarea>
+                  </div>
+                </div>
+              {/each}
+              {#if (langTab === 'en' ? bibliographyEn : bibliographyId).length === 0}
+                <p class="font-mono text-xs text-black/40 dark:text-white/40">No bibliography entries. Add one or switch to Raw mode.</p>
+              {/if}
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </div>
+
+    <!-- Meta sidebar -->
+    {#if showMeta}
+      <div class="flex w-64 shrink-0 flex-col overflow-y-auto border-l border-black/10 bg-[#f5f5f5] dark:border-white/10 dark:bg-[#0d0d0d]">
+        <div class="flex flex-col gap-5 p-4">
+
+          <!-- Slug -->
+          <div class="flex flex-col gap-1.5">
+            <label for="meta-slug" class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Slug</label>
+            <input
+              id="meta-slug"
+              bind:value={slug}
+              oninput={() => (slugTouched = true)}
+              class="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40"
+            />
+          </div>
+
+          <!-- Published at -->
+          <div class="flex flex-col gap-1.5">
+            <label for="meta-date" class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Published at</label>
+            <input
+              id="meta-date"
+              type="date"
+              bind:value={publishedAt}
+              class="w-full border-b border-black/15 bg-transparent pb-1 font-mono text-xs text-black/70 outline-none focus:border-black/40 dark:border-white/15 dark:text-white/70 dark:focus:border-white/40"
+            />
+          </div>
+
+          <!-- Description -->
+          <div class="flex flex-col gap-1.5">
+            <label for="meta-desc" class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">
+              Description {langTab === 'id' ? '(ID)' : '(EN)'}
+            </label>
+            <textarea
+              id="meta-desc"
+              value={langTab === 'id' ? descriptionId : description}
+              oninput={(e) =>
+                langTab === 'id'
+                  ? (descriptionId = (e.target as HTMLTextAreaElement).value)
+                  : (description = (e.target as HTMLTextAreaElement).value)}
+              placeholder={langTab === 'id' ? 'Deskripsi singkat... (ID)' : 'Short description...'}
+              rows={3}
+              class="w-full resize-none border border-black/10 bg-transparent p-2 font-mono text-xs text-black/70 placeholder-black/20 outline-none focus:border-black/30 dark:border-white/10 dark:text-white/70 dark:placeholder-white/20 dark:focus:border-white/30"
+            ></textarea>
+          </div>
+
+          <!-- Cover image -->
+          <div class="flex flex-col gap-1.5">
+            <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Cover image</span>
+            {#if coverImageUrl}
+              <div class="group relative aspect-video w-full overflow-hidden border border-black/10 dark:border-white/10">
+                <img src={coverImageUrl} alt="Cover" class="h-full w-full object-cover" />
+                <div class="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition-all group-hover:bg-black/50 group-hover:opacity-100">
+                  <button type="button" onclick={() => (showCoverGallery = true)} title="Change cover" class="bg-white/10 p-1.5 text-white transition-colors hover:bg-white/20">
+                    <RefreshCw size={14} />
+                  </button>
+                  <button type="button" onclick={() => (coverImageUrl = '')} title="Remove cover" class="bg-white/10 p-1.5 text-white transition-colors hover:bg-red-500/60">
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <button
+                type="button"
+                onclick={() => (showCoverGallery = true)}
+                class="flex aspect-video w-full flex-col items-center justify-center gap-1.5 border border-dashed border-black/20 text-black/30 transition-colors hover:border-black/40 hover:text-black/50 dark:border-white/20 dark:text-white/30 dark:hover:border-white/40 dark:hover:text-white/50"
+              >
+                <ImageIcon size={18} />
+                <span class="font-mono text-[10px] tracking-widest uppercase">Select cover</span>
+              </button>
+            {/if}
+          </div>
+
+          <!-- Tags -->
+          <div class="flex flex-col gap-2">
+            <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Tags</span>
+            <div class="flex flex-wrap gap-1.5">
+              {#each allTags as tag (tag.id)}
+                <button
+                  type="button"
+                  onclick={() => toggleTag(tag.id)}
+                  class={[
+                    'border px-2 py-0.5 font-mono text-[10px] tracking-wide uppercase transition-colors',
+                    selectedTagIds.includes(tag.id)
+                      ? 'border-black bg-black/10 text-black dark:border-white dark:bg-white/10 dark:text-white'
+                      : 'border-black/20 text-black/30 hover:border-black/40 dark:border-white/20 dark:text-white/30 dark:hover:border-white/40',
+                  ].join(' ')}
+                >
+                  #{tag.name}
+                </button>
+              {/each}
+            </div>
+            <input
+              bind:value={newTagName}
+              onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+              placeholder="+ new tag"
+              class="w-full border-b border-black/10 bg-transparent pb-0.5 font-mono text-[10px] tracking-wide text-black/40 uppercase placeholder-black/20 outline-none focus:border-black/30 dark:border-white/10 dark:text-white/40 dark:placeholder-white/20 dark:focus:border-white/30"
+            />
+          </div>
+
+          <!-- Heading outline -->
+          {#if headings.length > 0}
+            <div class="flex flex-col gap-1.5">
+              <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Outline</span>
+              <div class="flex flex-col gap-0.5">
+                {#each headings as h, i (i)}
+                  <button
+                    type="button"
+                    onclick={() => jumpToHeading(h.index)}
+                    style="padding-left: {(h.level - 1) * 8}px"
+                    class="truncate text-left font-mono text-[10px] text-black/50 transition-colors hover:text-black dark:text-white/50 dark:hover:text-white"
+                  >
+                    {h.text}
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </div>
+
+        <!-- Word count at bottom of sidebar -->
+        <div class="mt-auto flex gap-3 border-t border-black/10 px-4 py-2.5 dark:border-white/10">
+          <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">{wordCount} words</span>
+          <span class="font-mono text-[10px] tracking-widest text-black/20 uppercase dark:text-white/20">{getContent().length} chars</span>
+        </div>
       </div>
     {/if}
   </div>
+
+  <!-- Footer status bar (hidden when meta open) -->
+  {#if !showMeta}
+    <div class="flex h-7 shrink-0 items-center gap-4 border-t border-black/10 bg-[#f5f5f5] px-4 dark:border-white/10 dark:bg-[#0d0d0d]">
+      <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">{wordCount} words</span>
+      <span class="font-mono text-[10px] tracking-widest text-black/20 uppercase dark:text-white/20">{getContent().length} chars</span>
+    </div>
+  {/if}
 </div>

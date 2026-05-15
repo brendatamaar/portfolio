@@ -10,61 +10,63 @@
   <title>Login — Admin</title>
 </svelte:head>
 
-<div class="flex min-h-screen items-center justify-center bg-[#f5f5f5] dark:bg-[#0a0a0a]">
-  <div
-    class="w-full max-w-sm border-2 border-black bg-white p-8 shadow-[6px_6px_0px_#000] dark:border-white dark:bg-[#111] dark:shadow-[6px_6px_0px_#fff]"
+<div class="flex min-h-screen items-center justify-center bg-[#f0f0f0] dark:bg-black">
+  <form
+    method="POST"
+    class="w-full max-w-sm border-2 border-black p-8 dark:border-white"
+    use:enhance={() => {
+      loading = true
+      return async ({ update }) => {
+        loading = false
+        await update()
+      }
+    }}
   >
-    <h1 class="mb-8 text-2xl font-black uppercase tracking-tight dark:text-white">Admin Login</h1>
+    <h1 class="mb-6 text-2xl font-black tracking-tighter text-black uppercase dark:text-white">
+      Admin Login
+    </h1>
 
     {#if form?.error}
-      <div class="mb-4 border-2 border-red-600 bg-red-50 p-3 text-sm font-bold text-red-600">
+      <p class="mb-4 border border-red-500 p-2 font-mono text-xs text-red-500 dark:border-red-400 dark:text-red-400">
         {form.error}
-      </div>
+      </p>
     {/if}
 
-    <form
-      method="POST"
-      use:enhance={() => {
-        loading = true
-        return async ({ update }) => {
-          loading = false
-          await update()
-        }
-      }}
+    <label class="mb-4 block">
+      <span class="mb-1 block font-mono text-[11px] tracking-widest text-black/50 uppercase dark:text-white/50">
+        Username
+      </span>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        autocomplete="username"
+        required
+        autofocus
+        class="w-full border-2 border-black/30 bg-white px-3 py-2 font-mono text-sm text-black transition-colors outline-none focus:border-black dark:border-white/30 dark:bg-black dark:text-white dark:focus:border-white"
+      />
+    </label>
+
+    <label class="mb-6 block">
+      <span class="mb-1 block font-mono text-[11px] tracking-widest text-black/50 uppercase dark:text-white/50">
+        Password
+      </span>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+        class="w-full border-2 border-black/30 bg-white px-3 py-2 font-mono text-sm text-black transition-colors outline-none focus:border-black dark:border-white/30 dark:bg-black dark:text-white dark:focus:border-white"
+      />
+    </label>
+
+    <button
+      type="submit"
+      disabled={loading}
+      class="w-full bg-black py-2.5 font-black tracking-tight text-white uppercase transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
     >
-      <div class="mb-4">
-        <label
-          for="username"
-          class="mb-1 block text-xs font-bold uppercase tracking-widest dark:text-white"
-        >
-          Username
-        </label>
-        <input id="username" name="username" type="text" autocomplete="username" required />
-      </div>
-
-      <div class="mb-6">
-        <label
-          for="password"
-          class="mb-1 block text-xs font-bold uppercase tracking-widest dark:text-white"
-        >
-          Password
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autocomplete="current-password"
-          required
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        class="w-full border-2 border-black bg-[#ffe600] px-4 py-2 text-sm font-black uppercase tracking-widest transition-all hover:bg-black hover:text-[#ffe600] disabled:opacity-50"
-      >
-        {loading ? 'Logging in…' : 'Login'}
-      </button>
-    </form>
-  </div>
+      {loading ? 'Signing in…' : 'Sign in'}
+    </button>
+  </form>
 </div>
