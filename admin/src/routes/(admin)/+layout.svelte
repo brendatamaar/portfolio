@@ -23,34 +23,33 @@
 </script>
 
 <div class="flex min-h-screen flex-col dark:bg-[#0a0a0a]">
-  <header class="border-b-2 border-black bg-white dark:border-white dark:bg-[#111]">
-    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-      <a href="/" class="text-sm font-black uppercase tracking-widest dark:text-white">Admin CMS</a>
-      <nav class="flex items-center gap-6">
-        {#each navLinks as link}
-          <a
-            href={link.href}
-            class="text-xs font-bold uppercase tracking-widest hover:underline dark:text-white"
-          >
-            {link.label}
-          </a>
-        {/each}
-        <button
-          onclick={toggleTheme}
-          class="text-xs font-bold uppercase tracking-widest hover:underline dark:text-white"
+  <header class="flex h-14 items-center justify-between border-b border-black/10 px-6 dark:border-white/10">
+    <a href="/" class="text-sm font-black tracking-tight uppercase dark:text-white">Portfolio CMS</a>
+    <nav class="flex items-center gap-3">
+      {#each navLinks as link}
+        <a
+          href={link.href}
+          class="font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
         >
-          {dark ? 'Light' : 'Dark'}
+          {link.label}
+        </a>
+      {/each}
+      <button
+        onclick={toggleTheme}
+        class="p-1.5 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+        title="Toggle theme"
+      >
+        {dark ? '☀' : '☽'}
+      </button>
+      <form method="POST" action="/logout">
+        <button
+          type="submit"
+          class="font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+        >
+          Logout
         </button>
-        <form method="POST" action="/logout">
-          <button
-            type="submit"
-            class="text-xs font-bold uppercase tracking-widest hover:underline dark:text-white"
-          >
-            Logout
-          </button>
-        </form>
-      </nav>
-    </div>
+      </form>
+    </nav>
   </header>
 
   <main class="flex-1">

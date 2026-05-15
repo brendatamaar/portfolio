@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import { api } from '$lib/api'
   import type { AdminImage } from '$lib/types'
   import type { PageData } from './$types'
 
   let { data }: { data: PageData } = $props()
-  let images = $state<AdminImage[]>(data.images)
+  let images = $state<AdminImage[]>(untrack(() => data.images))
   $effect(() => {
     images = data.images
   })
@@ -56,11 +57,11 @@
   <title>Images — Admin</title>
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-6 py-8">
-  <div class="mb-8 flex items-center justify-between">
-    <h1 class="text-2xl font-black uppercase tracking-tight dark:text-white">Images</h1>
+<div class="mx-auto max-w-4xl px-6 py-8">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-3xl font-black tracking-tighter uppercase dark:text-white">Images</h1>
     <label
-      class="cursor-pointer border-2 border-black bg-[#ffe600] px-4 py-2 text-xs font-black uppercase tracking-widest shadow-[3px_3px_0px_#000] hover:bg-black hover:text-[#ffe600] dark:shadow-[3px_3px_0px_#fff]"
+      class="cursor-pointer bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
     >
       {uploading ? 'Uploading…' : '+ Upload'}
       <input
@@ -74,40 +75,40 @@
   </div>
 
   {#if error}
-    <div class="mb-4 border-2 border-red-600 bg-red-50 p-3 text-sm font-bold text-red-600">
+    <div class="mb-4 border border-red-500 p-2 font-mono text-xs text-red-500">
       {error}
     </div>
   {/if}
 
   {#if images.length === 0}
-    <p class="py-16 text-center text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40">
+    <p class="py-16 text-center font-mono text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
       No images uploaded yet.
     </p>
   {:else}
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {#each images as img (img.id)}
-        <div class="group border-2 border-black bg-white dark:border-white dark:bg-[#111]">
+        <div class="border border-black/10 bg-white dark:border-white/10 dark:bg-[#111]">
           <img
             src={img.url}
             alt={img.filename}
             class="aspect-square w-full object-cover"
             loading="lazy"
           />
-          <div class="border-t-2 border-black p-2 dark:border-white">
-            <p class="truncate text-[10px] font-bold dark:text-white">{img.filename}</p>
-            <p class="mb-2 text-[10px] text-black/50 dark:text-white/50">
+          <div class="border-t border-black/10 p-2 dark:border-white/10">
+            <p class="truncate font-mono text-[10px] font-bold dark:text-white">{img.filename}</p>
+            <p class="mb-2 font-mono text-[10px] text-black/40 dark:text-white/40">
               {fmtSize(img.size)}{img.width ? ` · ${img.width}×${img.height}` : ''}
             </p>
             <div class="flex gap-1">
               <button
                 onclick={() => copyUrl(img)}
-                class="flex-1 border border-black bg-[#f5f5f5] py-1 text-[10px] font-bold uppercase hover:bg-black hover:text-white dark:border-white dark:bg-[#1a1a1a] dark:text-white dark:hover:bg-white dark:hover:text-black"
+                class="flex-1 bg-black/5 py-1 font-mono text-[10px] font-bold uppercase transition-colors hover:bg-black hover:text-white dark:bg-white/5 dark:text-white dark:hover:bg-white dark:hover:text-black"
               >
                 {copied === img.id ? 'Copied!' : 'Copy URL'}
               </button>
               <button
                 onclick={() => handleDelete(img)}
-                class="border border-red-600 bg-red-50 px-2 py-1 text-[10px] font-bold text-red-600 hover:bg-red-600 hover:text-white"
+                class="px-2 py-1 font-mono text-[10px] font-bold text-red-500 transition-colors hover:bg-red-500 hover:text-white"
               >
                 ×
               </button>

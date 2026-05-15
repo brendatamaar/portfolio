@@ -1,6 +1,7 @@
 ﻿import type { Handle } from '@sveltejs/kit'
 
-const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001'
+const API_URL =
+  (process.env.API_INTERNAL_URL ?? 'http://localhost:3001') + '/api'
 const PUBLIC = ['/login']
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -8,7 +9,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   if (session) {
     try {
-      const res = await fetch(`${API_URL}/admin/me`, {
+      const res = await fetch(`${API_URL}/auth/me`, {
         headers: { Cookie: `session=${session}` },
       })
       event.locals.user = res.ok ? { username: 'admin' } : null
