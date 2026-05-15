@@ -10,9 +10,11 @@
   <title>Login — Admin</title>
 </svelte:head>
 
-<div class="flex min-h-screen items-center justify-center bg-[#f5f5f5]">
-  <div class="w-full max-w-sm border-2 border-black bg-white p-8 shadow-[6px_6px_0px_#000]">
-    <h1 class="mb-8 text-2xl font-black tracking-tight uppercase">Admin Login</h1>
+<div class="flex min-h-screen items-center justify-center bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+  <div
+    class="w-full max-w-sm border-2 border-black bg-white p-8 shadow-[6px_6px_0px_#000] dark:border-white dark:bg-[#111] dark:shadow-[6px_6px_0px_#fff]"
+  >
+    <h1 class="mb-8 text-2xl font-black uppercase tracking-tight dark:text-white">Admin Login</h1>
 
     {#if form?.error}
       <div class="mb-4 border-2 border-red-600 bg-red-50 p-3 text-sm font-bold text-red-600">
@@ -20,25 +22,40 @@
       </div>
     {/if}
 
-    <form method="POST" use:enhance={() => {
-      loading = true
-      return async ({ update }) => {
-        loading = false
-        await update()
-      }
-    }}>
+    <form
+      method="POST"
+      use:enhance={() => {
+        loading = true
+        return async ({ update }) => {
+          loading = false
+          await update()
+        }
+      }}
+    >
       <div class="mb-4">
-        <label for="username" class="mb-1 block text-xs font-bold uppercase tracking-widest">
+        <label
+          for="username"
+          class="mb-1 block text-xs font-bold uppercase tracking-widest dark:text-white"
+        >
           Username
         </label>
         <input id="username" name="username" type="text" autocomplete="username" required />
       </div>
 
       <div class="mb-6">
-        <label for="password" class="mb-1 block text-xs font-bold uppercase tracking-widest">
+        <label
+          for="password"
+          class="mb-1 block text-xs font-bold uppercase tracking-widest dark:text-white"
+        >
           Password
         </label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required />
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
       </div>
 
       <button
