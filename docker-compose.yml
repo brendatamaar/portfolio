@@ -7,11 +7,12 @@ services:
       - "3003:3001"
     environment:
       - PORT=3001
+      - NODE_ENV=production
       - CORS_ORIGINS=${CORS_ORIGINS}
-      - LIBRETRANSLATE_URL=${LIBRETRANSLATE_URL}
       - DB_PATH=${DB_PATH}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN}
     volumes:
-      - ./server/data:/app/dist/server/data
+      - ./server/data:/app/server/data
     restart: always
     deploy:
       resources:
@@ -21,17 +22,22 @@ services:
         reservations:
           cpus: '0.25'
           memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   portfolio:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
+      dockerfile: web/Dockerfile
     ports:
       - "3001:3000"
     environment:
       - PORT=3000
-      - VITE_API_INTERNAL_URL=${VITE_API_INTERNAL_URL}
+      - API_INTERNAL_URL=${API_INTERNAL_URL}
       - CORS_ORIGINS=${CORS_ORIGINS}
     depends_on:
       - server
@@ -44,14 +50,23 @@ services:
         reservations:
           cpus: '0.1'
           memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
   admin:
     build:
       context: .
       dockerfile: admin/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
     ports:
-      - "3002:80"
+      - "3002:3000"
+    environment:
+      - PORT=3000
+      - API_INTERNAL_URL=${API_INTERNAL_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     depends_on:
       - server
     restart: always
@@ -59,7 +74,13 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 256M
+          memory: 384M
         reservations:
           cpus: '0.1'
-          memory: 64M
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
