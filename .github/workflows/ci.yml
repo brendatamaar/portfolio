@@ -38,10 +38,10 @@ jobs:
           VITE_API_URL: http://localhost:3001
 
       - name: Install admin deps
-        run: cd admin-new && npm install --legacy-peer-deps
+        run: cd admin && npm install --legacy-peer-deps
 
       - name: Sync admin types
-        run: cd admin-new && npx svelte-kit sync
+        run: cd admin && npx svelte-kit sync
 
       - name: Typecheck admin
-        run: cd admin-new && npx svelte-check --tsconfig ./tsconfig.json
+        run: cd admin && npx svelte-check --tsconfig ./tsconfig.json
