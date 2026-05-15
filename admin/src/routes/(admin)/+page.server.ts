@@ -33,7 +33,8 @@ export const load: PageServerLoad = async ({ cookies }) => {
       serverFetch<import('$lib/types').PostTag[]>('/admin/tags', cookie),
     ])
     return { posts: postsData.data ?? [], tags: tags ?? [] }
-  } catch {
+  } catch (e) {
+    console.error('Dashboard load error:', e)
     return { posts: [], tags: [] }
   }
 }
@@ -48,7 +49,8 @@ export const actions: Actions = {
       await serverFetch(`/admin/posts/${id}`, `session=${session}`, {
         method: 'DELETE',
       })
-    } catch {
+    } catch (e) {
+      console.error('Dashboard delete error:', e)
       return fail(500, { error: 'Delete failed' })
     }
   },
