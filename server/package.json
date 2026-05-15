@@ -10,7 +10,8 @@
     "db:migrate": "drizzle-kit migrate",
     "setup": "bun run scripts/setup.ts",
     "seed:resume": "bun run scripts/seed-resume.ts",
-    "backup": "bun run scripts/backup-db.ts"
+    "backup": "bun run scripts/backup-db.ts",
+    "migrate-images": "bun run scripts/migrate-images.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.0",
