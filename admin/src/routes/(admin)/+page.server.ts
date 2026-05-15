@@ -24,15 +24,18 @@ export const load: PageServerLoad = async ({ cookies }) => {
   const session = cookies.get('session') ?? ''
   const cookie = `session=${session}`
 
-  const [postsData, tags] = await Promise.all([
-    serverFetch<{ data: import('$lib/types').AdminPostSummary[] }>(
-      '/admin/posts',
-      cookie,
-    ),
-    serverFetch<import('$lib/types').PostTag[]>('/admin/tags', cookie),
-  ])
-
-  return { posts: postsData.data, tags }
+  try {
+    const [postsData, tags] = await Promise.all([
+      serverFetch<{ data: import('$lib/types').AdminPostSummary[] }>(
+        '/admin/posts',
+        cookie,
+      ),
+      serverFetch<import('$lib/types').PostTag[]>('/admin/tags', cookie),
+    ])
+    return { posts: postsData.data ?? [], tags: tags ?? [] }
+  } catch {
+    return { posts: [], tags: [] }
+  }
 }
 
 export const actions: Actions = {
