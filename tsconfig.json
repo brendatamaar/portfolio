@@ -25,6 +25,8 @@
     "contentful",
     "server",
     "admin",
+    "admin-new",
+    "web",
     "server.ts"
   ]
 }
