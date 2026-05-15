@@ -346,13 +346,13 @@
       <div class="flex w-full flex-col">
         <div class="border-b-2 border-black bg-white px-4 py-3">
           <input
-            bind:value={langTab === 'en' ? title : titleId}
+            value={langTab === 'en' ? title : titleId}
             oninput={(e) => { if (langTab === 'en') title = (e.target as HTMLInputElement).value; else titleId = (e.target as HTMLInputElement).value }}
             placeholder={langTab === 'en' ? 'Title (EN)' : 'Title (ID)'}
             class="w-full border-none bg-transparent text-2xl font-black outline-none placeholder:text-black/20"
           />
           <input
-            bind:value={langTab === 'en' ? description : descriptionId}
+            value={langTab === 'en' ? description : descriptionId}
             oninput={(e) => { if (langTab === 'en') description = (e.target as HTMLInputElement).value; else descriptionId = (e.target as HTMLInputElement).value }}
             placeholder={langTab === 'en' ? 'Description (EN)' : 'Description (ID)'}
             class="mt-1 w-full border-none bg-transparent text-sm text-black/60 outline-none placeholder:text-black/20"
