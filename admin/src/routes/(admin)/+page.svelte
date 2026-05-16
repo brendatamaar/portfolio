@@ -3,6 +3,7 @@
   import { enhance } from '$app/forms'
   import type { PageData, ActionData } from './$types'
   import type { AdminPostSummary } from '$lib/types'
+  import { fmtDate } from '$lib/utils'
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
 
@@ -16,20 +17,22 @@
     filterStatus === 'all' ? posts : posts.filter((p) => p.status === filterStatus),
   )
 
-  function fmt(date: string | null, label: string) {
-    if (!date) return ''
-    return `${label} ${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`
-  }
-
   let deletingId = $state<number | null>(null)
 
-  const draftCount = $derived(posts.filter((p) => p.status === 'draft').length)
-  const publishedCount = $derived(posts.filter((p) => p.status === 'published').length)
+  const counts = $derived(
+    posts.reduce(
+      (acc, p) => {
+        acc[p.status]++
+        return acc
+      },
+      { draft: 0, published: 0 },
+    ),
+  )
 
   const tabs = $derived([
     { key: 'all' as const, label: 'All', count: posts.length },
-    { key: 'draft' as const, label: 'Draft', count: draftCount },
-    { key: 'published' as const, label: 'Published', count: publishedCount },
+    { key: 'draft' as const, label: 'Draft', count: counts.draft },
+    { key: 'published' as const, label: 'Published', count: counts.published },
   ])
 </script>
 
@@ -111,8 +114,8 @@
                 </span>
                 <span class="font-mono text-[10px] text-black/30 dark:text-white/30">
                   {post.status === 'published' && post.publishedAt
-                    ? fmt(post.publishedAt, 'Published')
-                    : fmt(post.createdAt, 'Created')}
+                    ? fmtDate(post.publishedAt, 'Published')
+                    : fmtDate(post.createdAt, 'Created')}
                 </span>
               </div>
               <p class="truncate text-sm font-bold">{post.title}</p>
