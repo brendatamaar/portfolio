@@ -290,13 +290,22 @@
     }
   }
 
-  // --- Live preview ---
-  let previewHtml = $derived.by(() => {
-    try {
-      return parse(getContent(), { glossMap: new Map(), citeMap: new Map() }).html
-    } catch {
-      return ''
-    }
+  // --- Live preview (debounced 150ms so parse doesn't run on every keystroke) ---
+  let previewHtml = $state('')
+  let previewTimer = 0
+  $effect(() => {
+    const src = getContent()
+    const mode = viewMode
+    clearTimeout(previewTimer)
+    if (mode === 'editor') return
+    previewTimer = window.setTimeout(() => {
+      try {
+        previewHtml = parse(src, { glossMap: new Map(), citeMap: new Map() }).html
+      } catch {
+        previewHtml = ''
+      }
+    }, 150)
+    return () => clearTimeout(previewTimer)
   })
 
   // --- Saved ago ---
@@ -847,7 +856,7 @@
             <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">Cover image</span>
             {#if coverImageUrl}
               <div class="group relative aspect-video w-full overflow-hidden border border-black/10 dark:border-white/10">
-                <img src={coverImageUrl} alt="Cover" class="h-full w-full object-cover" />
+                <img src={coverImageUrl} alt="Cover" class="h-full w-full object-cover" loading="lazy" />
                 <div class="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition-all group-hover:bg-black/50 group-hover:opacity-100">
                   <button type="button" onclick={() => (showCoverGallery = true)} title="Change cover" class="bg-white/10 p-1.5 text-white transition-colors hover:bg-white/20">
                     <RefreshCw size={14} />
