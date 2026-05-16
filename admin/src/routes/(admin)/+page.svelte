@@ -1,9 +1,11 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import { enhance } from '$app/forms'
+  import { Send, Archive, Download, Pencil, Trash2 } from 'lucide-svelte'
   import type { PageData, ActionData } from './$types'
   import type { AdminPostSummary } from '$lib/types'
-  import { fmtDate } from '$lib/utils'
+  import { fmtDate, glossaryToMarkdown, bibliographyToMarkdown } from '$lib/utils'
+  import { api } from '$lib/api'
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
 
@@ -18,6 +20,8 @@
   )
 
   let deletingId = $state<number | null>(null)
+  let togglingId = $state<number | null>(null)
+  let downloadingId = $state<number | null>(null)
 
   const counts = $derived(
     posts.reduce(
@@ -34,6 +38,42 @@
     { key: 'draft' as const, label: 'Draft', count: counts.draft },
     { key: 'published' as const, label: 'Published', count: counts.published },
   ])
+
+  async function toggleStatus(post: AdminPostSummary) {
+    const newStatus = post.status === 'published' ? 'draft' : 'published'
+    togglingId = post.id
+    try {
+      const updated = await api.updatePost(post.id, { status: newStatus })
+      posts = posts.map((p) => (p.id === post.id ? { ...p, ...updated } : p))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      togglingId = null
+    }
+  }
+
+  async function downloadPost(post: AdminPostSummary) {
+    downloadingId = post.id
+    try {
+      const full = await api.getPost(post.id)
+      const sections = [full.content]
+      if (full.glossaryEn.length > 0)
+        sections.push(`## Glossary\n\n${glossaryToMarkdown(full.glossaryEn)}`)
+      if (full.bibliographyEn.length > 0)
+        sections.push(`## Bibliography\n\n${bibliographyToMarkdown(full.bibliographyEn)}`)
+      const blob = new Blob([sections.join('\n\n')], { type: 'text/markdown' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${full.slug}.md`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      downloadingId = null
+    }
+  }
 </script>
 
 <svelte:head>
@@ -52,7 +92,7 @@
 
     <!-- Filter tabs -->
     {#if posts.length > 0}
-      <div class="mb-4 flex items-center gap-1 border-b border-black/10 dark:border-white/10">
+      <div class="mb-4 flex items-center gap-1 border-b border-black/10 pb-0 dark:border-white/10">
         {#each tabs as tab}
           <button
             onclick={() => (filterStatus = tab.key)}
@@ -74,21 +114,6 @@
             </span>
           </button>
         {/each}
-        <a
-          href="/posts/new"
-          class="ml-auto flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
-        >
-          + New post
-        </a>
-      </div>
-    {:else}
-      <div class="mb-4 flex justify-end">
-        <a
-          href="/posts/new"
-          class="flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
-        >
-          + New post
-        </a>
       </div>
     {/if}
 
@@ -115,20 +140,57 @@
                 <span class="font-mono text-[10px] text-black/30 dark:text-white/30">
                   {post.status === 'published' && post.publishedAt
                     ? fmtDate(post.publishedAt, 'Published')
-                    : fmtDate(post.createdAt, 'Created')}
+                    : fmtDate(post.updatedAt, 'Updated')}
                 </span>
               </div>
               <p class="truncate text-sm font-bold">{post.title}</p>
+              {#if post.description}
+                <p class="mt-0.5 truncate text-xs text-black/40 dark:text-white/40">
+                  {post.description}
+                </p>
+              {/if}
             </div>
 
             <div class="flex shrink-0 items-center gap-1">
+              <!-- Publish / Unpublish -->
+              <button
+                onclick={() => toggleStatus(post)}
+                disabled={togglingId === post.id}
+                title={post.status === 'published' ? 'Unpublish' : 'Publish'}
+                class={[
+                  'p-1.5 transition-all disabled:opacity-40',
+                  post.status === 'published'
+                    ? 'text-green-600/50 hover:bg-black/10 hover:text-black dark:text-green-400/50 dark:hover:bg-white/10 dark:hover:text-white'
+                    : 'text-black/25 hover:bg-[#FFE600] hover:text-black dark:text-white/25 dark:hover:bg-[#FFE600] dark:hover:text-black',
+                ].join(' ')}
+              >
+                {#if post.status === 'published'}
+                  <Archive size={14} />
+                {:else}
+                  <Send size={14} />
+                {/if}
+              </button>
+
+              <!-- Download as Markdown -->
+              <button
+                onclick={() => downloadPost(post)}
+                disabled={downloadingId === post.id}
+                class="p-1.5 text-black/30 transition-all hover:bg-black hover:text-white disabled:opacity-40 dark:text-white/30 dark:hover:bg-white dark:hover:text-black"
+                title="Download as Markdown"
+              >
+                <Download size={14} />
+              </button>
+
+              <!-- Edit -->
               <a
                 href="/posts/{post.id}"
                 class="p-1.5 text-black/30 transition-all hover:bg-black hover:text-white dark:text-white/30 dark:hover:bg-white dark:hover:text-black"
                 title="Edit"
               >
-                ✎
+                <Pencil size={14} />
               </a>
+
+              <!-- Delete -->
               <form
                 method="POST"
                 action="?/delete"
@@ -146,12 +208,12 @@
                   type="submit"
                   disabled={deletingId === post.id}
                   onclick={(e) => {
-                    if (!confirm('Delete this post?')) e.preventDefault()
+                    if (!confirm(`Delete "${post.title}"?`)) e.preventDefault()
                   }}
                   class="p-1.5 text-black/30 transition-all hover:bg-red-500 hover:text-white dark:text-white/30 dark:hover:bg-red-500 dark:hover:text-white disabled:opacity-40"
                   title="Delete"
                 >
-                  ✕
+                  <Trash2 size={14} />
                 </button>
               </form>
             </div>
