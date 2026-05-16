@@ -28,18 +28,16 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   getPosts: (lang = 'en') =>
-    apiFetch<PostsResponse>(
-      `/api/posts${lang !== 'en' ? `?lang=${lang}` : ''}`,
-    ),
+    apiFetch<PostsResponse>(`/posts${lang !== 'en' ? `?lang=${lang}` : ''}`),
   getPost: (slug: string, lang = 'en') =>
     apiFetch<PostDetail>(
-      `/api/posts/${slug}${lang !== 'en' ? `?lang=${lang}` : ''}`,
+      `/posts/${slug}${lang !== 'en' ? `?lang=${lang}` : ''}`,
     ),
   getPostPreview: (id: string | number, lang = 'en') =>
     apiFetch<PostDetail>(
-      `/api/admin/posts/${id}/preview${lang !== 'en' ? `?lang=${lang}` : ''}`,
+      `/admin/posts/${id}/preview${lang !== 'en' ? `?lang=${lang}` : ''}`,
       { credentials: 'include' },
     ),
   getResumeData: (locale: 'en' | 'id') =>
-    apiFetch<ResumeData>(`/api/resume?locale=${locale}`),
+    apiFetch<ResumeData>(`/resume?locale=${locale}`),
 }
