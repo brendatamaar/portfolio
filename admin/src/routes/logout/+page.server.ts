@@ -1,18 +1,13 @@
 ﻿import { redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
-
-const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api'
+import { serverFetch, SESSION_COOKIE } from '$lib/server/config'
 
 export const actions: Actions = {
   default: async ({ cookies }) => {
-    const session = cookies.get('session')
-    if (session) {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        headers: { Cookie: `session=${session}` },
-      }).catch(() => {})
-    }
-    cookies.delete('session', { path: '/' })
+    await serverFetch('/auth/logout', cookies, { method: 'POST' }).catch(
+      () => {},
+    )
+    cookies.delete(SESSION_COOKIE, { path: '/' })
     redirect(302, '/login')
   },
 }
