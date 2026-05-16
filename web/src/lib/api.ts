@@ -12,7 +12,7 @@ export type {
 function baseUrl(): string {
   if (typeof window === 'undefined') {
     return (
-      import.meta.env.API_INTERNAL_URL ??
+      process.env.API_INTERNAL_URL ??
       import.meta.env.PUBLIC_API_URL ??
       'http://localhost:3001'
     )
