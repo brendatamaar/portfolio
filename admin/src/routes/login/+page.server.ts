@@ -1,7 +1,6 @@
 ﻿import { redirect, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
-
-const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api'
+import { API_URL, SESSION_COOKIE, SESSION_MAX_AGE } from '$lib/server/config'
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) redirect(302, '/')
@@ -20,8 +19,7 @@ export const actions: Actions = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-    } catch (e) {
-      console.error('Login fetch error:', e)
+    } catch {
       return fail(500, { error: 'Cannot reach API server.' })
     }
 
@@ -29,17 +27,18 @@ export const actions: Actions = {
       return fail(401, { error: 'Invalid username or password.' })
     }
 
-    // Forward Set-Cookie from API to browser
-    const setCookie = res.headers.get('set-cookie')
-    if (setCookie) {
-      const match = setCookie.match(/session=([^;]+)/)
+    // Forward session cookie set by API to the browser
+    const setCookies = res.headers.getSetCookie?.() ?? []
+    for (const raw of setCookies) {
+      const match = raw.match(/session=([^;]+)/)
       if (match) {
-        cookies.set('session', match[1], {
+        cookies.set(SESSION_COOKIE, match[1].trim(), {
           path: '/',
           httpOnly: true,
           sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 7,
+          maxAge: SESSION_MAX_AGE,
         })
+        break
       }
     }
 

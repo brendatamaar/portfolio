@@ -1,58 +1,28 @@
 ﻿import type { PageServerLoad, Actions } from './$types'
 import { fail } from '@sveltejs/kit'
-
-const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api'
-
-async function serverFetch<T>(
-  path: string,
-  cookie: string,
-  init?: RequestInit,
-): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: {
-      Cookie: cookie,
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
-  })
-  if (!res.ok) throw new Error(`API ${res.status}`)
-  return res.json() as Promise<T>
-}
+import { serverFetch } from '$lib/server/config'
 
 export const load: PageServerLoad = async ({ cookies }) => {
-  const session = cookies.get('session') ?? ''
-  const cookie = `session=${session}`
-  console.log('Dashboard load running, session:', !!session)
-
   try {
-    const [posts, tags] = await Promise.all([
-      serverFetch<import('$lib/types').AdminPostSummary[]>(
-        '/admin/posts',
-        cookie,
-      ),
-      serverFetch<import('$lib/types').PostTag[]>('/admin/tags', cookie),
-    ])
-    console.log('Posts fetched:', posts?.length, 'Tags:', tags?.length)
-    return { posts: posts ?? [], tags: tags ?? [] }
-  } catch (e) {
-    console.error('Dashboard load error:', e)
-    return { posts: [], tags: [] }
+    const posts = await serverFetch<import('$lib/types').AdminPostSummary[]>(
+      '/admin/posts',
+      cookies,
+    )
+    return { posts: posts ?? [] }
+  } catch {
+    return { posts: [] }
   }
 }
 
 export const actions: Actions = {
   delete: async ({ request, cookies }) => {
-    const session = cookies.get('session') ?? ''
     const data = await request.formData()
     const id = Number(data.get('id'))
-    if (!id) return fail(400, { error: 'Missing id' })
+    if (!Number.isInteger(id) || id <= 0)
+      return fail(400, { error: 'Missing id' })
     try {
-      await serverFetch(`/admin/posts/${id}`, `session=${session}`, {
-        method: 'DELETE',
-      })
-    } catch (e) {
-      console.error('Dashboard delete error:', e)
+      await serverFetch(`/admin/posts/${id}`, cookies, { method: 'DELETE' })
+    } catch {
       return fail(500, { error: 'Delete failed' })
     }
   },

@@ -1,21 +1,18 @@
 ﻿import type { Handle } from '@sveltejs/kit'
+import { API_URL } from '$lib/server/config'
 
-const API_URL = process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api'
 const PUBLIC = ['/login']
 
 export const handle: Handle = async ({ event, resolve }) => {
   const session = event.cookies.get('session')
-  console.log('Session cookie present:', !!session, 'Path:', event.url.pathname)
 
   if (session) {
     try {
       const res = await fetch(`${API_URL}/auth/me`, {
         headers: { Cookie: `session=${session}` },
       })
-      console.log('Auth/me status:', res.status)
       event.locals.user = res.ok ? { username: 'admin' } : null
-    } catch (e) {
-      console.error('Session check error:', e)
+    } catch {
       event.locals.user = null
     }
   } else {
