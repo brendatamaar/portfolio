@@ -4,49 +4,63 @@ Personal portfolio and blog built from scratch. No CMS dependencies — content 
 
 ## Stack
 
-| Layer | Tech |
-|---|---|
-| Frontend | React 19, Vite 6, TypeScript, Tailwind CSS v4 |
-| Animation | Framer Motion (`motion/react`) |
-| Routing | React Router v7 |
-| Theming | next-themes |
-| API | Hono, SQLite, Drizzle ORM |
-| Markdown | Custom isomorphic parser (no deps) |
+| Layer     | Tech                                    |
+| --------- | --------------------------------------- |
+| Portfolio | Astro 5, TypeScript, Tailwind CSS v4    |
+| Animation | Motion (view transitions)               |
+| Admin     | SvelteKit 2, Svelte 5, Tailwind CSS v4  |
+| API       | Hono, Bun, SQLite (libSQL), Drizzle ORM |
+| Markdown  | Custom isomorphic parser (no deps)      |
+| Infra     | Docker Compose, pnpm workspaces         |
 
 ## Structure
 
 ```
-portofolio/       — portfolio frontend          (port 5173)
-admin/            — blog admin UI               (port 5174)
+web/              — Astro portfolio + blog      (port 4321)
+admin/            — SvelteKit blog admin UI     (port 4322)
 server/           — Hono REST API + SQLite DB   (port 3001)
 shared/markdown/  — shared markdown parser
+shared/types/     — shared TypeScript types
 ```
 
 ## Getting Started
 
-**1. Set up the server (first time only)**
+**1. Install dependencies**
+
 ```bash
-cd server
-npm install
-npm run setup   # creates admin user + DB
+pnpm install
 ```
 
-**2. Run everything**
+**2. Set up the server (first time only)**
+
 ```bash
-npm run dev:all
+cd server
+bun run setup   # creates admin user + DB
+```
+
+**3. Run everything**
+
+```bash
+pnpm dev
 ```
 
 Or run individually:
+
 ```bash
-npm run dev              # portfolio
-npm run dev --prefix server   # API
-npm run dev --prefix admin    # admin UI
+pnpm -C web dev        # portfolio
+pnpm -C server dev     # API
+pnpm -C admin dev      # admin UI
 ```
 
-## Features
+## Docker
 
-- Brutalist design — heavy borders, offset shadows, yellow accent
-- Light / dark mode
-- Blog with markdown, syntax highlighting, sidenotes, and TOC
-- Self-hosted CMS admin with split-pane editor
-- Reading time, scroll progress, tag filtering, copy code buttons
+```bash
+cp .env.example .env   # edit with your values
+docker compose up -d
+```
+
+| Service   | Container Port | Host Port |
+| --------- | -------------- | --------- |
+| server    | 3001           | 3003      |
+| portfolio | 3000           | 3001      |
+| admin     | 3000           | 3002      |
