@@ -61,13 +61,12 @@
 
 {#if open}
   <!-- Backdrop -->
-  <div
-    class="fixed inset-0 z-40 bg-black/60"
-    role="button"
-    tabindex="-1"
+  <button
+    class="fixed inset-0 z-40 w-full cursor-default bg-black/60"
+    aria-label="Close gallery"
     onkeydown={(e) => e.key === 'Escape' && onclose()}
     onclick={onclose}
-  ></div>
+  ></button>
 
   <!-- Modal -->
   <div
@@ -109,25 +108,26 @@
       {:else}
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {#each images as img (img.id)}
-            <div
-              class="group relative cursor-pointer border-2 border-black hover:border-[#ffe600] dark:border-white dark:hover:border-[#ffe600]"
-              role="button"
-              tabindex="0"
-              onkeydown={(e) => e.key === 'Enter' && onselect(img.url)}
-              onclick={() => onselect(img.url)}
-            >
-              <img
-                src={img.url}
-                alt={img.filename}
-                class="aspect-square w-full object-cover"
-                loading="lazy"
-              />
-              <div class="border-t border-black/20 p-1.5 dark:border-white/20">
-                <p class="truncate text-[10px] font-medium dark:text-white">{img.filename}</p>
-                <p class="text-[10px] text-black/50 dark:text-white/50">{fmtSize(img.size)}</p>
-              </div>
+            <div class="group relative border-2 border-black hover:border-[#ffe600] dark:border-white dark:hover:border-[#ffe600]">
+              <button
+                class="block w-full cursor-pointer text-left"
+                onclick={() => onselect(img.url)}
+                aria-label="Select {img.filename}"
+              >
+                <img
+                  src={img.url}
+                  alt={img.filename}
+                  class="aspect-square w-full object-cover"
+                  loading="lazy"
+                />
+                <div class="border-t border-black/20 p-1.5 dark:border-white/20">
+                  <p class="truncate text-[10px] font-medium dark:text-white">{img.filename}</p>
+                  <p class="text-[10px] text-black/50 dark:text-white/50">{fmtSize(img.size)}</p>
+                </div>
+              </button>
               <button
                 class="absolute right-1 top-1 hidden border border-black bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white group-hover:block"
+                aria-label="Delete {img.filename}"
                 onclick={(e) => handleDelete(img, e)}
               >
                 ×
