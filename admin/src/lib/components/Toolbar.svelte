@@ -163,14 +163,14 @@
       <span>Admonition</span>
     </button>
     {#if admonitionOpen}
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
+        role="menu"
         class="absolute top-full left-0 z-50 mt-1 flex min-w-max flex-col border border-black/20 bg-[#f0f0f0] shadow-xl dark:border-white/20 dark:bg-[#1a1a1a]"
-        onmousedown={(e) => e.stopPropagation()}
       >
         {#each ADMONITION_TYPES as t}
           <button
             type="button"
+            role="menuitem"
             onclick={() => { onInsert(`\n:::${t}\n\n:::\n`); admonitionOpen = false }}
             class="px-3 py-1.5 text-left font-mono text-[11px] text-black/60 transition-colors hover:bg-black/10 hover:text-black dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
           >
