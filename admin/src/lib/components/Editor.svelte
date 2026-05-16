@@ -9,6 +9,7 @@
     BibSourceType,
     PostPayload,
   } from '$lib/types'
+  import { parse } from '@portfolio/shared/markdown/parser'
   import ImageGallery from './ImageGallery.svelte'
   import Toast from './Toast.svelte'
   import Toolbar from './Toolbar.svelte'
@@ -16,7 +17,7 @@
   import GlossaryPane from './GlossaryPane.svelte'
   import BibliographyPane from './BibliographyPane.svelte'
   import MetaSidebar from './MetaSidebar.svelte'
-  import { parse } from '@portfolio/shared/markdown/parser'
+  import PostPreviewModal from './PostPreviewModal.svelte'
 
   interface Props {
     post: AdminPost | null
@@ -24,23 +25,22 @@
   }
   let { post, allTags: initialTags }: Props = $props()
 
-  type ViewMode = 'editor' | 'split' | 'preview'
+  type Mode = 'editor' | 'split' | 'preview'
 
-  // --- Theme ---
-  let dark = $state(false)
-  onMount(() => {
-    dark = localStorage.getItem('admin-theme') === 'dark'
-  })
-  function toggleTheme() {
-    dark = !dark
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('admin-theme', dark ? 'dark' : 'light')
-  }
+  const PREVIEW_DEBOUNCE_MS = 300
 
-  // --- Editor state ---
+  // --- Tick timer for live "Saved Xs ago" ---
+  let nowTick = $state(0)
+
+  // --- View / state ---
   let langTab = $state<'en' | 'id'>('en')
   let activeTab = $state<'content' | 'glossary' | 'bibliography'>('content')
-  let viewMode = $state<ViewMode>('editor')
+  let mode = $state<Mode>('split')
+  let syncScroll = $state(false)
+  let showGallery = $state(false)
+  let showCoverGallery = $state(false)
+  let showPostPreview = $state(false)
+  let showMeta = $state(false)
 
   let title = $state(untrack(() => post?.title ?? ''))
   let slug = $state(untrack(() => post?.slug ?? ''))
@@ -51,11 +51,13 @@
   let contentId = $state(untrack(() => post?.contentId ?? ''))
   let status = $state<'draft' | 'published'>(untrack(() => post?.status ?? 'draft'))
   let coverImageUrl = $state(untrack(() => post?.coverImageUrl ?? ''))
-  let publishedAt = $state(untrack(() =>
-    post?.publishedAt
-      ? new Date(post.publishedAt).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10),
-  ))
+  let publishedAt = $state(
+    untrack(() =>
+      post?.publishedAt
+        ? new Date(post.publishedAt).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+    ),
+  )
 
   let selectedTagIds = $state<number[]>(untrack(() => post?.tags.map((t) => t.id) ?? []))
   let allTags = $state<PostTag[]>(untrack(() => initialTags))
@@ -67,22 +69,27 @@
   let bibliographyId = $state<BibliographyEntry[]>(untrack(() => post?.bibliographyId ?? []))
 
   let saving = $state(false)
-  let savedAt = $state<Date | null>(null)
   let saveMsg = $state('')
+  let lastSavedAt = $state<Date | null>(null)
   let postId = $state<number | null>(untrack(() => post?.id ?? null))
 
-  let showMeta = $state(false)
-  let showGallery = $state(false)
-  let showCoverGallery = $state(false)
-
   let textareaRef = $state<HTMLTextAreaElement | null>(null)
+  let previewRef = $state<HTMLDivElement | null>(null)
   let toastRef =
-    $state<{ show: (msg: string, type?: 'success' | 'error' | 'info', dur?: number) => void } | null>(
-      null,
-    )
+    $state<{ show: (msg: string, type?: 'success' | 'error' | 'info', dur?: number) => void } | null>(null)
 
-  // Auto-generate slug from title on new posts
   let slugTouched = false
+
+  // --- Mount: tick interval ---
+  onMount(() => {
+    const tickId = setInterval(() => {
+      nowTick++
+    }, 1000)
+
+    return () => clearInterval(tickId)
+  })
+
+  // --- Auto-slug from title (new posts, untouched slug) ---
   $effect(() => {
     if (!postId && !slugTouched && title) {
       slug = title
@@ -93,25 +100,10 @@
     }
   })
 
-  // Autosave after 5s of inactivity
-  let autosaveTimer = 0
-  $effect(() => {
-    const _ = [
-      title, description, content,
-      titleId, descriptionId, contentId,
-      status, coverImageUrl, publishedAt,
-      selectedTagIds.join(),
-      JSON.stringify(glossaryEn), JSON.stringify(glossaryId),
-      JSON.stringify(bibliographyEn), JSON.stringify(bibliographyId),
-    ]
-    clearTimeout(autosaveTimer)
-    autosaveTimer = window.setTimeout(() => save(true), 5000)
-    return () => clearTimeout(autosaveTimer)
-  })
-
-  async function save(silent = false, toStatus?: 'draft' | 'published') {
+  // --- Save (manual: clicking Save / Publish / Unpublish) ---
+  async function save(toStatus?: 'draft' | 'published') {
     if (!title.trim()) {
-      if (!silent) toastRef?.show('Title is required', 'error')
+      toastRef?.show('Title is required', 'error')
       return
     }
     saving = true
@@ -122,16 +114,13 @@
       slug,
       description,
       content,
-      titleId: titleId ?? '',
-      descriptionId: descriptionId ?? '',
-      contentId: contentId ?? '',
+      titleId,
+      descriptionId,
+      contentId,
       status: resolvedStatus,
       coverImageUrl: coverImageUrl || null,
       tagIds: selectedTagIds,
-      publishedAt:
-        resolvedStatus === 'published' && publishedAt
-          ? new Date(publishedAt).toISOString()
-          : null,
+      publishedAt: publishedAt ? new Date(publishedAt).toISOString() : null,
       glossaryEn,
       glossaryId,
       bibliographyEn,
@@ -146,8 +135,7 @@
         history.replaceState({}, '', `/posts/${created.id}`)
       }
       if (toStatus) status = toStatus
-      savedAt = new Date()
-      if (!silent) toastRef?.show('Saved!', 'success')
+      lastSavedAt = new Date()
     } catch (e) {
       saveMsg = 'Save failed'
       toastRef?.show(`Save failed: ${e}`, 'error')
@@ -156,6 +144,7 @@
     }
   }
 
+  // --- Tag operations ---
   async function addTag() {
     const name = newTagName.trim()
     if (!name) return
@@ -175,7 +164,7 @@
       : [...selectedTagIds, id]
   }
 
-  // --- Content helpers ---
+  // --- Active content & helpers ---
   function getContent() {
     return langTab === 'en' ? content : contentId
   }
@@ -184,7 +173,6 @@
     else contentId = val
   }
 
-  // --- Cursor manipulation ---
   function insertAtCursor(text: string) {
     const el = textareaRef
     if (!el) return
@@ -192,6 +180,7 @@
     const end = el.selectionEnd
     setContent(el.value.slice(0, start) + text + el.value.slice(end))
     requestAnimationFrame(() => {
+      if (!el) return
       el.selectionStart = el.selectionEnd = start + text.length
       el.focus()
     })
@@ -232,9 +221,14 @@
   }
 
   // --- Image handling ---
-  function handleGallerySelect(url: string) {
+  function escapeMarkdownImageText(text: string) {
+    return text.replace(/\\/g, '\\\\').replace(/]/g, '\\]')
+  }
+
+  function handleGallerySelect(url: string, opts?: { altText: string; caption: string }) {
     showGallery = false
-    insertAtCursor(`\n![](${url})\n`)
+    const label = opts?.caption || opts?.altText || ''
+    insertAtCursor(`![${escapeMarkdownImageText(label)}](${url})`)
   }
 
   function handleDrop(e: DragEvent) {
@@ -257,7 +251,8 @@
     toastRef?.show('Uploading…', 'info')
     try {
       const img = await api.uploadImage(file)
-      insertAtCursor(`\n![](${img.url})\n`)
+      const label = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ')
+      insertAtCursor(`![${escapeMarkdownImageText(label)}](${img.url})`)
       toastRef?.show('Image inserted', 'success')
     } catch (e) {
       toastRef?.show(`Upload failed: ${e}`, 'error')
@@ -267,12 +262,35 @@
   // --- Keyboard shortcuts ---
   function handleKeydown(e: KeyboardEvent) {
     const ctrl = e.ctrlKey || e.metaKey
-    if (!ctrl) return
-    switch (e.key) {
-      case 's': e.preventDefault(); save(); break
-      case 'b': e.preventDefault(); wrapSelection('**', '**', 'bold'); break
-      case 'i': e.preventDefault(); wrapSelection('*', '*', 'italic'); break
-      case 'k': e.preventDefault(); wrapSelection('[', '](url)', 'link text'); break
+    if (ctrl && e.shiftKey && e.key.toLowerCase() === 'p') {
+      e.preventDefault()
+      mode = mode === 'preview' ? 'split' : 'preview'
+      return
+    }
+    if (ctrl) {
+      switch (e.key.toLowerCase()) {
+        case 's':
+          e.preventDefault()
+          void save()
+          return
+        case 'b':
+          e.preventDefault()
+          wrapSelection('**', '**', 'bold')
+          return
+        case 'i':
+          e.preventDefault()
+          wrapSelection('*', '*', 'italic')
+          return
+        case 'k':
+          e.preventDefault()
+          wrapSelection('[', '](url)', 'link text')
+          return
+      }
+    }
+    // Tab → 2 spaces (only when textarea is focused)
+    if (e.key === 'Tab' && document.activeElement === textareaRef && textareaRef) {
+      e.preventDefault()
+      insertAtCursor('  ')
     }
   }
 
@@ -281,49 +299,106 @@
   let previewTimer = 0
   $effect(() => {
     const src = getContent()
-    const mode = viewMode
+    const m = mode
     clearTimeout(previewTimer)
-    if (mode === 'editor') return
+    if (m === 'editor') return
     previewTimer = window.setTimeout(() => {
       try {
         previewHtml = parse(src, { glossMap: new Map(), citeMap: new Map() }).html
       } catch {
-        previewHtml = ''
+        previewHtml = '<p style="color:#f87171">Parse error</p>'
       }
-    }, 150)
+    }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(previewTimer)
   })
 
+  // --- Scroll sync (split mode + syncScroll) ---
+  let isSyncing = false
+  $effect(() => {
+    const ta = textareaRef
+    const pv = previewRef
+    if (!syncScroll || mode !== 'split' || !ta || !pv) return
+
+    const ratio = (el: HTMLElement) => {
+      const m = el.scrollHeight - el.clientHeight
+      return m > 0 ? el.scrollTop / m : 0
+    }
+    const taToPv = () => {
+      pv.scrollTop = ratio(ta) * (pv.scrollHeight - pv.clientHeight)
+    }
+    const pvToTa = () => {
+      ta.scrollTop = ratio(pv) * (ta.scrollHeight - ta.clientHeight)
+    }
+
+    taToPv()
+
+    const onTaScroll = () => {
+      if (isSyncing) return
+      isSyncing = true
+      taToPv()
+      setTimeout(() => {
+        isSyncing = false
+      }, 50)
+    }
+    const onPvScroll = () => {
+      if (isSyncing) return
+      isSyncing = true
+      pvToTa()
+      setTimeout(() => {
+        isSyncing = false
+      }, 50)
+    }
+
+    ta.addEventListener('scroll', onTaScroll)
+    pv.addEventListener('scroll', onPvScroll)
+    return () => {
+      ta.removeEventListener('scroll', onTaScroll)
+      pv.removeEventListener('scroll', onPvScroll)
+    }
+  })
+
   // --- Derived display values ---
-  let savedAgoText = $derived(
-    savedAt ? `Saved ${Math.round((Date.now() - savedAt.getTime()) / 1000)}s ago` : '',
-  )
-  let wordCount = $derived(getContent().trim() ? getContent().trim().split(/\s+/).length : 0)
+  let savedAgoText = $derived.by(() => {
+    void nowTick
+    if (saveMsg) return ''
+    if (!lastSavedAt) return ''
+    const s = Math.floor((Date.now() - lastSavedAt.getTime()) / 1000)
+    if (s < 10) return 'Saved just now'
+    if (s < 60) return `Saved ${s}s ago`
+    return `Saved ${Math.floor(s / 60)}m ago`
+  })
+
+  let activeContent = $derived(langTab === 'id' ? contentId : content)
+  let activeGlossary = $derived(langTab === 'id' ? glossaryId : glossaryEn)
+  let activeBibliography = $derived(langTab === 'id' ? bibliographyId : bibliographyEn)
+
+  let wordCount = $derived(activeContent.trim() ? activeContent.trim().split(/\s+/).length : 0)
+  let charCount = $derived(activeContent.length)
+
   let headings = $derived(
-    [...getContent().matchAll(/^(#{1,6})\s+(.+)$/gm)].map((m) => ({
+    [...activeContent.matchAll(/^(#{1,6})\s+(.+)$/gm)].map((m) => ({
       level: m[1].length,
       text: m[2].trim(),
       index: m.index ?? 0,
     })),
   )
-  let glossaryCount = $derived((langTab === 'id' ? glossaryId : glossaryEn).length)
-  let bibliographyCount = $derived((langTab === 'id' ? bibliographyId : bibliographyEn).length)
-  let previewUrl = $derived(
-    postId ? `${import.meta.env.VITE_SITE_URL ?? 'http://localhost:4321'}/blog/${slug}` : null,
-  )
+  let glossaryCount = $derived(activeGlossary.length)
+  let bibliographyCount = $derived(activeBibliography.length)
 
   function jumpToHeading(charIndex: number) {
     const ta = textareaRef
     if (!ta) return
     ta.focus()
     ta.setSelectionRange(charIndex, charIndex)
-    const linesBefore = getContent().slice(0, charIndex).split('\n').length - 1
-    const lineHeight = ta.scrollHeight / Math.max(getContent().split('\n').length, 1)
+    const linesBefore = activeContent.slice(0, charIndex).split('\n').length - 1
+    const lineHeight = ta.scrollHeight / Math.max(activeContent.split('\n').length, 1)
     ta.scrollTop = linesBefore * lineHeight - ta.clientHeight / 3
   }
 
-  // --- Glossary helpers ---
-  const BIB_TYPES: BibSourceType[] = ['web', 'docs', 'journal', 'article', 'book', 'video', 'podcast', 'repo', 'other']
+  // --- Glossary / bibliography helpers ---
+  const BIB_TYPES: BibSourceType[] = [
+    'web', 'docs', 'journal', 'article', 'book', 'video', 'podcast', 'repo', 'other',
+  ]
 
   function addGlossEntry() {
     const blank: GlossaryEntry = { key: '', term: '', definition: '' }
@@ -335,7 +410,8 @@
     else glossaryId = glossaryId.filter((_, i) => i !== idx)
   }
   function updateGlossEntry(idx: number, field: keyof GlossaryEntry, val: string) {
-    if (langTab === 'en') glossaryEn = glossaryEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
+    if (langTab === 'en')
+      glossaryEn = glossaryEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
     else glossaryId = glossaryId.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
   }
 
@@ -349,13 +425,12 @@
     else bibliographyId = bibliographyId.filter((_, i) => i !== idx)
   }
   function updateBibEntry(idx: number, field: keyof BibliographyEntry, val: string) {
-    if (langTab === 'en') bibliographyEn = bibliographyEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
+    if (langTab === 'en')
+      bibliographyEn = bibliographyEn.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
     else bibliographyId = bibliographyId.map((e, i) => (i === idx ? { ...e, [field]: val } : e))
   }
 
   // --- Raw mode for glossary / bibliography ---
-  // Glossary format:  "key :: Term\ndefinition…" (blank line between entries)
-  // Bib format:       "key [sourceType]\ncitation text…"
   let rawGlossMode = $state(false)
   let rawBibMode = $state(false)
   let rawGlossText = $state('')
@@ -386,7 +461,13 @@
       const lines = trimmed.split('\n')
       const first = lines[0] ?? ''
       const m = first.match(/^(.+?)\s+\[(\w+)\]$/)
-      return [{ key: m ? m[1].trim() : first.trim(), sourceType: (m ? m[2] : 'web') as BibSourceType, text: lines.slice(1).join('\n').trim() }]
+      return [
+        {
+          key: m ? m[1].trim() : first.trim(),
+          sourceType: (m ? m[2] : 'web') as BibSourceType,
+          text: lines.slice(1).join('\n').trim(),
+        },
+      ]
     })
   }
 
@@ -413,7 +494,7 @@
 
   // Reset raw modes when switching language
   $effect(() => {
-    const _lang = langTab
+    void langTab
     rawGlossMode = false
     rawBibMode = false
   })
@@ -421,28 +502,61 @@
 
 <svelte:window onkeydown={handleKeydown} />
 <Toast bind:this={toastRef} />
-<ImageGallery open={showGallery} onselect={handleGallerySelect} onclose={() => (showGallery = false)} />
+
+<ImageGallery
+  open={showGallery}
+  enableInsertDetails
+  onselect={handleGallerySelect}
+  onclose={() => (showGallery = false)}
+/>
 <ImageGallery
   open={showCoverGallery}
-  onselect={(url) => { coverImageUrl = url; showCoverGallery = false }}
+  onselect={(url) => {
+    coverImageUrl = url
+    showCoverGallery = false
+  }}
   onclose={() => (showCoverGallery = false)}
 />
 
-<div class="flex h-screen flex-col overflow-hidden bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
+{#if showPostPreview}
+  <PostPreviewModal
+    onclose={() => (showPostPreview = false)}
+    title={langTab === 'id' ? titleId || title : title}
+    description={langTab === 'id' ? descriptionId || description : description}
+    markdown={langTab === 'id' ? contentId || content : content}
+    {coverImageUrl}
+    {publishedAt}
+    {status}
+    tags={allTags.filter((t) => selectedTagIds.includes(t.id))}
+    glossary={activeGlossary}
+    bibliography={activeBibliography}
+    lang={langTab}
+  />
+{/if}
 
+<div class="flex h-screen flex-col overflow-hidden bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
   <EditorHeader
-    {langTab} {title} {titleId} {status} {saving} {saveMsg} {savedAgoText} {previewUrl} {dark}
+    {langTab}
+    {title}
+    {titleId}
+    {status}
+    {saving}
+    {saveMsg}
+    {savedAgoText}
     onLangChange={(l) => (langTab = l)}
-    onTitleInput={(val) => { if (langTab === 'id') titleId = val; else title = val }}
+    onTitleInput={(val) => {
+      if (langTab === 'id') titleId = val
+      else title = val
+    }}
+    onPostPreview={() => (showPostPreview = true)}
     onSave={() => save()}
-    onPublish={() => save(false, 'published')}
-    onUnpublish={() => save(false, 'draft')}
-    onToggleTheme={toggleTheme}
+    onPublish={() => save('published')}
+    onUnpublish={() => save('draft')}
   />
 
-  <!-- Content tabs -->
+  <!-- Content tabs (filled-pill, matching old React PostEditor) -->
   <div class="flex border-b border-black/10 dark:border-white/10">
-    {#each (['content', 'glossary', 'bibliography'] as const) as tab}
+    {#each ['content', 'glossary', 'bibliography'] as const as tab}
       <button
         onclick={() => (activeTab = tab)}
         class={[
@@ -452,54 +566,60 @@
             : 'text-black/40 hover:bg-black/5 hover:text-black dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white',
         ].join(' ')}
       >
-        {tab === 'content' ? 'Content' : tab === 'glossary' ? `Glossary (${glossaryCount})` : `Bibliography (${bibliographyCount})`}
+        {tab === 'content'
+          ? 'Content'
+          : tab === 'glossary'
+            ? `Glossary (${glossaryCount})`
+            : `Bibliography (${bibliographyCount})`}
       </button>
     {/each}
   </div>
 
-  {#if activeTab === 'content'}
-    <Toolbar
-      {viewMode}
-      onViewMode={(m) => (viewMode = m)}
-      onFormat={wrapSelection}
-      onLinePrefix={insertLinePrefix}
-      onInsert={insertAtCursor}
-      onGallery={() => (showGallery = true)}
-      onMetaToggle={() => (showMeta = !showMeta)}
-      metaOpen={showMeta}
-    />
-  {/if}
+  <!-- Toolbar (always visible; old React did the same) -->
+  <Toolbar
+    viewMode={mode}
+    {syncScroll}
+    onSyncScrollChange={(v) => (syncScroll = v)}
+    onViewMode={(m) => (mode = m)}
+    onFormat={wrapSelection}
+    onLinePrefix={insertLinePrefix}
+    onInsert={insertAtCursor}
+    onGallery={() => (showGallery = true)}
+    onMetaToggle={() => (showMeta = !showMeta)}
+    metaOpen={showMeta}
+  />
 
   <div class="flex min-h-0 flex-1">
-    <div class="flex min-h-0 flex-1 flex-col">
-
+    <div class="flex min-h-0 flex-1 divide-x divide-black/10 dark:divide-white/10">
       {#if activeTab === 'content'}
-        <div class="flex min-h-0 flex-1 divide-x divide-black/10 dark:divide-white/10">
-          {#if viewMode !== 'preview'}
-            <div class={viewMode === 'split' ? 'flex min-h-0 w-1/2 flex-col' : 'flex min-h-0 w-full flex-col'}>
-              <textarea
-                bind:this={textareaRef}
-                value={langTab === 'en' ? content : contentId}
-                oninput={(e) => setContent((e.target as HTMLTextAreaElement).value)}
-                ondrop={handleDrop}
-                onpaste={handlePaste}
-                placeholder={langTab === 'id' ? 'Mulai menulis dalam markdown... (ID)' : 'Start writing in markdown...'}
-                spellcheck="false"
-                class="editor-textarea editor-pane h-full w-full resize-none border-none bg-transparent p-4 font-mono text-sm leading-relaxed text-black outline-none dark:text-white"
-              ></textarea>
-            </div>
-          {/if}
-          {#if viewMode !== 'editor'}
-            <div class={viewMode === 'split' ? 'prose-preview min-h-0 w-1/2 overflow-y-auto p-6' : 'prose-preview min-h-0 w-full overflow-y-auto p-6'}>
-              {@html previewHtml}
-            </div>
-          {/if}
-        </div>
-
+        {#if mode !== 'preview'}
+          <div class={mode === 'split' ? 'flex min-h-0 w-1/2 flex-col' : 'flex min-h-0 w-full flex-col'}>
+            <textarea
+              bind:this={textareaRef}
+              value={activeContent}
+              oninput={(e) => setContent((e.target as HTMLTextAreaElement).value)}
+              ondrop={handleDrop}
+              onpaste={handlePaste}
+              placeholder={langTab === 'id' ? 'Mulai menulis dalam markdown... (ID)' : 'Start writing in markdown...'}
+              spellcheck="false"
+              class="editor-textarea editor-pane"
+            ></textarea>
+          </div>
+        {/if}
+        {#if mode !== 'editor'}
+          <div
+            bind:this={previewRef}
+            class={mode === 'split'
+              ? 'preview-content min-h-0 w-1/2 overflow-y-auto'
+              : 'preview-content preview-content-full min-h-0 w-full overflow-y-auto'}
+          >
+            {@html previewHtml}
+          </div>
+        {/if}
       {:else if activeTab === 'glossary'}
         <GlossaryPane
           lang={langTab}
-          entries={langTab === 'en' ? glossaryEn : glossaryId}
+          entries={activeGlossary}
           rawMode={rawGlossMode}
           rawText={rawGlossText}
           onadd={addGlossEntry}
@@ -511,7 +631,7 @@
       {:else}
         <BibliographyPane
           lang={langTab}
-          entries={langTab === 'en' ? bibliographyEn : bibliographyId}
+          entries={activeBibliography}
           rawMode={rawBibMode}
           rawText={rawBibText}
           bibTypes={BIB_TYPES}
@@ -527,13 +647,24 @@
     {#if showMeta}
       <MetaSidebar
         lang={langTab}
-        {slug} {publishedAt} {description} {descriptionId}
-        {coverImageUrl} {allTags} {selectedTagIds} {newTagName}
-        {headings} {wordCount} charCount={getContent().length}
+        {slug}
+        {publishedAt}
+        {description}
+        {descriptionId}
+        {coverImageUrl}
+        {allTags}
+        {selectedTagIds}
+        {newTagName}
+        {headings}
+        {wordCount}
+        {charCount}
         onSlugInput={(val) => (slug = val)}
         onSlugTouch={() => (slugTouched = true)}
         onPublishedAtChange={(val) => (publishedAt = val)}
-        onDescriptionInput={(val) => { if (langTab === 'id') descriptionId = val; else description = val }}
+        onDescriptionInput={(val) => {
+          if (langTab === 'id') descriptionId = val
+          else description = val
+        }}
         onCoverSelect={() => (showCoverGallery = true)}
         onCoverRemove={() => (coverImageUrl = '')}
         onToggleTag={toggleTag}
@@ -547,7 +678,7 @@
   {#if !showMeta}
     <div class="flex h-7 shrink-0 items-center gap-4 border-t border-black/10 bg-[#f5f5f5] px-4 dark:border-white/10 dark:bg-[#0d0d0d]">
       <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">{wordCount} words</span>
-      <span class="font-mono text-[10px] tracking-widest text-black/20 uppercase dark:text-white/20">{getContent().length} chars</span>
+      <span class="font-mono text-[10px] tracking-widest text-black/20 uppercase dark:text-white/20">{charCount} chars</span>
     </div>
   {/if}
 </div>
