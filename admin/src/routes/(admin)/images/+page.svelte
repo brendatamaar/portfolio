@@ -3,6 +3,7 @@
   import { api } from '$lib/api'
   import type { AdminImage } from '$lib/types'
   import type { PageData } from './$types'
+  import { fmtSize } from '$lib/utils'
 
   let { data }: { data: PageData } = $props()
   let images = $state<AdminImage[]>(untrack(() => data.images))
@@ -46,11 +47,6 @@
     setTimeout(() => (copied = null), 1500)
   }
 
-  function fmtSize(bytes: number) {
-    if (bytes < 1024) return `${bytes}B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`
-    return `${(bytes / 1024 / 1024).toFixed(1)}MB`
-  }
 </script>
 
 <svelte:head>

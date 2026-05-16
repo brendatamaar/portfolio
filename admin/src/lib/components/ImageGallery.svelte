@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api } from '$lib/api'
   import type { AdminImage } from '$lib/types'
+  import { fmtSize } from '$lib/utils'
 
   interface Props {
     open: boolean
@@ -55,12 +56,6 @@
     } catch (e) {
       error = String(e)
     }
-  }
-
-  function fmtSize(bytes: number) {
-    if (bytes < 1024) return `${bytes}B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`
-    return `${(bytes / 1024 / 1024).toFixed(1)}MB`
   }
 </script>
 
