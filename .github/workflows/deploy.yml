@@ -3,50 +3,64 @@ name: CI & Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'INSTALLATION.md'
+      - 'MIGRATION_PLAN.md'
+      - 'docs/**'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'INSTALLATION.md'
+      - 'MIGRATION_PLAN.md'
+      - 'docs/**'
 
 jobs:
-  ci:
-    name: Typecheck & Build
+  validate:
+    name: Validate - ${{ matrix.project }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: server
+            filter: portfolio-server...
+            command: pnpm typecheck
+          - project: web
+            filter: portfolio-web...
+            command: pnpm typecheck && pnpm build
+          - project: admin
+            filter: portfolio-admin-new...
+            command: pnpm typecheck && pnpm build
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --filter ${{ matrix.filter }}
 
-      - name: Typecheck — server
-        run: pnpm typecheck
-        working-directory: server
-
-      - name: Typecheck — web
-        run: pnpm typecheck
-        working-directory: web
-
-      - name: Typecheck — admin
-        run: pnpm typecheck
-        working-directory: admin
-
-      - name: Build — web
-        run: pnpm build
-        working-directory: web
-
-      - name: Build — admin
-        run: pnpm build
-        working-directory: admin
+      - name: Run validation
+        run: ${{ matrix.command }}
+        working-directory: ${{ matrix.project }}
 
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    needs: ci
+    timeout-minutes: 20
+    needs: validate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: production
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
@@ -56,28 +70,36 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 20m
           script: |
             set -e
+            export DOCKER_BUILDKIT=1
+            export COMPOSE_DOCKER_CLI_BUILD=1
             cd ~/apps/portfolio
 
-            echo "→ Pulling latest code"
+            echo "Pulling latest code"
             git pull origin main
 
-            echo "→ Backing up database"
+            echo "Backing up database"
             docker compose exec -T server bun run server/scripts/backup-db.ts || \
               cp -f ~/apps/portfolio/server/data/app.db \
                     ~/apps/portfolio/server/data/app.db.bak.$(date +%Y%m%d_%H%M%S) 2>/dev/null || \
               echo "Backup skipped (no existing container or db)"
 
-            echo "→ Restarting containers"
-            docker compose down
-            docker compose up -d --build
+            echo "Building images"
+            docker compose build --parallel
 
-            echo "→ Running migrations"
+            echo "Restarting changed containers"
+            docker compose up -d --remove-orphans
+
+            echo "Running migrations"
             docker compose exec -T server sh -c "cd server && bun run db:migrate"
 
-            echo "→ Smoke test"
-            sleep 5
+            echo "Smoke test"
+            for i in $(seq 1 30); do
+              curl -sf http://localhost:3003/api/health && break
+              sleep 1
+            done
             curl -sf http://localhost:3003/api/health || (echo "Health check failed" && exit 1)
 
-            echo "✓ Deploy complete"
+            echo "Deploy complete"
