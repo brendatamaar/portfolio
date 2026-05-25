@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM oven/bun:1-alpine AS build
 WORKDIR /app
 
@@ -8,7 +10,11 @@ RUN wget -qO /usr/local/bin/pnpm \
 COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY shared/package.json ./shared/
 COPY admin/package.json ./admin/
-RUN pnpm install --frozen-lockfile --filter portfolio-admin-new...
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --filter portfolio-admin-new...
+
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 COPY shared/ ./shared/
 COPY admin/ ./admin/
