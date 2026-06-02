@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+
+**/node_modules
+**/.astro
+**/.svelte-kit
+**/.vite
+**/dist
+**/build
+**/coverage
+**/*.log
+
+server/data
+server/uploads
