@@ -74,6 +74,7 @@ services:
       - PORT=3000
       - API_INTERNAL_URL=${API_INTERNAL_URL}
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN}
     depends_on:
       server:
         condition: service_healthy
