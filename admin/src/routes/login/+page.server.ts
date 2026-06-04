@@ -1,6 +1,11 @@
 ﻿import { redirect, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
-import { API_URL, SESSION_COOKIE, SESSION_MAX_AGE } from '$lib/server/config'
+import {
+  API_URL,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE,
+  COOKIE_DOMAIN,
+} from '$lib/server/config'
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) redirect(302, '/')
@@ -35,8 +40,10 @@ export const actions: Actions = {
         cookies.set(SESSION_COOKIE, match[1].trim(), {
           path: '/',
           httpOnly: true,
+          secure: !!COOKIE_DOMAIN,
           sameSite: 'lax',
           maxAge: SESSION_MAX_AGE,
+          ...(COOKIE_DOMAIN && { domain: COOKIE_DOMAIN }),
         })
         break
       }
