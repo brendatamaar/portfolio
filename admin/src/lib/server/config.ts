@@ -4,6 +4,7 @@ export const API_URL =
   process.env.API_INTERNAL_URL ?? 'http://localhost:3001/api'
 export const SESSION_COOKIE = 'session'
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+export const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN ?? undefined
 
 export async function serverFetch<T>(
   path: string,
