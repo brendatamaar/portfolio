@@ -454,8 +454,14 @@ app.delete('/images/:id', async (c) => {
   const row = db.select().from(images).where(eq(images.id, id)).get()
   if (!row) return c.json({ error: 'Not found' }, 404)
 
-  const filepath = join(UPLOADS_DIR, row.filename)
-  if (existsSync(filepath)) await unlinkAsync(filepath)
+  // Remove the original plus any generated webp/thumbnail variants
+  const filenames = [row.filename, row.webpUrl, row.thumbUrl]
+    .filter((f): f is string => !!f)
+    .map((f) => f.replace(/^\/uploads\//, ''))
+  for (const name of filenames) {
+    const filepath = join(UPLOADS_DIR, name)
+    if (existsSync(filepath)) await unlinkAsync(filepath)
+  }
 
   db.delete(images).where(eq(images.id, id)).run()
   return c.json({ ok: true })

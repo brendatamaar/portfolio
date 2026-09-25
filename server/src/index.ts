@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { join } from 'path'
+import { resolve, sep } from 'path'
 import { runMigrations } from './db/migrate.js'
 import { initJwtSecret } from './lib/init.js'
 import { db, sqlite } from './db/index.js'
@@ -43,12 +43,19 @@ app.use(
   }),
 )
 
-// Static uploads served via Bun's native file API
+// Static uploads served via Bun's native file API.
+// Filenames are unique per upload (timestamp + random), so they can be cached forever.
 app.get('/uploads/*', async (c) => {
-  const filePath = c.req.path.replace(/^\/uploads\//, '')
-  const file = Bun.file(join(UPLOADS_DIR, filePath))
+  const filePath = resolve(UPLOADS_DIR, c.req.path.replace(/^\/uploads\//, ''))
+  if (!filePath.startsWith(UPLOADS_DIR + sep)) return c.notFound()
+  const file = Bun.file(filePath)
   if (!(await file.exists())) return c.notFound()
-  return new Response(file)
+  return new Response(file, {
+    headers: {
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  })
 })
 
 // Rate limiters

@@ -25,6 +25,32 @@ function localizeFields(src: PostDetailRow, lang: string | undefined) {
   }
 }
 
+type ParseResult = ReturnType<typeof parse>
+
+// Markdown parsing + highlighting is the most expensive part of serving a post.
+// Cache per post/lang, keyed on the exact inputs so edits invalidate immediately.
+const PARSE_CACHE_MAX = 200
+const parseCache = new Map<string, { source: string; result: ParseResult }>()
+
+function parseCached(
+  cacheKey: string,
+  content: string,
+  glossMap: Map<string, number>,
+  citeMap: Map<string, number>,
+): ParseResult {
+  const source = `${content}\u0000${JSON.stringify([...glossMap])}\u0000${JSON.stringify([...citeMap])}`
+  const hit = parseCache.get(cacheKey)
+  if (hit && hit.source === source) return hit.result
+
+  const result = parse(content, { glossMap, citeMap })
+  parseCache.delete(cacheKey)
+  parseCache.set(cacheKey, { source, result })
+  if (parseCache.size > PARSE_CACHE_MAX) {
+    parseCache.delete(parseCache.keys().next().value!)
+  }
+  return result
+}
+
 export function buildPostDetail(post: PostDetailRow, lang: string | undefined) {
   const postTagRows = db
     .select({ name: tags.name, slug: tags.slug })
@@ -56,7 +82,12 @@ export function buildPostDetail(post: PostDetailRow, lang: string | undefined) {
 
   const glossMap = new Map(glossary.map((g) => [g.key, g.num]))
   const citeMap = new Map(bibliography.map((b) => [b.key, b.num]))
-  const { html, toc, sidenotes } = parse(content, { glossMap, citeMap })
+  const { html, toc, sidenotes } = parseCached(
+    `${post.id}:${lang === 'id' ? 'id' : 'en'}`,
+    content,
+    glossMap,
+    citeMap,
+  )
 
   return {
     post: {

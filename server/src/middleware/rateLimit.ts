@@ -5,7 +5,9 @@ export function createRateLimit(opts: { windowMs: number; max: number }) {
   const store = new Map<string, RateLimitEntry>()
 
   return async function rateLimitMiddleware(c: Context, next: Next) {
+    // Behind Cloudflare Tunnel the origin is unreachable directly, so CF's header is trustworthy
     const ip =
+      c.req.header('cf-connecting-ip') ??
       c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
       c.req.header('x-real-ip') ??
       'unknown'

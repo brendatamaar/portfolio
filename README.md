@@ -54,13 +54,18 @@ pnpm -C admin dev      # admin UI
 
 ## Docker
 
-```bash
-cp .env.example .env   # edit with your values
-docker compose up -d
-```
+Production runs from images built by GitHub Actions (GHCR) behind a Cloudflare Tunnel —
+no host ports are published. See [docs/deployment.md](docs/deployment.md) for the full VPS runbook.
 
-| Service   | Container Port | Host Port |
-| --------- | -------------- | --------- |
-| server    | 3001           | 3003      |
-| portfolio | 3000           | 3001      |
-| admin     | 3000           | 3002      |
+| Service     | Container Port | Public hostname                    |
+| ----------- | -------------- | ---------------------------------- |
+| web         | 3000           | www.brendatama.dev, brendatama.dev |
+| server      | 3001           | api.brendatama.dev                 |
+| admin       | 3000           | admin.brendatama.dev               |
+| cloudflared | —              | outbound tunnel to Cloudflare      |
+
+Build the images locally instead of pulling:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+```
