@@ -24,10 +24,11 @@ services:
     restart: unless-stopped
     logging: *logging
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:3001/api/health']
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001/api/health']
       interval: 30s
       timeout: 5s
       start_period: 10s
+      start_interval: 3s
       retries: 3
     deploy:
       resources:
@@ -45,10 +46,11 @@ services:
     restart: unless-stopped
     logging: *logging
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/']
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/']
       interval: 30s
       timeout: 5s
       start_period: 15s
+      start_interval: 3s
       retries: 3
     deploy:
       resources:
@@ -69,10 +71,11 @@ services:
     restart: unless-stopped
     logging: *logging
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/login']
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/login']
       interval: 30s
       timeout: 5s
       start_period: 10s
+      start_interval: 3s
       retries: 3
     deploy:
       resources:
