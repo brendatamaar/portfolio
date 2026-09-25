@@ -27,6 +27,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/admin/build ./build
 COPY --from=build /app/admin/package.json ./
 
+ENV NODE_ENV=production
+USER bun
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:3000/ || exit 1

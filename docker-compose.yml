@@ -1,23 +1,30 @@
+# Production stack. Images are built by GitHub Actions and pulled from GHCR.
+# Public traffic arrives only through the Cloudflare Tunnel (cloudflared) —
+# no container publishes a host port. See docs/deployment.md.
+#
+# Local image build: docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
 services:
   server:
-    build:
-      context: .
-      dockerfile: server/Dockerfile
-    ports:
-      - "3003:3001"
+    image: ghcr.io/brendatamaar/portfolio-server:${IMAGE_TAG:-latest}
     environment:
       - PORT=3001
       - NODE_ENV=production
       - CORS_ORIGINS=${CORS_ORIGINS}
       - UPLOADS_DIR=/app/server/uploads
-      - DB_PATH=${DB_PATH}
-      - COOKIE_DOMAIN=${COOKIE_DOMAIN}
     volumes:
-      - ./server/data:/app/server/data
-      - ./server/uploads:/app/server/uploads
-    restart: always
+      - ./data:/app/server/data
+      - ./uploads:/app/server/uploads
+    restart: unless-stopped
+    logging: *logging
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3001/api/health']
       interval: 30s
       timeout: 5s
       start_period: 10s
@@ -25,30 +32,20 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
           memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
 
-  portfolio:
-    build:
-      context: .
-      dockerfile: web/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-    ports:
-      - "3001:3000"
+  web:
+    image: ghcr.io/brendatamaar/portfolio-web:${IMAGE_TAG:-latest}
     environment:
       - PORT=3000
-      - API_INTERNAL_URL=${API_INTERNAL_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+      - API_INTERNAL_URL=http://server:3001/api
     depends_on:
       server:
         condition: service_healthy
-    restart: always
+    restart: unless-stopped
+    logging: *logging
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/']
       interval: 30s
       timeout: 5s
       start_period: 15s
@@ -56,31 +53,23 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
+          memory: 384M
 
   admin:
-    build:
-      context: .
-      dockerfile: admin/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-    ports:
-      - "3002:3000"
+    image: ghcr.io/brendatamaar/portfolio-admin:${IMAGE_TAG:-latest}
     environment:
       - PORT=3000
-      - API_INTERNAL_URL=${API_INTERNAL_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+      - API_INTERNAL_URL=http://server:3001/api
       - COOKIE_DOMAIN=${COOKIE_DOMAIN}
+      # adapter-node needs the public origin for its CSRF check behind a proxy
+      - ORIGIN=${ADMIN_ORIGIN}
     depends_on:
       server:
         condition: service_healthy
-    restart: always
+    restart: unless-stopped
+    logging: *logging
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/login']
       interval: 30s
       timeout: 5s
       start_period: 10s
@@ -88,8 +77,20 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 384M
-        reservations:
-          cpus: '0.1'
+          memory: 256M
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - web
+      - admin
+      - server
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
           memory: 128M
