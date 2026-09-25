@@ -132,6 +132,18 @@ jobs:
             set -e
             cd ~/portfolio
 
+            # Preflight: fail fast with a clear message instead of an unhealthy container
+            if [ ! -r .env ]; then
+              echo "::error::~/portfolio/.env is missing or unreadable (see docs/deployment.md step 7)"
+              exit 1
+            fi
+            for dir in data uploads; do
+              if [ "$(stat -c %u "$dir" 2>/dev/null)" != "1000" ]; then
+                echo "::error::~/portfolio/$dir must exist and be owned by uid 1000: sudo mkdir -p ~/portfolio/$dir && sudo chown -R 1000:1000 ~/portfolio/$dir"
+                exit 1
+              fi
+            done
+
             echo "Backing up database"
             docker compose exec -T server bun run server/scripts/backup-db.ts \
               || echo "Backup skipped (server not running yet)"

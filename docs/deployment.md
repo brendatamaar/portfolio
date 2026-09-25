@@ -16,7 +16,7 @@ Browser ──HTTPS──▶ Cloudflare edge ──Cloudflare Tunnel (outbound f
 - **Images are built in GitHub Actions** and pushed to GHCR (`ghcr.io/brendatamaar/portfolio-{server,web,admin}`). The VPS only pulls them, so there are no builds on 2 GB of RAM and no source checkout on the server.
 - **State** lives in two host folders: `~/portfolio/data` (SQLite) and `~/portfolio/uploads` (images). Back up those two folders.
 
-Replace `VPS_IP` below with your server's IP. Commands marked **(local)** run on your Windows machine in PowerShell. Everything else runs on the VPS.
+Replace `VPS_IP` below with your server's IP. The login user is `brendatama`. **Steps 1–5 are already done on the current server**; continue from step 6. Commands marked **(local)** run on your Windows machine in PowerShell. Everything else runs on the VPS.
 
 ---
 
@@ -36,21 +36,21 @@ Check the CPU architecture. The images are built for `x86_64`:
 uname -m
 ```
 
-## 2. System update and `deploy` user
+## 2. System update and `brendatama` user
 
 ```bash
 apt update && apt -y full-upgrade
 timedatectl set-timezone Asia/Jakarta
 
-adduser --gecos "" deploy                # set a password (used for sudo)
-usermod -aG sudo deploy
-mkdir -p /home/deploy/.ssh
-cp ~/.ssh/authorized_keys /home/deploy/.ssh/
-chown -R deploy:deploy /home/deploy/.ssh
-chmod 700 /home/deploy/.ssh && chmod 600 /home/deploy/.ssh/authorized_keys
+adduser --gecos "" brendatama                # set a password (used for sudo)
+usermod -aG sudo brendatama
+mkdir -p /home/brendatama/.ssh
+cp ~/.ssh/authorized_keys /home/brendatama/.ssh/
+chown -R brendatama:brendatama /home/brendatama/.ssh
+chmod 700 /home/brendatama/.ssh && chmod 600 /home/brendatama/.ssh/authorized_keys
 ```
 
-**(local)**: in a **new** terminal, confirm `ssh deploy@VPS_IP` works **before** continuing.
+**(local)**: in a **new** terminal, confirm `ssh brendatama@VPS_IP` works **before** continuing.
 
 ## 3. Harden SSH
 
@@ -65,7 +65,7 @@ EOF
 sshd -t && systemctl restart ssh
 ```
 
-Keep the root session open. **(local)** Check that `ssh deploy@VPS_IP` still works and `ssh root@VPS_IP` is refused. Then close the root session and do everything from here on as `deploy`.
+Keep the root session open. **(local)** Check that `ssh brendatama@VPS_IP` still works and `ssh root@VPS_IP` is refused. Then close the root session and do everything from here on as `brendatama`.
 
 ## 4. Firewall, fail2ban, automatic security updates
 
@@ -79,8 +79,15 @@ sudo dpkg-reconfigure -plow unattended-upgrades   # answer "Yes"
 
 ## 5. Swap (2 GB RAM needs it)
 
+First check whether the provider already created swap (Sumopod images ship with `/swap.img`, about 2 GB):
+
 ```bash
-swapon --show                      # skip this section if swap already exists
+swapon --show
+```
+
+**If that lists anything, skip to the last two lines** (swappiness only). Otherwise create a swap file:
+
+```bash
 sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile && sudo swapon /swapfile
@@ -93,7 +100,7 @@ sudo sysctl --system
 
 ```bash
 curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker deploy
+sudo usermod -aG docker brendatama
 exit                               # log out and back in so the docker group applies
 ```
 
@@ -103,6 +110,8 @@ docker compose version
 ```
 
 ## 7. App directory
+
+Run this as **`brendatama`, not root**. As root, `~` is `/root`, so compose (which runs as `brendatama`) wouldn't find `.env`.
 
 The containers run as uid/gid `1000`, so the data folders must belong to it:
 
@@ -147,7 +156,7 @@ chmod 600 ~/portfolio/.env
 
 ```powershell
 ssh-keygen -t ed25519 -f $env:USERPROFILE\.ssh\portfolio_deploy -N '""' -C "github-actions-deploy"
-type $env:USERPROFILE\.ssh\portfolio_deploy.pub | ssh deploy@VPS_IP "cat >> ~/.ssh/authorized_keys"
+type $env:USERPROFILE\.ssh\portfolio_deploy.pub | ssh brendatama@VPS_IP "cat >> ~/.ssh/authorized_keys"
 ```
 
 In the repo: Settings → Secrets and variables → Actions → set these **repository secrets**:
@@ -155,7 +164,7 @@ In the repo: Settings → Secrets and variables → Actions → set these **repo
 | Secret        | Value                                                                |
 | ------------- | -------------------------------------------------------------------- |
 | `VPS_HOST`    | the VPS IP                                                           |
-| `VPS_USER`    | `deploy`                                                             |
+| `VPS_USER`    | `brendatama`                                                         |
 | `VPS_SSH_KEY` | full contents of `%USERPROFILE%\.ssh\portfolio_deploy` (private key) |
 
 Then deploy: push to `main`, or go to Actions → _CI & Deploy_ → _Run workflow_ on `main`. The workflow:
@@ -183,8 +192,8 @@ docker compose exec server bun run server/scripts/seed-resume.ts # resume/profil
 
 ```powershell
 # (local)
-scp .\app.db deploy@VPS_IP:~/portfolio/
-scp -r .\uploads\* deploy@VPS_IP:~/portfolio/uploads/
+scp .\app.db brendatama@VPS_IP:~/portfolio/
+scp -r .\uploads\* brendatama@VPS_IP:~/portfolio/uploads/
 ```
 
 ```bash
@@ -209,7 +218,7 @@ In a browser: home page, blog, dark-mode toggle, **admin login** (the cookie mus
 
 ## 12. Backups
 
-The database gets snapshotted on every deploy and should also be backed up nightly. `crontab -e` as `deploy`:
+The database gets snapshotted on every deploy and should also be backed up nightly. `crontab -e` as `brendatama`:
 
 ```cron
 0 3 * * * cd ~/portfolio && docker compose exec -T server bun run server/scripts/backup-db.ts >> ~/portfolio/backup.log 2>&1
@@ -231,8 +240,8 @@ rclone config    # n → name "r2" → type "s3" → provider "Cloudflare" → a
 **Option B: pull a copy to your laptop now and then** (local):
 
 ```powershell
-scp -r deploy@VPS_IP:~/portfolio/data/backups .\portfolio-backups\
-scp -r deploy@VPS_IP:~/portfolio/uploads .\portfolio-backups\
+scp -r brendatama@VPS_IP:~/portfolio/data/backups .\portfolio-backups\
+scp -r brendatama@VPS_IP:~/portfolio/uploads .\portfolio-backups\
 ```
 
 ---
