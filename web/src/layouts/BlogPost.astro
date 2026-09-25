@@ -1,5 +1,5 @@
 ---
-import { ViewTransitions } from 'astro:transitions'
+import BaseHead from '../components/BaseHead.astro'
 import ThemeToggle from '../components/ThemeToggle.astro'
 import '../globals.css'
 import '../blog.css'
@@ -8,64 +8,34 @@ interface Props {
   title: string
   description?: string
   canonicalUrl?: string
+  lang?: 'en' | 'id'
 }
 
 const {
   title,
   description = 'Read on brendatama.dev',
-  canonicalUrl = Astro.url.href,
+  canonicalUrl,
+  lang = 'en',
 } = Astro.props
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <link rel="icon" type="image/svg+xml" href="/images/favicon/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
-    <link rel="icon" type="image/x-icon" href="/images/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png" />
-    <link rel="manifest" href="/images/favicon/site.webmanifest" />
-
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalUrl} />
-
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:site_name" content="Brendatama Akbar" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-
-    <link rel="preconnect" href="https://api.brendatama.dev" />
-
-    <script is:inline>
-      ;(function () {
-        var s = localStorage.getItem('theme')
-        var d = window.matchMedia('(prefers-color-scheme: dark)').matches
-        if (s === 'dark' || (s === null && d)) {
-          document.documentElement.classList.add('dark')
-        }
-      })()
-    </script>
-
-    <ViewTransitions />
+    <BaseHead {title} {description} ogType="article" {canonicalUrl} preconnectApi />
   </head>
   <body class="bg-white text-black dark:bg-black dark:text-white">
     <!-- Scroll progress bar -->
     <div
       id="scroll-progress"
-      class="fixed top-0 left-0 z-50 h-[3px] w-0 bg-[#FFE600]"
+      class="fixed top-0 left-0 z-50 h-[3px] w-full origin-left scale-x-0 bg-[#FFE600]"
       aria-hidden="true"
     ></div>
 
     <!-- Back to top -->
     <button
       id="back-to-top"
+      tabindex="-1"
       class="fixed bottom-8 right-8 z-40 border-2 border-black bg-[#FFE600] px-3 py-2 font-mono text-[10px] font-bold tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] opacity-0 pointer-events-none transition-all hover:shadow-[6px_6px_0px_#000] dark:border-white dark:shadow-[4px_4px_0px_#fff]"
       aria-label="Back to top"
     >

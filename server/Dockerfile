@@ -22,13 +22,15 @@ FROM oven/bun:1-alpine
 WORKDIR /app
 
 RUN apk add --no-cache vips
-RUN addgroup -S nodejs && adduser -S nodejs -G nodejs
 
-COPY --from=build --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=build --chown=nodejs:nodejs /app/server ./server
-COPY --from=build --chown=nodejs:nodejs /app/shared ./shared
+# Runs as the image's built-in `bun` user (uid/gid 1000). Host bind mounts for
+# data/ and uploads/ must be owned by 1000:1000 (see docs/deployment.md).
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/server ./server
+COPY --from=build /app/shared ./shared
+RUN mkdir -p server/data server/uploads && chown -R bun:bun server/data server/uploads
 
-USER nodejs
+USER bun
 
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

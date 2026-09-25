@@ -1,4 +1,4 @@
-export function initScrollspy() {
+export function initScrollspy(signal: AbortSignal) {
   const links = Array.from(
     document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'),
   )
@@ -9,8 +9,11 @@ export function initScrollspy() {
     .filter(Boolean) as HTMLElement[]
 
   const visibleIds = new Set<string>()
+  let activeId: string | null = null
 
   const setActive = (id: string) => {
+    if (id === activeId) return
+    activeId = id
     links.forEach((link) => {
       const active = link.dataset.tocLink === id
       link.classList.toggle('font-bold', active)
@@ -34,6 +37,7 @@ export function initScrollspy() {
   )
 
   headingEls.forEach((el) => observer.observe(el))
+  signal.addEventListener('abort', () => observer.disconnect())
 
   // Smooth scroll on TOC link click
   links.forEach((link) => {

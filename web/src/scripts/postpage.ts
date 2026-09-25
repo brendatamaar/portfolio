@@ -1,52 +1,89 @@
-export function initScrollProgress() {
+export function initScrollProgress(signal: AbortSignal) {
   const bar = document.getElementById('scroll-progress')
   if (!bar) return
+
+  // Scales a full-width bar (transform, not width) so scrolling never triggers layout
+  let ticking = false
   const update = () => {
-    const scrolled = window.scrollY
+    ticking = false
     const total = document.documentElement.scrollHeight - window.innerHeight
-    bar.style.width = total > 0 ? `${(scrolled / total) * 100}%` : '0%'
+    const ratio = total > 0 ? Math.min(1, window.scrollY / total) : 0
+    bar.style.transform = `scaleX(${ratio})`
   }
-  window.addEventListener('scroll', update, { passive: true })
+  const onScroll = () => {
+    if (ticking) return
+    ticking = true
+    requestAnimationFrame(update)
+  }
+  window.addEventListener('scroll', onScroll, { passive: true, signal })
+  window.addEventListener('resize', onScroll, { passive: true, signal })
   update()
 }
 
-export function initBackToTop() {
+export function initBackToTop(signal: AbortSignal) {
   const btn = document.getElementById('back-to-top')
   if (!btn) return
+
+  let visible: boolean | null = null
   const toggle = () => {
-    btn.classList.toggle('opacity-0', window.scrollY < 300)
-    btn.classList.toggle('pointer-events-none', window.scrollY < 300)
+    const next = window.scrollY >= 300
+    if (next === visible) return
+    visible = next
+    btn.classList.toggle('opacity-0', !next)
+    btn.classList.toggle('pointer-events-none', !next)
+    btn.tabIndex = next ? 0 : -1
   }
-  window.addEventListener('scroll', toggle, { passive: true })
+  window.addEventListener('scroll', toggle, { passive: true, signal })
   toggle()
   btn.addEventListener('click', () =>
     window.scrollTo({ top: 0, behavior: 'smooth' }),
   )
 }
 
-export function initShareMenu(title: string) {
+export function initShareMenu(signal: AbortSignal) {
   const trigger = document.getElementById('share-trigger')
   const menu = document.getElementById('share-menu')
   const copyBtn = document.getElementById('share-copy')
   if (!trigger || !menu) return
 
-  const close = () => menu.classList.add('hidden')
-  trigger.addEventListener('click', () => menu.classList.toggle('hidden'))
+  const title = trigger.dataset.title ?? document.title
+  const setOpen = (open: boolean) => {
+    menu.classList.toggle('hidden', !open)
+    trigger.setAttribute('aria-expanded', String(open))
+  }
+  const close = () => setOpen(false)
 
-  document.addEventListener('mousedown', (e) => {
-    if (!trigger.contains(e.target as Node) && !menu.contains(e.target as Node))
-      close()
-  })
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close()
-  })
+  trigger.addEventListener('click', () =>
+    setOpen(menu.classList.contains('hidden')),
+  )
+
+  document.addEventListener(
+    'mousedown',
+    (e) => {
+      const target = e.target as Node
+      if (!trigger.contains(target) && !menu.contains(target)) close()
+    },
+    { signal },
+  )
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key === 'Escape') close()
+    },
+    { signal },
+  )
 
   copyBtn?.addEventListener('click', async () => {
-    await navigator.clipboard.writeText(window.location.href)
-    copyBtn.textContent = 'COPIED!'
+    const label = copyBtn.dataset.label ?? copyBtn.textContent
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      copyBtn.textContent = copyBtn.dataset.copied ?? label
+    } catch {
+      return
+    }
     close()
     setTimeout(() => {
-      copyBtn.textContent = 'COPY LINK'
+      copyBtn.textContent = label
     }, 2000)
   })
 
@@ -54,26 +91,25 @@ export function initShareMenu(title: string) {
     window.open(url, '_blank', 'noopener,noreferrer')
     close()
   }
+  const href = () => encodeURIComponent(window.location.href)
 
   document
     .getElementById('share-twitter')
     ?.addEventListener('click', () =>
       openWindow(
-        `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(window.location.href)}`,
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${href()}`,
       ),
     )
   document
     .getElementById('share-linkedin')
     ?.addEventListener('click', () =>
       openWindow(
-        `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`,
+        `https://www.linkedin.com/sharing/share-offsite/?url=${href()}`,
       ),
     )
   document
     .getElementById('share-facebook')
     ?.addEventListener('click', () =>
-      openWindow(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
-      ),
+      openWindow(`https://www.facebook.com/sharer/sharer.php?u=${href()}`),
     )
 }

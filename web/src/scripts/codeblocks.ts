@@ -1,25 +1,31 @@
 export function initCodeblocks() {
-  document.querySelectorAll<HTMLPreElement>('pre').forEach((pre) => {
-    if (pre.querySelector('.copy-btn')) return
-    const btn = document.createElement('button')
-    btn.className =
-      'copy-btn font-mono text-[10px] uppercase tracking-widest border-2 border-black px-2 py-0.5 bg-white text-black hover:bg-[#FFE600] transition-colors absolute top-2 right-2 shadow-[2px_2px_0px_#000]'
-    btn.textContent = 'copy'
-    btn.addEventListener('click', async () => {
-      await navigator.clipboard.writeText(
-        pre.querySelector('code')?.textContent ?? '',
-      )
-      btn.textContent = 'copied!'
-      setTimeout(() => {
-        btn.textContent = 'copy'
-      }, 2000)
+  document
+    .querySelectorAll<HTMLPreElement>('.blog-content pre')
+    .forEach((pre) => {
+      if (pre.querySelector('.copy-btn')) return
+      const btn = document.createElement('button')
+      btn.className =
+        'copy-btn font-mono text-[10px] uppercase tracking-widest border-2 border-black px-2 py-0.5 bg-white text-black hover:bg-[#FFE600] transition-colors absolute top-2 right-2 shadow-[2px_2px_0px_#000]'
+      btn.textContent = 'copy'
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(
+            pre.querySelector('code')?.textContent ?? '',
+          )
+        } catch {
+          return
+        }
+        btn.textContent = 'copied!'
+        setTimeout(() => {
+          btn.textContent = 'copy'
+        }, 2000)
+      })
+      pre.style.position = 'relative'
+      pre.appendChild(btn)
     })
-    pre.style.position = 'relative'
-    pre.appendChild(btn)
-  })
 }
 
-export function initImageZoom() {
+export function initImageZoom(signal: AbortSignal) {
   let overlay: HTMLDivElement | null = null
 
   const close = () => {
@@ -61,7 +67,12 @@ export function initImageZoom() {
       img.addEventListener('click', () => open(img.src))
     })
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close()
-  })
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key === 'Escape') close()
+    },
+    { signal },
+  )
+  signal.addEventListener('abort', close)
 }

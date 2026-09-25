@@ -1,34 +1,15 @@
 export type Theme = 'dark' | 'light'
 
-function getStored(): Theme | null {
-  const v = localStorage.getItem('theme')
-  return v === 'dark' || v === 'light' ? v : null
-}
-
-function getPreferred(): Theme {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light'
-}
-
-function apply(theme: Theme) {
-  document.documentElement.classList.toggle('dark', theme === 'dark')
-}
-
-export function initTheme() {
-  apply(getStored() ?? getPreferred())
-
-  // Follow system preference when user hasn't made an explicit choice
-  window
-    .matchMedia('(prefers-color-scheme: dark)')
-    .addEventListener('change', (e) => {
-      if (!getStored()) apply(e.matches ? 'dark' : 'light')
-    })
-}
+// Initial theme is applied by the inline script in components/BaseHead.astro
 
 export function toggleTheme() {
-  const isDark = document.documentElement.classList.contains('dark')
-  const next: Theme = isDark ? 'light' : 'dark'
-  localStorage.setItem('theme', next)
-  apply(next)
+  const next: Theme = document.documentElement.classList.contains('dark')
+    ? 'light'
+    : 'dark'
+  try {
+    localStorage.setItem('theme', next)
+  } catch {
+    // Storage unavailable (private mode) — theme still applies for this page
+  }
+  document.documentElement.classList.toggle('dark', next === 'dark')
 }

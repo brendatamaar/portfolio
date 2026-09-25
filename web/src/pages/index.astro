@@ -10,7 +10,7 @@ const BLOG_PREVIEW = 3
 const PROJECT_PREVIEW = 4
 
 const [postsRes, resumeRes] = await Promise.allSettled([
-  api.getPosts('en').then((r) => r.data.slice(0, BLOG_PREVIEW)),
+  api.getPosts('en', BLOG_PREVIEW).then((r) => r.data),
   api.getResumeData('en'),
 ])
 
@@ -194,7 +194,9 @@ const profile = resume.profile
 </Base>
 
 <script>
-  function initHomepage() {
+  import { onPageLoad } from '../scripts/lifecycle'
+
+  onPageLoad(() => {
     // Show more projects toggle
     const showMoreBtn = document.getElementById('show-more-projects')
     const extraProjects = document.getElementById('extra-projects')
@@ -223,8 +225,5 @@ const profile = resume.profile
         panel.style.maxHeight = open ? '0' : `${panel.scrollHeight}px`
       })
     })
-  }
-
-  initHomepage()
-  document.addEventListener('astro:page-load', initHomepage)
+  })
 </script>

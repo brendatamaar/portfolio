@@ -1,5 +1,4 @@
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/jetbrains-mono';
+/* Font faces are declared (latin subsets only) and preloaded in components/BaseHead.astro */
 @import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
@@ -21,6 +20,11 @@
 
   html {
     scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
@@ -60,28 +64,12 @@
   }
 }
 
-/* Cassette / vinyl animations */
-
-@keyframes reel-spin {
-  to {
-    transform: rotate(360deg);
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-}
-
-.reel-animate {
-  animation: reel-spin 2s linear infinite;
-  animation-play-state: paused;
-}
-
-.group:hover .reel-animate {
-  animation-play-state: running;
-}
-
-.vinyl-spin {
-  animation: reel-spin 3s linear infinite;
-  animation-play-state: paused;
-}
-
-.group:hover .vinyl-spin {
-  animation-play-state: running;
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
 }

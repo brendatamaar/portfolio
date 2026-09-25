@@ -1,6 +1,7 @@
-import { copyFileSync, mkdirSync, readdirSync, rmSync, statSync } from 'fs'
+import { mkdirSync, readdirSync, rmSync, statSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { Database } from 'bun:sqlite'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, '../data')
@@ -13,7 +14,11 @@ mkdirSync(BACKUP_DIR, { recursive: true })
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
 const dest = join(BACKUP_DIR, `app-${timestamp}.db`)
 
-copyFileSync(DB_PATH, dest)
+// VACUUM INTO writes a consistent snapshot even while the server is writing.
+// A plain file copy of a WAL-mode database can miss or tear recent writes.
+const db = new Database(DB_PATH, { readonly: true })
+db.run(`VACUUM INTO '${dest.replace(/'/g, "''")}'`)
+db.close()
 console.log(`Backed up to ${dest}`)
 
 const backups = readdirSync(BACKUP_DIR)

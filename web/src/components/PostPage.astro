@@ -1,0 +1,162 @@
+---
+import BlogPost from '../layouts/BlogPost.astro'
+import TOC from './TOC.astro'
+import Sidenotes from './Sidenotes.astro'
+import GlossarySection from './GlossarySection.astro'
+import BibliographySection from './BibliographySection.astro'
+import { formatDate, readingTime } from '../lib/utils'
+import type { PostDetail } from '../lib/types'
+
+interface Props {
+  data: PostDetail
+  lang: 'en' | 'id'
+}
+
+const { data, lang } = Astro.props
+const { post, html, toc, sidenotes, bibliography, glossary } = data
+
+const t =
+  lang === 'id'
+    ? { back: '← Tulisan', all: '← Semua tulisan', minRead: 'menit baca', share: 'Bagikan', copy: 'Salin tautan', copied: 'Tersalin!', fallback: 'Baca di brendatama.dev' }
+    : { back: '← Writing', all: '← All posts', minRead: 'min read', share: 'Share', copy: 'Copy link', copied: 'Copied!', fallback: 'Read on brendatama.dev' }
+
+const blogPath = lang === 'id' ? '/id/blog' : '/blog'
+const date = new Date(post.publishedAt ?? post.createdAt)
+const mins = readingTime(html)
+const title = `${post.title} | Brendatama Akbar`
+const description = post.description || t.fallback
+const canonicalUrl = `https://www.brendatama.dev${blogPath}/${post.slug}`
+
+const menuItem =
+  'flex w-full items-center gap-2 px-3 py-2 font-mono text-[10px] font-bold tracking-wide uppercase text-black transition-colors hover:bg-[#FFE600] dark:text-white dark:hover:bg-[#FFE600] dark:hover:text-black'
+---
+
+<BlogPost {title} {description} {canonicalUrl} {lang}>
+  <!-- Post header -->
+  <div slot="header" class="mb-10 border-b-2 border-black pb-10 dark:border-white">
+    <a
+      href={blogPath}
+      class="mb-8 inline-block font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+    >
+      {t.back}
+    </a>
+
+    {post.tags.length > 0 && (
+      <div class="mb-5 flex flex-wrap gap-1.5">
+        {post.tags.map((tag) => (
+          <span class="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+            #{tag.name}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <h1 class="mb-4 text-5xl leading-[0.9] font-black tracking-tighter text-black uppercase sm:text-6xl dark:text-white">
+      {post.title}
+    </h1>
+
+    {post.description && (
+      <p class="mb-8 max-w-2xl text-xl leading-relaxed text-black/60 dark:text-white/60">
+        {post.description}
+      </p>
+    )}
+
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="font-mono text-[11px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
+        {formatDate(date, lang)}
+      </span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">{mins} {t.minRead}</span>
+      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+
+      <!-- Share menu -->
+      <div class="relative">
+        <button
+          id="share-trigger"
+          class="flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="share-menu"
+          data-title={post.title}
+        >
+          <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          {t.share}
+        </button>
+        <div
+          id="share-menu"
+          class="hidden absolute top-full left-0 z-50 mt-2 min-w-[168px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+          role="menu"
+        >
+          <button id="share-copy" role="menuitem" class={menuItem} data-label={t.copy} data-copied={t.copied}>{t.copy}</button>
+          <button id="share-twitter" role="menuitem" class={menuItem}>Twitter</button>
+          <button id="share-linkedin" role="menuitem" class={menuItem}>LinkedIn</button>
+          <button id="share-facebook" role="menuitem" class={menuItem}>Facebook</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data island for client scripts -->
+  {(glossary.length > 0 || bibliography.length > 0) && (
+    <div
+      id="blog-data"
+      data-glossary={JSON.stringify(glossary)}
+      data-bibliography={JSON.stringify(bibliography)}
+      hidden
+    />
+  )}
+
+  <!-- 3-column layout -->
+  <div class="blog-layout flex w-full items-start gap-10">
+    <Sidenotes {sidenotes} />
+    <div class="blog-content prose-custom min-w-0 flex-1" set:html={html} />
+    <TOC {toc} hasGlossary={glossary.length > 0} hasBibliography={bibliography.length > 0} />
+  </div>
+
+  <!-- Footer section: glossary, bibliography, back link -->
+  <div slot="footer" class="space-y-4">
+    <GlossarySection {glossary} />
+    <BibliographySection {bibliography} />
+    <div class="border-t-2 border-black pt-6 dark:border-white">
+      <a
+        href={blogPath}
+        class="font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+      >
+        {t.all}
+      </a>
+    </div>
+  </div>
+</BlogPost>
+
+<script>
+  import { onPageLoad } from '../scripts/lifecycle'
+  import { initScrollProgress, initBackToTop, initShareMenu } from '../scripts/postpage'
+  import { initScrollspy } from '../scripts/scrollspy'
+  import { initSidenotes } from '../scripts/sidenotes'
+  import { initCodeblocks, initImageZoom } from '../scripts/codeblocks'
+  import { initGlossaryPopups, initBibliographyPopups } from '../scripts/popups'
+
+  onPageLoad((signal) => {
+    // Shared by every page that loaded this module — bail out when not on a post
+    if (!document.querySelector('.blog-content')) return
+
+    initScrollProgress(signal)
+    initBackToTop(signal)
+    initShareMenu(signal)
+    initScrollspy(signal)
+    initSidenotes(signal)
+    initCodeblocks()
+    initImageZoom(signal)
+
+    const el = document.getElementById('blog-data')
+    if (el) {
+      const glossary = JSON.parse(el.dataset.glossary ?? '[]')
+      const bibliography = JSON.parse(el.dataset.bibliography ?? '[]')
+      if (glossary.length) initGlossaryPopups(glossary, signal)
+      if (bibliography.length) initBibliographyPopups(bibliography, signal)
+    }
+  })
+</script>

@@ -26,198 +26,172 @@ function computePopupStyle(
   }
 }
 
-function applyStyle(el: HTMLElement, style: Partial<CSSStyleDeclaration>) {
-  Object.assign(el.style, style)
+interface PopupConfig<T> {
+  entries: Map<string, T>
+  /** Selector matching reference elements in the article */
+  selector: string
+  /** Reads the entry key off a matched reference element */
+  keyOf: (ref: HTMLElement) => string | undefined
+  className: string
+  closeClassName: string
+  width: number
+  /** Popup HTML; `closeBtn` is included only for the click-pinned popup */
+  render: (entry: T, closeBtn: string) => string
 }
 
-export function initGlossaryPopups(glossary: GlossaryEntry[]) {
-  const map = new Map(glossary.map((g) => [g.key, g]))
+/**
+ * Hover shows a transient popup; click pins one with a close button.
+ * Document listeners are removed when `signal` aborts (page navigation).
+ */
+function initPopups<T>(cfg: PopupConfig<T>, signal: AbortSignal) {
   let hoverEl: HTMLDivElement | null = null
+  let hoverRef: HTMLElement | null = null
   let clickEl: HTMLDivElement | null = null
   let hideTimer = 0
 
   const removeHover = () => {
     hoverEl?.remove()
     hoverEl = null
+    hoverRef = null
   }
   const removeClick = () => {
     clickEl?.remove()
     clickEl = null
   }
 
-  const showHover = (entry: GlossaryEntry, ref: HTMLElement) => {
-    removeHover()
+  const create = (entry: T, ref: HTMLElement, pinned: boolean) => {
     const rect = ref.getBoundingClientRect()
-    hoverEl = document.createElement('div')
-    hoverEl.className = 'gloss-popup'
-    hoverEl.style.pointerEvents = 'none'
-    hoverEl.innerHTML = `<div class="gloss-popup-term">${entry.term}</div><div>${entry.definition}</div>`
-    applyStyle(
-      hoverEl,
+    const el = document.createElement('div')
+    el.className = cfg.className
+    el.innerHTML = cfg.render(
+      entry,
+      pinned
+        ? `<button class="${cfg.closeClassName}" aria-label="Close">×</button>`
+        : '',
+    )
+    if (!pinned) el.style.pointerEvents = 'none'
+    Object.assign(
+      el.style,
       computePopupStyle(rect.left + rect.width / 2, rect.top, rect.bottom, {
-        width: 400,
+        width: cfg.width,
         margin: 8,
       }),
     )
-    document.body.appendChild(hoverEl)
+    el.querySelector(`.${cfg.closeClassName}`)?.addEventListener(
+      'click',
+      removeClick,
+    )
+    document.body.appendChild(el)
+    return el
   }
 
-  const showClick = (entry: GlossaryEntry, ref: HTMLElement) => {
-    removeClick()
-    const rect = ref.getBoundingClientRect()
-    clickEl = document.createElement('div')
-    clickEl.className = 'gloss-popup'
-    clickEl.innerHTML = `
-      <div class="gloss-popup-header">
-        <div class="gloss-popup-term">${entry.term}</div>
-        <button class="gloss-popup-close" aria-label="Close">×</button>
-      </div>
-      <div>${entry.definition}</div>`
-    applyStyle(
-      clickEl,
-      computePopupStyle(rect.left + rect.width / 2, rect.top, rect.bottom, {
-        width: 400,
-        margin: 8,
-      }),
-    )
-    clickEl
-      .querySelector('.gloss-popup-close')
-      ?.addEventListener('click', removeClick)
-    document.body.appendChild(clickEl)
-  }
+  const findRef = (e: Event) =>
+    (e.target as HTMLElement).closest<HTMLElement>(cfg.selector)
 
-  document.addEventListener('mouseover', (e) => {
-    const ref = (e.target as HTMLElement).closest<HTMLElement>(
-      '[data-gloss-key]',
-    )
-    if (!ref) {
+  document.addEventListener(
+    'mouseover',
+    (e) => {
+      const ref = findRef(e)
       clearTimeout(hideTimer)
-      hideTimer = window.setTimeout(removeHover, 150)
-      return
-    }
-    clearTimeout(hideTimer)
-    const entry = map.get(ref.dataset.glossKey!)
-    if (entry) showHover(entry, ref)
-  })
-
-  document.addEventListener('click', (e) => {
-    const ref = (e.target as HTMLElement).closest<HTMLElement>(
-      '[data-gloss-key]',
-    )
-    if (!ref) {
-      removeClick()
-      return
-    }
-    e.preventDefault()
-    const entry = map.get(ref.dataset.glossKey!)
-    if (entry) showClick(entry, ref)
-  })
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
+      if (!ref) {
+        if (hoverEl) hideTimer = window.setTimeout(removeHover, 150)
+        return
+      }
+      // mouseover bubbles from every child — don't rebuild for the same ref
+      if (ref === hoverRef) return
+      const key = cfg.keyOf(ref)
+      const entry = key ? cfg.entries.get(key) : undefined
+      if (!entry) return
       removeHover()
+      hoverEl = create(entry, ref, false)
+      hoverRef = ref
+    },
+    { signal },
+  )
+
+  document.addEventListener(
+    'click',
+    (e) => {
+      const ref = findRef(e)
+      if (!ref) {
+        removeClick()
+        return
+      }
+      e.preventDefault()
+      const key = cfg.keyOf(ref)
+      const entry = key ? cfg.entries.get(key) : undefined
+      if (!entry) return
       removeClick()
-    }
+      clickEl = create(entry, ref, true)
+    },
+    { signal },
+  )
+
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key === 'Escape') {
+        removeHover()
+        removeClick()
+      }
+    },
+    { signal },
+  )
+
+  signal.addEventListener('abort', () => {
+    clearTimeout(hideTimer)
+    removeHover()
+    removeClick()
   })
 }
 
-export function initBibliographyPopups(bibliography: BibliographyEntry[]) {
-  const map = new Map(bibliography.map((b) => [b.key, b]))
-  let hoverEl: HTMLDivElement | null = null
-  let clickEl: HTMLDivElement | null = null
-  let hideTimer = 0
+export function initGlossaryPopups(
+  glossary: GlossaryEntry[],
+  signal: AbortSignal,
+) {
+  initPopups(
+    {
+      entries: new Map(glossary.map((g) => [g.key, g])),
+      selector: '[data-gloss-key]',
+      keyOf: (ref) => ref.dataset.glossKey,
+      className: 'gloss-popup',
+      closeClassName: 'gloss-popup-close',
+      width: 400,
+      render: (entry, closeBtn) =>
+        closeBtn
+          ? `<div class="gloss-popup-header"><div class="gloss-popup-term">${entry.term}</div>${closeBtn}</div><div>${entry.definition}</div>`
+          : `<div class="gloss-popup-term">${entry.term}</div><div>${entry.definition}</div>`,
+    },
+    signal,
+  )
+}
 
-  const SOURCE_ICONS: Record<string, string> = {
-    web: '🌐',
-    book: '📖',
-    paper: '📄',
-    video: '🎬',
-    podcast: '🎙️',
-    other: '📎',
-  }
+const SOURCE_ICONS: Record<string, string> = {
+  web: '🌐',
+  book: '📖',
+  paper: '📄',
+  video: '🎬',
+  podcast: '🎙️',
+  other: '📎',
+}
 
-  const removeHover = () => {
-    hoverEl?.remove()
-    hoverEl = null
-  }
-  const removeClick = () => {
-    clickEl?.remove()
-    clickEl = null
-  }
-
-  const buildContent = (entry: BibliographyEntry) => {
-    const icon = SOURCE_ICONS[entry.sourceType] ?? SOURCE_ICONS.other
-    return `
-      <div class="bib-popup-source">
-        <span class="bib-popup-icon">${icon}</span>
-        ${entry.sourceType.toUpperCase()}
-      </div>
-      <div>${entry.text}</div>`
-  }
-
-  const showHover = (entry: BibliographyEntry, ref: HTMLElement) => {
-    removeHover()
-    const rect = ref.getBoundingClientRect()
-    hoverEl = document.createElement('div')
-    hoverEl.className = 'bib-popup'
-    hoverEl.style.pointerEvents = 'none'
-    hoverEl.innerHTML = buildContent(entry)
-    applyStyle(
-      hoverEl,
-      computePopupStyle(rect.left + rect.width / 2, rect.top, rect.bottom, {
-        width: 320,
-        margin: 8,
-      }),
-    )
-    document.body.appendChild(hoverEl)
-  }
-
-  const showClick = (entry: BibliographyEntry, ref: HTMLElement) => {
-    removeClick()
-    const rect = ref.getBoundingClientRect()
-    clickEl = document.createElement('div')
-    clickEl.className = 'bib-popup'
-    clickEl.innerHTML = `<button class="bib-popup-close" aria-label="Close">×</button>${buildContent(entry)}`
-    applyStyle(
-      clickEl,
-      computePopupStyle(rect.left + rect.width / 2, rect.top, rect.bottom, {
-        width: 320,
-        margin: 8,
-      }),
-    )
-    clickEl
-      .querySelector('.bib-popup-close')
-      ?.addEventListener('click', removeClick)
-    document.body.appendChild(clickEl)
-  }
-
-  document.addEventListener('mouseover', (e) => {
-    const ref = (e.target as HTMLElement).closest<HTMLElement>('[data-cite-id]')
-    if (!ref) {
-      clearTimeout(hideTimer)
-      hideTimer = window.setTimeout(removeHover, 150)
-      return
-    }
-    clearTimeout(hideTimer)
-    const entry = map.get(ref.dataset.citeId!)
-    if (entry) showHover(entry, ref)
-  })
-
-  document.addEventListener('click', (e) => {
-    const ref = (e.target as HTMLElement).closest<HTMLElement>('[data-cite-id]')
-    if (!ref) {
-      removeClick()
-      return
-    }
-    e.preventDefault()
-    const entry = map.get(ref.dataset.citeId!)
-    if (entry) showClick(entry, ref)
-  })
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      removeHover()
-      removeClick()
-    }
-  })
+export function initBibliographyPopups(
+  bibliography: BibliographyEntry[],
+  signal: AbortSignal,
+) {
+  initPopups(
+    {
+      entries: new Map(bibliography.map((b) => [b.key, b])),
+      selector: '[data-cite-id]',
+      keyOf: (ref) => ref.dataset.citeId,
+      className: 'bib-popup',
+      closeClassName: 'bib-popup-close',
+      width: 320,
+      render: (entry, closeBtn) => {
+        const icon = SOURCE_ICONS[entry.sourceType] ?? SOURCE_ICONS.other
+        return `${closeBtn}<div class="bib-popup-source"><span class="bib-popup-icon">${icon}</span>${entry.sourceType.toUpperCase()}</div><div>${entry.text}</div>`
+      },
+    },
+    signal,
+  )
 }
