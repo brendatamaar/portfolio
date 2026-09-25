@@ -96,7 +96,7 @@ export function renderBlocks(
           const caption = alt
             ? `<figcaption>${escapeHtml(alt)}</figcaption>`
             : ''
-          html += `<figure><img src="${escapeHtml(sanitizeUrl(src))}" alt="${escapeHtml(alt)}" loading="lazy">${caption}</figure>\n`
+          html += `<figure><img src="${escapeHtml(sanitizeUrl(src))}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async">${caption}</figure>\n`
           break
         }
         // Split on hard line breaks (two spaces at end or \n in source)

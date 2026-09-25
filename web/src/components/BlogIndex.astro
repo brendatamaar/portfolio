@@ -1,0 +1,105 @@
+---
+import Base from '../layouts/Base.astro'
+import PostCard from './PostCard.astro'
+import type { PostSummary, PostTag } from '../lib/types'
+
+interface Props {
+  posts: PostSummary[]
+  lang: 'en' | 'id'
+  title: string
+  heading: string
+  description: string
+  allLabel: string
+  emptyLabel: string
+}
+
+const { posts, lang, title, heading, description, allLabel, emptyLabel } = Astro.props
+
+// Unique tags across all posts, in first-seen order
+const tags = [
+  ...new Map(posts.flatMap((p) => p.tags).map((t): [string, PostTag] => [t.slug, t])).values(),
+]
+
+const tagBtn =
+  'tag-btn border-2 border-black px-3 py-1 font-mono text-[10px] font-bold tracking-widest uppercase transition-colors dark:border-white'
+---
+
+<Base {title} {description} ogType="website" {lang}>
+  <div class="mb-12">
+    <h1 class="mb-4 text-5xl font-black tracking-tighter text-black uppercase sm:text-7xl dark:text-white">
+      {heading}
+    </h1>
+    <p class="text-base leading-relaxed text-black/60 dark:text-white/60">
+      {description}
+    </p>
+  </div>
+
+  {tags.length > 0 && (
+    <div id="tag-bar" class="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filter by tag">
+      <button class={`${tagBtn} active`} data-tag="" aria-pressed="true">{allLabel}</button>
+      {tags.map((tag) => (
+        <button class={tagBtn} data-tag={tag.slug} aria-pressed="false">#{tag.name}</button>
+      ))}
+    </div>
+  )}
+
+  <div id="post-list" class="flex flex-col gap-4">
+    {posts.map((post) => (
+      <div class="post-item" data-tags={post.tags.map((t) => t.slug).join(',')}>
+        <PostCard post={post} {lang} />
+      </div>
+    ))}
+    {posts.length === 0 && (
+      <p class="py-8 font-mono text-[11px] tracking-widest text-black/40 uppercase dark:text-white/40">
+        {emptyLabel}
+      </p>
+    )}
+  </div>
+</Base>
+
+<style>
+  .tag-btn {
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .tag-btn.active {
+    background: #000;
+    color: #fff;
+  }
+  :global(.dark) .tag-btn.active {
+    background: #fff;
+    color: #000;
+  }
+</style>
+
+<script>
+  import { onPageLoad } from '../scripts/lifecycle'
+
+  onPageLoad(() => {
+    const tagBar = document.getElementById('tag-bar')
+    const postList = document.getElementById('post-list')
+    if (!tagBar || !postList) return
+
+    const items = Array.from(postList.querySelectorAll<HTMLElement>('.post-item'))
+    const buttons = Array.from(tagBar.querySelectorAll<HTMLButtonElement>('.tag-btn'))
+    let activeTag = ''
+
+    tagBar.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.tag-btn')
+      if (!btn) return
+      const tag = btn.dataset.tag ?? ''
+      activeTag = tag === activeTag ? '' : tag
+
+      for (const item of items) {
+        const show = !activeTag || (item.dataset.tags ?? '').split(',').includes(activeTag)
+        item.hidden = !show
+      }
+      for (const b of buttons) {
+        const active = (b.dataset.tag ?? '') === activeTag
+        b.classList.toggle('active', active)
+        b.setAttribute('aria-pressed', String(active))
+      }
+    })
+  })
+</script>

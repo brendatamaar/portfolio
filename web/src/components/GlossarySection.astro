@@ -57,7 +57,9 @@ const sorted = [...glossary].sort((a, b) => a.num - b.num)
 </section>
 
 <script>
-  function initGlossarySection() {
+  import { onPageLoad } from '../scripts/lifecycle'
+
+  onPageLoad(() => {
     const toggle = document.getElementById('glossary-toggle')
     const body = document.getElementById('glossary-body')
     const chevron = document.getElementById('glossary-chevron')
@@ -79,8 +81,5 @@ const sorted = [...glossary].sort((a, b) => a.num - b.num)
         ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     })
-  }
-
-  initGlossarySection()
-  document.addEventListener('astro:page-load', initGlossarySection)
+  })
 </script>

@@ -1,5 +1,5 @@
 ---
-import { ViewTransitions } from 'astro:transitions'
+import BaseHead from '../components/BaseHead.astro'
 import ThemeToggle from '../components/ThemeToggle.astro'
 import '../globals.css'
 
@@ -8,61 +8,22 @@ interface Props {
   description?: string
   ogType?: string
   canonicalUrl?: string
+  lang?: 'en' | 'id'
 }
 
 const {
   title = 'Brendatama Akbar — Web Software Developer',
   description = 'Web Software Developer based in Jakarta, Indonesia.',
   ogType = 'website',
-  canonicalUrl = Astro.url.href,
+  canonicalUrl,
+  lang = 'en',
 } = Astro.props
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Favicons -->
-    <link rel="icon" type="image/svg+xml" href="/images/favicon/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
-    <link rel="icon" type="image/x-icon" href="/images/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png" />
-    <link rel="manifest" href="/images/favicon/site.webmanifest" />
-
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalUrl} />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content={ogType} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:site_name" content="Brendatama Akbar" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-
-    <!-- API prefetch -->
-    <link rel="preconnect" href="https://api.brendatama.dev" />
-
-    <!--
-      Inline theme script — must execute before <body> renders to prevent FOUC.
-      Not bundled by Astro (is:inline), so keep it minimal.
-    -->
-    <script is:inline>
-      ;(function () {
-        var s = localStorage.getItem('theme')
-        var d = window.matchMedia('(prefers-color-scheme: dark)').matches
-        if (s === 'dark' || (s === null && d)) {
-          document.documentElement.classList.add('dark')
-        }
-      })()
-    </script>
-
-    <ViewTransitions />
-
+    <BaseHead {title} {description} {ogType} {canonicalUrl} />
     <slot name="head" />
   </head>
   <body class="bg-white text-black dark:bg-black dark:text-white">

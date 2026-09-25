@@ -75,7 +75,7 @@ export function parseInline(text: string, ctx?: InlineContext): string {
         if (urlEnd !== -1) {
           const alt = text.slice(i + 2, altEnd)
           const url = text.slice(altEnd + 2, urlEnd)
-          result += `<img src="${escapeHtml(sanitizeUrl(url))}" alt="${escapeHtml(alt)}" class="rounded-sm">`
+          result += `<img src="${escapeHtml(sanitizeUrl(url))}" alt="${escapeHtml(alt)}" class="rounded-sm" loading="lazy" decoding="async">`
           i = urlEnd + 1
           continue
         }

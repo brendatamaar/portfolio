@@ -13,9 +13,6 @@ COPY web/package.json ./web/
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --filter portfolio-web...
 
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
 COPY shared/ ./shared/
 COPY web/ ./web/
 RUN pnpm --filter portfolio-web build
@@ -26,7 +23,10 @@ WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/web/dist ./dist
 
+# API_INTERNAL_URL is read at runtime (set in docker-compose.yml)
 ENV HOST=0.0.0.0
+ENV NODE_ENV=production
+USER bun
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://localhost:3000/ || exit 1

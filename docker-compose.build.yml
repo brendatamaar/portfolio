@@ -1,0 +1,17 @@
+# Override for building the images locally instead of pulling from GHCR:
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+  admin:
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}

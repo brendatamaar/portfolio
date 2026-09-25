@@ -52,7 +52,9 @@ if (!bibliography.length) return
 </section>
 
 <script>
-  function initBibliographySection() {
+  import { onPageLoad } from '../scripts/lifecycle'
+
+  onPageLoad(() => {
     const toggle = document.getElementById('bibliography-toggle')
     const body = document.getElementById('bibliography-body')
     const chevron = document.getElementById('bibliography-chevron')
@@ -75,8 +77,5 @@ if (!bibliography.length) return
         ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
       })
     })
-  }
-
-  initBibliographySection()
-  document.addEventListener('astro:page-load', initBibliographySection)
+  })
 </script>

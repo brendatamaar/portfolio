@@ -1,49 +1,68 @@
-export function initSidenotes() {
+const NOTE_GAP = 12
+
+export function initSidenotes(signal: AbortSignal) {
   const container = document.querySelector<HTMLElement>('.sidenotes')
   const content = document.querySelector<HTMLElement>('.blog-content')
   if (!container || !content) return
 
-  const position = () => {
-    const pairs = Array.from(
-      container.querySelectorAll<HTMLElement>('[data-sidenote]'),
+  const pairs = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-sidenote]'),
+  )
+    .map((noteEl) => ({
+      noteEl,
+      refEl: content.querySelector<HTMLElement>(
+        `[data-sidenote-id="${noteEl.dataset.sidenote}"]`,
+      ),
+    }))
+    .filter(
+      (p): p is { noteEl: HTMLElement; refEl: HTMLElement } => p.refEl !== null,
     )
-      .map((noteEl) => {
-        const id = noteEl.dataset.sidenote
-        const refEl = content.querySelector<HTMLElement>(
-          `[data-sidenote-id="${id}"]`,
-        )
-        return { noteEl, refEl }
-      })
-      .filter(
-        (p): p is { noteEl: HTMLElement; refEl: HTMLElement } =>
-          p.refEl !== null,
-      )
+  if (!pairs.length) return
 
-    const containerTop = container.getBoundingClientRect().top + window.scrollY
-    pairs.forEach(({ noteEl, refEl }) => {
-      noteEl.style.top = `${refEl.getBoundingClientRect().top + window.scrollY - containerTop}px`
-    })
+  const position = () => {
+    // Hidden below lg — nothing to lay out
+    if (container.offsetParent === null) return
+
+    // Read everything first, then write, to avoid forced reflow per note
+    const containerTop = container.getBoundingClientRect().top
+    const measured = pairs.map(({ noteEl, refEl }) => ({
+      noteEl,
+      top: refEl.getBoundingClientRect().top - containerTop,
+      height: noteEl.offsetHeight,
+    }))
+
+    // Push notes down so neighbours never overlap
+    let minTop = 0
+    for (const m of measured) {
+      const top = Math.max(m.top, minTop)
+      m.noteEl.style.top = `${top}px`
+      minTop = top + m.height + NOTE_GAP
+    }
   }
 
-  position()
-
+  // Re-position when the article reflows (viewport resize, images/fonts loading)
   let rafId = 0
-  const onResize = () => {
+  const schedule = () => {
     cancelAnimationFrame(rafId)
     rafId = requestAnimationFrame(position)
   }
-  window.addEventListener('resize', onResize)
+  const observer = new ResizeObserver(schedule)
+  observer.observe(content)
+  signal.addEventListener('abort', () => {
+    observer.disconnect()
+    cancelAnimationFrame(rafId)
+  })
 
   // Footnote ref click — highlight matching sidenote on desktop
   content.addEventListener('click', (e) => {
-    const link = (e.target as HTMLElement).closest(
+    const link = (e.target as HTMLElement).closest<HTMLAnchorElement>(
       'a[data-sidenote-id]',
-    ) as HTMLAnchorElement | null
+    )
     if (!link || window.innerWidth < 1024) return
     e.preventDefault()
     const id = link.dataset.sidenoteId
     if (!id) return
-    const noteEl = document.querySelector<HTMLElement>(
+    const noteEl = container.querySelector<HTMLElement>(
       `[data-sidenote="${id}"]`,
     )
     if (!noteEl) return
