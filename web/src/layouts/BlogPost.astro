@@ -26,7 +26,7 @@ const {
   <head>
     <BaseHead {title} {description} ogType="article" {canonicalUrl} preconnectApi />
   </head>
-  <body class="flex min-h-screen flex-col">
+  <body>
     <!-- Scroll progress bar -->
     <div
       id="scroll-progress"
@@ -52,25 +52,28 @@ const {
       Skip to main content
     </a>
 
-    <SiteHeader current="writing" />
-
-    <!-- Post header banner -->
-    <div class="bg-hero-alt">
-      <div class="mx-auto max-w-3xl px-4 sm:px-6">
-        <slot name="header" />
-      </div>
+    <!-- Nav — max-w-3xl -->
+    <div class="mx-auto max-w-3xl px-4 pt-10 sm:px-6 sm:pt-16">
+      <SiteHeader current="writing" />
     </div>
 
-    <!-- 3-col content -->
-    <main id="main" class="mx-auto w-full max-w-[72rem] flex-1 px-4 pb-16 sm:px-6">
+    <!-- Post header — max-w-3xl -->
+    <div class="mx-auto max-w-3xl px-4 sm:px-6">
+      <slot name="header" />
+    </div>
+
+    <!-- 3-col content — max-w-[72rem] -->
+    <main id="main" class="mx-auto max-w-[72rem] px-4 pb-16 sm:px-6">
       <slot />
     </main>
 
-    <!-- Below content -->
-    <div class="mx-auto w-full max-w-3xl px-4 pb-16 sm:px-6">
+    <!-- Below content — max-w-3xl -->
+    <div class="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
       <slot name="footer" />
     </div>
 
-    <SiteFooter />
+    <div class="mx-auto max-w-3xl px-4 sm:px-6">
+      <SiteFooter />
+    </div>
   </body>
 </html>

@@ -1,7 +1,6 @@
 ---
 import type { ResumeProjectItem } from '../lib/types'
 import Icon from './Icon.astro'
-import ProjectMedia from './ProjectMedia.astro'
 
 interface Props {
   project: ResumeProjectItem
@@ -11,59 +10,33 @@ interface Props {
 const { project, index } = Astro.props
 const hasLink = !!project.link
 const [type, ...tech] = project.techStack
-const badge = !hasLink
-  ? 'Internal'
-  : project.link!.href.includes('github.com')
-    ? 'Open source'
-    : 'Live'
+const num = String(index + 1).padStart(2, '0')
+const MAX_TECH = 5
 const Tag = hasLink ? 'a' : 'article'
 const linkProps = hasLink
   ? { href: project.link!.href, target: '_blank', rel: 'noopener noreferrer' }
   : {}
 ---
 
-<Tag {...linkProps} class="card card-hover group flex h-full flex-col overflow-hidden">
-  <!-- Media -->
-  <div class="relative aspect-[16/10] overflow-hidden">
-    <ProjectMedia img={project.img} title={project.title} {index} class="transition-transform duration-500 group-hover:scale-[1.04]" />
-
-    <span class="absolute top-0 left-0 bg-teal px-3 py-1.5 text-[12px] font-semibold text-white">
-      {badge}
-    </span>
-
-    {hasLink && (
-      <span class="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-navy shadow-card">
-        <Icon name="external" class="h-4 w-4" />
-      </span>
-    )}
-
-    <!-- Hover reveal: hashtag over a soft scrim -->
-    {tech[0] && (
-      <div class="pointer-events-none absolute inset-x-0 bottom-0 flex h-16 items-end bg-linear-to-t from-navy/70 to-transparent px-4 pb-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
-        <span class="type-tag text-[11px] text-white">#{tech[0]}</span>
-      </div>
-    )}
+<Tag {...linkProps} class:list={['card group flex h-full flex-col p-5', hasLink && 'card-hover']}>
+  <div class="mb-5 flex items-center justify-between">
+    {type && <span class="tag">{type}</span>}
+    <span class="font-mono text-[11px] font-bold text-muted">{num}</span>
   </div>
-
-  <!-- Body -->
-  <div class="flex flex-1 flex-col p-4 sm:p-5">
-    {type && (
-      <div class="mb-3 flex flex-wrap gap-2">
-        <span class="tag">{type}</span>
-      </div>
-    )}
-    <h3 class="type-h4 line-clamp-1 text-heading">{project.title}</h3>
-    <p class="mt-1 line-clamp-2 text-sm text-body">{project.description}</p>
-
-    <div class="mt-auto pt-4">
-      <hr class="hairline mb-3" />
-      <div class="flex items-center justify-between gap-3 text-[13px]">
-        <span class="flex min-w-0 items-center gap-1.5 text-muted">
-          <Icon name="code" class="h-4 w-4 shrink-0 text-teal" />
-          <span class="truncate">{tech.slice(0, 3).join(' · ') || '—'}</span>
-        </span>
-        {hasLink && <span class="shrink-0 font-bold text-link group-hover:underline">Details</span>}
-      </div>
+  <div class="mb-2 flex items-start justify-between gap-2">
+    <h3 class="type-h4 text-heading group-hover:text-link">{project.title}</h3>
+    <Icon
+      name="external"
+      class:list={[
+        'mt-1 h-4 w-4 shrink-0 transition-transform',
+        hasLink ? 'text-teal group-hover:translate-x-0.5 group-hover:-translate-y-0.5' : 'text-grey-300',
+      ]}
+    />
+  </div>
+  <p class="text-sm text-body">{project.description}</p>
+  {tech.length > 0 && (
+    <div class="mt-auto flex flex-wrap gap-1.5 pt-5">
+      {tech.slice(0, MAX_TECH).map((t) => <span class="tag tag-outline">{t}</span>)}
     </div>
-  </div>
+  )}
 </Tag>

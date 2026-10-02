@@ -2,18 +2,11 @@
 interface Props {
   num: string
   label: string
-  /** Small uppercase line above the heading */
-  eyebrow?: string
 }
-const { num, label, eyebrow } = Astro.props
+const { num, label } = Astro.props
 ---
 
-<div class="mb-10 flex flex-wrap items-end justify-between gap-4">
-  <div>
-    {eyebrow && <p class="mb-2 type-subtitle text-muted">{eyebrow}</p>}
-    <h2 class="type-h2 text-heading">
-      <span class="text-peach">{num}.</span> {label}
-    </h2>
-  </div>
-  <slot />
+<div class="mb-8 flex items-center gap-4 border-b border-line pb-4">
+  <span class="font-mono text-[11px] font-bold text-peach">{num}</span>
+  <h2 class="type-subtitle font-semibold text-heading">{label}</h2>
 </div>
