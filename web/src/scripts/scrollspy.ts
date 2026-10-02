@@ -28,7 +28,7 @@ export function initScrollspy(signal: AbortSignal) {
       const topmost = headingEls.find((el) => visibleIds.has(el.id))
       if (topmost) setActive(topmost.id)
     },
-    { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
+    { rootMargin: '-100px 0px -60% 0px', threshold: 0 },
   )
 
   headingEls.forEach((el) => observer.observe(el))
@@ -41,7 +41,8 @@ export function initScrollspy(signal: AbortSignal) {
       const id = link.dataset.tocLink!
       const el = document.getElementById(id)
       if (!el) return
-      const top = el.getBoundingClientRect().top + window.scrollY - 80
+      // Clears the sticky site header
+      const top = el.getBoundingClientRect().top + window.scrollY - 96
       window.scrollTo({ top, behavior: 'smooth' })
       history.pushState(null, '', `#${id}`)
     })

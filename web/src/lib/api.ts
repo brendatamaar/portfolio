@@ -17,10 +17,10 @@ function baseUrl(): string {
     return (
       process.env.API_INTERNAL_URL ??
       import.meta.env.PUBLIC_API_URL ??
-      'http://localhost:3001'
+      'http://localhost:3001/api'
     )
   }
-  return import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001'
+  return import.meta.env.PUBLIC_API_URL ?? 'http://localhost:3001/api'
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
