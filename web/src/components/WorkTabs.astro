@@ -1,0 +1,166 @@
+---
+import type { ResumeProjectItem, ResumeWorkItem } from '../lib/types'
+import Icon from './Icon.astro'
+
+interface Props {
+  work: ResumeWorkItem[]
+  projectsByCompany: Record<string, ResumeProjectItem[]>
+}
+
+const { work, projectsByCompany } = Astro.props
+
+const realLink = (href?: string) => (href && href !== '#' ? href : undefined)
+---
+
+{work.length > 0 && (
+  <div class="work-tabs">
+    <!-- Tabs: Poppins 14 uppercase, teal underline on the active tab -->
+    <div
+      role="tablist"
+      aria-label="Companies"
+      class="flex gap-8 overflow-x-auto border-b border-line-soft [scrollbar-width:none]"
+    >
+      {work.map((w, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`work-tab-${w.id}`}
+          aria-controls={`work-panel-${w.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+          class="-mb-px shrink-0 border-b-[3px] border-transparent py-3 text-sm tracking-[0.08em] text-muted uppercase transition-colors hover:text-heading aria-selected:border-teal aria-selected:font-bold aria-selected:text-link"
+        >
+          {w.company}
+        </button>
+      ))}
+    </div>
+
+    {work.map((w, i) => {
+      const projects = projectsByCompany[w.company] ?? []
+      const link = realLink(w.link)
+      return (
+        <div
+          role="tabpanel"
+          id={`work-panel-${w.id}`}
+          aria-labelledby={`work-tab-${w.id}`}
+          hidden={i !== 0}
+          tabindex="0"
+          class:list={['mt-8 grid items-start gap-6', projects.length > 0 && 'lg:grid-cols-[1fr_1.1fr]']}
+        >
+          <!-- Order-details style card -->
+          <div class="panel p-6 sm:px-9 sm:py-8">
+            <div class="flex items-start gap-5">
+              <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xs border border-line-soft bg-white">
+                {w.badge ? (
+                  <img src={w.badge} alt="" loading={i === 0 ? 'eager' : 'lazy'}class="h-full w-full object-contain p-2" />
+                ) : (
+                  <span class="text-xl font-bold text-navy">{w.company.charAt(0)}</span>
+                )}
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-xl leading-snug font-bold text-heading sm:text-[22px]">
+                  {link ? (
+                    <a href={link} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 hover:text-link">
+                      {w.company}
+                      <Icon name="external" class="h-4 w-4 text-teal" />
+                    </a>
+                  ) : w.company}
+                </h3>
+                <p class="text-muted">{w.title}</p>
+              </div>
+            </div>
+
+            <hr class="hairline my-5" />
+
+            <dl class="space-y-3 text-sm">
+              {[
+                ['Period', `${w.start} – ${w.end}`],
+                ['Role', w.title],
+                ['Projects', String(projects.length || '—')],
+              ].map(([label, value]) => (
+                <div class="flex items-baseline">
+                  <dt class="w-[120px] shrink-0 type-subtitle text-[11px] text-muted">{label}</dt>
+                  <dd class="text-heading"><span class="mr-3 text-muted" aria-hidden="true">:</span>{value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <hr class="hairline my-5" />
+            <p class="text-body">{w.description}</p>
+          </div>
+
+          <!-- Price-details style list of company projects -->
+          {projects.length > 0 && (
+            <div class="panel overflow-hidden">
+              <p class="px-6 pt-6 type-subtitle text-muted sm:px-9">Projects at {w.company}</p>
+              <ul class="px-6 pb-2 sm:px-9">
+                {projects.map((p) => {
+                  const tech = p.techStack.slice(1, 3)
+                  const inner = (
+                    <Fragment>
+                      <span class="min-w-0">
+                        <span class="flex items-center gap-1.5 font-semibold text-heading">
+                          {p.title}
+                          {p.link && <Icon name="external" class="h-3.5 w-3.5 text-teal" />}
+                        </span>
+                        <span class="mt-0.5 line-clamp-2 block text-[13px] text-muted">{p.description}</span>
+                      </span>
+                      <span class="hidden shrink-0 flex-col items-end gap-1 sm:flex">
+                        {tech.map((t) => <span class="tag tag-outline">{t}</span>)}
+                      </span>
+                    </Fragment>
+                  )
+                  return (
+                    <li class="border-b border-line-soft last:border-0">
+                      {p.link ? (
+                        <a href={p.link.href} target="_blank" rel="noopener noreferrer" class="-mx-3 flex items-start justify-between gap-4 rounded-xs px-3 py-4 transition-colors hover:bg-sunken">
+                          {inner}
+                        </a>
+                      ) : (
+                        <div class="flex items-start justify-between gap-4 py-4">{inner}</div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+              <div class="bg-sunken px-6 py-4 text-sm text-muted sm:px-9">
+                Shipped <span class="font-mono font-bold text-heading">{projects.length}</span> project{projects.length === 1 ? '' : 's'} with the team at {w.company}
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    })}
+  </div>
+)}
+
+<script>
+  import { onPageLoad } from '../scripts/lifecycle'
+
+  onPageLoad(() => {
+    document.querySelectorAll<HTMLElement>('.work-tabs').forEach((root) => {
+      const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+      const select = (tab: HTMLButtonElement) => {
+        for (const t of tabs) {
+          const active = t === tab
+          t.setAttribute('aria-selected', String(active))
+          t.tabIndex = active ? 0 : -1
+          const panel = document.getElementById(t.getAttribute('aria-controls')!)
+          if (panel) panel.hidden = !active
+        }
+        tab.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      }
+      tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => select(tab))
+        tab.addEventListener('keydown', (e) => {
+          const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+          if (!dir) return
+          e.preventDefault()
+          const next = tabs[(i + dir + tabs.length) % tabs.length]
+          select(next)
+          next.focus()
+        })
+      })
+    })
+  })
+</script>
