@@ -6,7 +6,9 @@ interface Props {
 const { num, label } = Astro.props
 ---
 
-<div class="mb-8 flex items-center gap-4 border-b border-line pb-4">
-  <span class="font-mono text-[11px] font-bold text-peach">{num}</span>
+<div class="mb-8 flex items-center gap-3 border-b border-line pb-4">
+  <span class="hex flex aspect-[1.15] w-9 shrink-0 items-center justify-center bg-peach font-mono text-[11px] font-bold text-white">
+    {num}
+  </span>
   <h2 class="type-subtitle font-semibold text-heading">{label}</h2>
 </div>

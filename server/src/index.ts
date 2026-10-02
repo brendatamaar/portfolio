@@ -34,8 +34,8 @@ app.use(
   cors({
     origin: (origin) => {
       const allowed = process.env.CORS_ORIGINS?.split(',') ?? [
-        'http://localhost:5173',
-        'http://localhost:5174',
+        'http://localhost:4321',
+        'http://localhost:4322',
       ]
       return allowed.includes(origin) ? origin : null
     },

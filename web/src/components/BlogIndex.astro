@@ -21,12 +21,15 @@ const tags = [
 ]
 ---
 
-<Base {title} {description} ogType="website" {lang} current="writing">
-  <div class="mb-12">
-    <h1 class="mb-3 type-h1 text-heading">
+<Base {title} {description} ogType="website" {lang} current="writing" banner="cool">
+  <div class="relative mb-12">
+    <div class="hex pointer-events-none absolute -top-10 -right-10 hidden aspect-[1.15] w-36 bg-butter sm:block" aria-hidden="true"></div>
+    <div class="hex pointer-events-none absolute top-24 right-36 hidden aspect-[1.15] w-10 bg-lilac sm:block" aria-hidden="true"></div>
+    <div class="dots pointer-events-none absolute -top-6 right-52 hidden h-16 w-32 text-peach/50 md:block" aria-hidden="true"></div>
+    <h1 class="relative mb-3 type-h1 text-heading">
       {heading}<span class="text-peach">.</span>
     </h1>
-    <p class="text-body">{description}</p>
+    <p class="relative max-w-md text-body">{description}</p>
   </div>
 
   {tags.length > 0 && (
@@ -45,7 +48,10 @@ const tags = [
       </div>
     ))}
     {posts.length === 0 && (
-      <p class="py-8 type-subtitle text-[11px] text-muted">{emptyLabel}</p>
+      <div class="panel flex items-center gap-5 p-6">
+        <div class="hex aspect-[1.15] w-12 shrink-0 bg-butter" aria-hidden="true"></div>
+        <p class="font-bold text-heading">{emptyLabel}</p>
+      </div>
     )}
   </div>
 </Base>

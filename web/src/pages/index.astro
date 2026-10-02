@@ -41,8 +41,15 @@ const [firstName, ...restName] = profile?.name.split(' ') ?? []
 >
   <!-- Hero -->
   {profile && (
-    <section class="mb-20">
-      <div class="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start">
+    <section class="relative mb-20">
+      <!-- Hive pattern behind the role card + one dot pattern -->
+      <div class="pointer-events-none absolute -top-8 -right-12 hidden aspect-[1.15] w-44 sm:block" aria-hidden="true">
+        <div class="hex h-full w-full bg-butter"></div>
+      </div>
+      <div class="hex pointer-events-none absolute top-56 -right-16 hidden aspect-[1.15] w-10 bg-lilac sm:block" aria-hidden="true"></div>
+      <div class="dots pointer-events-none absolute top-40 right-2 hidden h-20 w-36 text-teal/40 sm:block" aria-hidden="true"></div>
+
+      <div class="relative mb-8 flex flex-col gap-6 sm:flex-row sm:items-start">
         <div class="flex flex-1 flex-col items-start gap-6">
           <h1 class="type-h1 text-heading">
             <span class="text-peach">{firstName}</span> {restName.join(' ')}
@@ -53,7 +60,7 @@ const [firstName, ...restName] = profile?.name.split(' ') ?? []
           </a>
         </div>
 
-        <div class="panel shrink-0 self-start sm:w-48">
+        <div class="panel shrink-0 self-start shadow-raised sm:w-48">
           <div class="border-b border-line-soft px-4 py-3">
             <p class="mb-0.5 type-subtitle text-[10px] text-muted">Role</p>
             <p class="text-sm font-semibold text-heading">{profile.currentJob}</p>
@@ -68,7 +75,7 @@ const [firstName, ...restName] = profile?.name.split(' ') ?? []
         </div>
       </div>
 
-      <div class="border-t border-line pt-6">
+      <div class="relative border-t border-line pt-6">
         <p class="text-body">{profile.summary}</p>
       </div>
     </section>
@@ -76,7 +83,7 @@ const [firstName, ...restName] = profile?.name.split(' ') ?? []
 
   <div class="space-y-20">
     <!-- 01 — Projects -->
-    <section>
+    <section id="projects" data-section="projects">
       <SectionLabel num="01" label="Projects" />
       <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
         {visibleProjects.map((project, i) => (
@@ -105,34 +112,43 @@ const [firstName, ...restName] = profile?.name.split(' ') ?? []
     </section>
 
     <!-- 02 — Work -->
-    <section>
+    <section id="work" data-section="work">
       <SectionLabel num="02" label="Work" />
       <div>
         {resume.work.map((work, i) => {
           const companyProjects = workProjectsByCompany[work.company]
           const isLast = i === resume.work.length - 1
+          const isCurrent = work.end.toLowerCase() === 'now'
           return (
             <div class={isLast ? '' : 'border-b border-line-soft'}>
               <div class="py-5">
                 <div class="flex items-baseline justify-between gap-2">
-                  <span class="type-h4 text-heading">{work.company}</span>
+                  <span class="flex items-center gap-2.5 type-h4 text-heading">
+                    <span
+                      class:list={['hex aspect-[1.15] w-3 shrink-0', isCurrent ? 'bg-teal' : 'bg-grey-300']}
+                      aria-hidden="true"
+                    ></span>
+                    {work.company}
+                  </span>
                   <span class="shrink-0 font-mono text-[11px] text-muted tabular-nums">
                     {work.start}–{work.end}
                   </span>
                 </div>
-                <p class="mb-2 type-subtitle text-[11px] text-muted">{work.title}</p>
-                <p class="text-sm text-body">{work.description}</p>
-                {companyProjects && (
-                  <button
-                    type="button"
-                    class="work-toggle mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-link hover:underline"
-                    data-company={work.company}
-                    aria-expanded="false"
-                  >
-                    <span>See projects</span>
-                    <Icon name="chevron-down" class="h-3.5 w-3.5 transition-transform" strokeWidth={2} />
-                  </button>
-                )}
+                <div class="pl-[22px]">
+                  <p class="mb-2 type-subtitle text-[11px] text-muted">{work.title}</p>
+                  <p class="text-sm text-body">{work.description}</p>
+                  {companyProjects && (
+                    <button
+                      type="button"
+                      class="work-toggle mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-link hover:underline"
+                      data-company={work.company}
+                      aria-expanded="false"
+                    >
+                      <span>See projects</span>
+                      <Icon name="chevron-down" class="h-3.5 w-3.5 transition-transform" strokeWidth={2} />
+                    </button>
+                  )}
+                </div>
               </div>
               {companyProjects && (
                 <div
@@ -154,14 +170,20 @@ const [firstName, ...restName] = profile?.name.split(' ') ?? []
     </section>
 
     <!-- 03 — Writing -->
-    <section>
+    <section id="writing" data-section="writing">
       <SectionLabel num="03" label="Writing" />
       {posts.length > 0 ? (
         <div class="flex flex-col gap-4">
           {posts.map((post) => <PostCard post={post} />)}
         </div>
       ) : (
-        <p class="py-4 type-subtitle text-[11px] text-muted">No posts yet.</p>
+        <div class="panel flex items-center gap-5 p-6">
+          <div class="hex aspect-[1.15] w-12 shrink-0 bg-butter" aria-hidden="true"></div>
+          <div>
+            <p class="font-bold text-heading">No posts yet.</p>
+            <p class="text-sm text-muted">The first essays are being drafted — check back soon.</p>
+          </div>
+        </div>
       )}
       <div class="mt-6">
         <a href="/blog" class="btn btn-outline">
@@ -173,23 +195,30 @@ const [firstName, ...restName] = profile?.name.split(' ') ?? []
 
     <!-- 04 — Connect -->
     {profile?.social && profile.social.length > 0 && (
-      <section>
+      <section id="connect" data-section="connect">
         <SectionLabel num="04" label="Connect" />
-        <p class="mb-8 text-body">
-          I'm always open to interesting conversations, collaborations, and opportunities.
-        </p>
-        <div class="flex flex-wrap gap-3">
-          {profile.social.map((link, i) => (
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class:list={['btn', i === 0 ? 'btn-primary' : 'btn-outline']}
-            >
-              {link.name}
-              <Icon name="external" class="h-4 w-4" strokeWidth={2} />
-            </a>
-          ))}
+        <!-- Promo-banner style block with hive pattern -->
+        <div class="relative overflow-hidden rounded-xs bg-sunken px-6 py-8 sm:px-10 sm:py-10">
+          <div class="hex-tilt pointer-events-none absolute -top-10 -right-6 hidden aspect-[1.15] w-44 bg-butter sm:block" aria-hidden="true"></div>
+          <div class="hex pointer-events-none absolute right-20 bottom-5 hidden aspect-[1.15] w-12 bg-teal sm:block" aria-hidden="true"></div>
+          <div class="hex pointer-events-none absolute right-5 bottom-20 hidden aspect-[1.15] w-8 bg-lilac sm:block" aria-hidden="true"></div>
+
+          <p class="relative mb-8 max-w-sm text-body sm:text-base">
+            I'm always open to interesting conversations, collaborations, and opportunities.
+          </p>
+          <div class="relative flex flex-wrap gap-3 sm:max-w-[75%]">
+            {profile.social.map((link, i) => (
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class:list={['btn', i === 0 ? 'btn-primary' : 'btn-outline']}
+              >
+                {link.name}
+                <Icon name="external" class="h-4 w-4" strokeWidth={2} />
+              </a>
+            ))}
+          </div>
         </div>
       </section>
     )}
