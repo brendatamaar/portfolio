@@ -35,7 +35,7 @@ const menuItem =
 
 <BlogPost {title} {description} {canonicalUrl} {lang}>
   <!-- Post header -->
-  <div slot="header" class="pt-10 pb-12 md:pt-14 md:pb-16">
+  <div slot="header" class="mb-10 border-b border-line pb-10">
     <a href={blogPath} class="link-arrow mb-8">
       <Icon name="arrow-left" class="h-4 w-5" />
       {t.back}
@@ -106,7 +106,7 @@ const menuItem =
   )}
 
   <!-- 3-column layout -->
-  <div class="blog-layout flex w-full items-start gap-10 pt-10">
+  <div class="blog-layout flex w-full items-start gap-10">
     <Sidenotes {sidenotes} />
     <div class="blog-content prose-custom min-w-0 flex-1" set:html={html} />
     <TOC {toc} hasGlossary={glossary.length > 0} hasBibliography={bibliography.length > 0} />
@@ -116,8 +116,7 @@ const menuItem =
   <div slot="footer" class="space-y-4">
     <GlossarySection {glossary} />
     <BibliographySection {bibliography} />
-    <hr class="hairline !mt-10" />
-    <div class="pt-2">
+    <div class="border-t border-line pt-6">
       <a href={blogPath} class="link-arrow">
         <Icon name="arrow-left" class="h-4 w-5" />
         {t.all}

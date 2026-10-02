@@ -3,15 +3,12 @@ import Base from '../layouts/Base.astro'
 import SectionLabel from '../components/SectionLabel.astro'
 import PostCard from '../components/PostCard.astro'
 import ProjectCard from '../components/ProjectCard.astro'
-import FeaturedProject from '../components/FeaturedProject.astro'
-import WorkTabs from '../components/WorkTabs.astro'
 import Icon from '../components/Icon.astro'
 import { api } from '../lib/api'
 import type { PostSummary, ResumeData, ResumeProjectItem } from '../lib/types'
 
 const BLOG_PREVIEW = 3
-const PROJECT_PREVIEW = 3
-const RESUME = '/pdf/Resume Brendatama Akbar (2026) - English.pdf'
+const PROJECT_PREVIEW = 4
 
 const [postsRes, resumeRes] = await Promise.allSettled([
   api.getPosts('en', BLOG_PREVIEW).then((r) => r.data),
@@ -32,237 +29,205 @@ for (const p of resume.projects) {
   }
 }
 
-// Featured slot prefers a featured project that has an image
-const featured =
-  sideProjects.find((p) => p.isFeatured && p.img) ?? sideProjects.find((p) => p.isFeatured)
-const gridProjects = sideProjects.filter((p) => p !== featured)
-const visibleProjects = gridProjects.slice(0, PROJECT_PREVIEW)
-const remaining = gridProjects.length - PROJECT_PREVIEW
-
+const visibleProjects = sideProjects.slice(0, PROJECT_PREVIEW)
+const remaining = sideProjects.length - PROJECT_PREVIEW
 const profile = resume.profile
-const firstName = profile?.name.split(' ')[0] ?? ''
-const city = profile?.location.split(',')[0] ?? ''
-const current = resume.work.find((w) => w.end.toLowerCase() === 'now')
-const socials = profile?.social.filter((s) => !s.url.startsWith('mailto:')) ?? []
-const github = socials.find((s) => s.name.toLowerCase() === 'github')
-const email = profile?.email
+const [firstName, ...restName] = profile?.name.split(' ') ?? []
 ---
 
 <Base
   title="Brendatama Akbar — Web Software Developer"
   description="Web Software Developer based in Jakarta, Indonesia."
 >
-  <!-- Hero banner: smooth gradient, hive pattern, one dot pattern -->
+  <!-- Hero -->
   {profile && (
-    <section class="bg-hero relative overflow-hidden">
-      <div class="container-page grid items-center gap-12 pt-12 pb-16 md:pt-20 md:pb-24 lg:grid-cols-[1.2fr_1fr]">
-        <div>
-          <span class="banner-tag mb-6">
-            <Icon name="pin" class="h-4 w-4 text-teal" />
-            {profile.location}
-          </span>
-
-          <h1 class="type-h1 max-w-xl text-heading">
-            <span class="text-peach">Hi, I'm {firstName}.</span>
-            {profile.currentJob} based in {city}.
+    <section class="mb-20">
+      <div class="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start">
+        <div class="flex flex-1 flex-col items-start gap-6">
+          <h1 class="type-h1 text-heading">
+            <span class="text-peach">{firstName}</span> {restName.join(' ')}
           </h1>
-
-          <p class="mt-5 max-w-xl text-body">{profile.summary}</p>
-
-          <!-- Search-form style contact bar -->
-          {email && (
-            <a
-              href={`mailto:${email}`}
-              class="group mt-9 flex h-14 max-w-xl items-stretch overflow-hidden rounded-xs bg-surface shadow-field md:h-20"
-            >
-              <span class="flex min-w-0 flex-1 items-center gap-3 px-4 md:px-6">
-                <Icon name="mail" class="h-5 w-5 shrink-0 text-heading" />
-                <span class="truncate text-sm font-semibold text-muted transition-colors group-hover:text-heading">
-                  {email}
-                </span>
-              </span>
-              <span class="flex shrink-0 items-center bg-teal px-5 type-button text-white transition-colors group-hover:bg-teal-hover md:px-10">
-                Say hello
-              </span>
-            </a>
-          )}
-
-          <p class="mt-7 mb-3 type-subtitle text-[11px] text-muted">Elsewhere</p>
-          <div class="flex flex-wrap gap-2.5">
-            <a href={RESUME} download class="chip">
-              <Icon name="download" class="h-3.5 w-3.5" strokeWidth={2} />
-              Résumé
-            </a>
-            {socials.map((s) => (
-              <a href={s.url} target="_blank" rel="noopener noreferrer" class="chip">{s.name}</a>
-            ))}
-          </div>
+          <a href="/pdf/Resume Brendatama Akbar (2026) - English.pdf" download class="btn btn-primary">
+            <Icon name="download" class="h-4 w-4" strokeWidth={2} />
+            Download Resume
+          </a>
         </div>
 
-        <!-- Hive composition -->
-        <div class="relative mx-auto aspect-square w-full max-w-[300px] sm:max-w-[400px]" aria-hidden="true">
-          <div class="dots absolute top-[2%] left-0 h-[26%] w-[42%] text-teal/45"></div>
-          <div class="hex absolute top-[4%] right-[2%] aspect-[1.15] w-[38%] bg-butter"></div>
-          <div class="hex absolute bottom-[12%] left-[2%] aspect-[1.15] w-[15%] bg-lilac"></div>
-          <div class="hex absolute top-[18%] left-[10%] aspect-[1.15] w-[78%] overflow-hidden bg-apricot">
-            {profile.avatarUrl ? (
-              <img src={profile.avatarUrl} alt="" class="h-full w-full object-cover" loading="eager" decoding="async" />
-            ) : (
-              <span class="flex h-full w-full items-center justify-center text-6xl font-bold text-navy">{profile.initials}</span>
-            )}
+        <div class="panel shrink-0 self-start sm:w-48">
+          <div class="border-b border-line-soft px-4 py-3">
+            <p class="mb-0.5 type-subtitle text-[10px] text-muted">Role</p>
+            <p class="text-sm font-semibold text-heading">{profile.currentJob}</p>
           </div>
-          {current && (
-            <div class="absolute right-0 bottom-[4%] rounded-xs bg-surface px-4 py-3 shadow-raised">
-              <p class="type-subtitle text-[10px] text-muted">Currently at</p>
-              <p class="text-sm font-bold text-heading">{current.company}</p>
-            </div>
-          )}
+          <div class="px-4 py-3">
+            <p class="mb-0.5 type-subtitle text-[10px] text-muted">Location</p>
+            <p class="flex items-center gap-1 text-sm font-semibold text-heading">
+              <Icon name="pin" class="h-3.5 w-3.5 shrink-0 text-teal" />
+              {profile.location}
+            </p>
+          </div>
         </div>
+      </div>
+
+      <div class="border-t border-line pt-6">
+        <p class="text-body">{profile.summary}</p>
       </div>
     </section>
   )}
 
-  <!-- 01 — Projects -->
-  <section id="projects" data-section="projects" class="container-page py-16 md:py-24">
-    <SectionLabel num="01" label="Projects" eyebrow="Things I've built">
-      {github && (
-        <a href={github.url} target="_blank" rel="noopener noreferrer" class="link-arrow">
-          More on GitHub
-          <Icon name="arrow-right" class="h-4 w-5" />
-        </a>
-      )}
-    </SectionLabel>
-
-    {featured && (
-      <div class="mb-14">
-        <FeaturedProject project={featured} />
+  <div class="space-y-20">
+    <!-- 01 — Projects -->
+    <section>
+      <SectionLabel num="01" label="Projects" />
+      <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
+        {visibleProjects.map((project, i) => (
+          <ProjectCard project={project} index={i} />
+        ))}
       </div>
-    )}
-
-    <div class="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {visibleProjects.map((project, i) => (
-        <ProjectCard project={project} index={i} />
-      ))}
-    </div>
-
-    {remaining > 0 && (
-      <>
-        <div id="extra-projects" class="mt-6 hidden grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {gridProjects.slice(PROJECT_PREVIEW).map((project, i) => (
-            <ProjectCard project={project} index={PROJECT_PREVIEW + i} />
-          ))}
-        </div>
-        <div class="mt-10 flex justify-center">
+      {remaining > 0 && (
+        <div class="mt-6">
           <button
             id="show-more-projects"
             type="button"
             data-remaining={remaining}
             aria-expanded="false"
             aria-controls="extra-projects"
-            class="btn-pill"
+            class="btn btn-outline"
           >
-            + Show {remaining} more
+            +{remaining} more projects
           </button>
-        </div>
-      </>
-    )}
-  </section>
-
-  <!-- 02 — Experience -->
-  <section id="experience" data-section="experience" class="bg-sunken">
-    <div class="container-page py-16 md:py-24">
-      <SectionLabel num="02" label="Experience" eyebrow="Where I've worked" />
-      <WorkTabs work={resume.work} projectsByCompany={workProjectsByCompany} />
-
-      {resume.skills.length > 0 && (
-        <div class="mt-12">
-          <p class="mb-3 type-subtitle text-[11px] text-muted">Toolkit</p>
-          <ul class="flex flex-wrap gap-2.5">
-            {resume.skills.map((s) => (
-              <li class="inline-flex h-[30px] items-center rounded-3xl border border-line-soft bg-surface px-4 text-[13px] font-semibold text-heading">
-                {s}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  </section>
-
-  <!-- 03 — Writing -->
-  <section id="writing" data-section="writing" class="container-page py-16 md:py-24">
-    <SectionLabel num="03" label="Writing" eyebrow="Notes & essays">
-      <a href="/blog" class="link-arrow">
-        See all posts
-        <Icon name="arrow-right" class="h-4 w-5" />
-      </a>
-    </SectionLabel>
-
-    {posts.length > 0 ? (
-      <div class="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post, i) => <PostCard post={post} index={i} />)}
-      </div>
-    ) : (
-      <div class="panel flex items-center gap-5 p-6 sm:p-8">
-        <div class="hex aspect-[1.15] w-14 shrink-0 bg-butter" aria-hidden="true"></div>
-        <div>
-          <p class="font-bold text-heading">No posts yet.</p>
-          <p class="text-sm text-muted">The first essays are being drafted — check back soon.</p>
-        </div>
-      </div>
-    )}
-  </section>
-
-  <!-- 04 — Connect: promo banner -->
-  {profile && (
-    <section id="connect" data-section="connect" class="container-page pb-16 md:pb-24">
-      <div class="relative overflow-hidden rounded-xs bg-sunken px-6 py-10 md:min-h-[348px] md:px-14 md:py-14">
-        <div class="pointer-events-none absolute -top-10 right-[6%] hidden aspect-[1.15] w-56 md:block" aria-hidden="true">
-          <div class="hex-tilt h-full w-full bg-butter"></div>
-        </div>
-        <div class="pointer-events-none absolute right-[22%] bottom-10 hidden aspect-[1.15] w-20 bg-teal md:block hex" aria-hidden="true"></div>
-        <div class="pointer-events-none absolute right-[8%] bottom-24 hidden aspect-[1.15] w-12 bg-lilac md:block hex" aria-hidden="true"></div>
-
-        <div class="relative max-w-xl">
-          <span class="banner-tag mb-6">Let's talk</span>
-          <p class="text-body">Have a project, a role, or an idea in mind?</p>
-          <h2 class="mt-2 type-h3 text-heading">
-            I'm always open to interesting conversations, collaborations, and opportunities.
-          </h2>
-          <div class="mt-8 flex flex-wrap items-center gap-3">
-            {email && (
-              <a href={`mailto:${email}`} class="btn btn-primary">
-                <Icon name="mail" class="h-4 w-4" strokeWidth={2} />
-                Send an email
-              </a>
-            )}
-            {socials.map((s) => (
-              <a href={s.url} target="_blank" rel="noopener noreferrer" class="btn-pill capitalize">
-                {s.name}
-                <Icon name="external" class="h-3.5 w-3.5" strokeWidth={2} />
-              </a>
+          <div id="extra-projects" class="mt-4 hidden grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
+            {sideProjects.slice(PROJECT_PREVIEW).map((project, i) => (
+              <ProjectCard project={project} index={PROJECT_PREVIEW + i} />
             ))}
           </div>
         </div>
+      )}
+    </section>
+
+    <!-- 02 — Work -->
+    <section>
+      <SectionLabel num="02" label="Work" />
+      <div>
+        {resume.work.map((work, i) => {
+          const companyProjects = workProjectsByCompany[work.company]
+          const isLast = i === resume.work.length - 1
+          return (
+            <div class={isLast ? '' : 'border-b border-line-soft'}>
+              <div class="py-5">
+                <div class="flex items-baseline justify-between gap-2">
+                  <span class="type-h4 text-heading">{work.company}</span>
+                  <span class="shrink-0 font-mono text-[11px] text-muted tabular-nums">
+                    {work.start}–{work.end}
+                  </span>
+                </div>
+                <p class="mb-2 type-subtitle text-[11px] text-muted">{work.title}</p>
+                <p class="text-sm text-body">{work.description}</p>
+                {companyProjects && (
+                  <button
+                    type="button"
+                    class="work-toggle mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-link hover:underline"
+                    data-company={work.company}
+                    aria-expanded="false"
+                  >
+                    <span>See projects</span>
+                    <Icon name="chevron-down" class="h-3.5 w-3.5 transition-transform" strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+              {companyProjects && (
+                <div
+                  class="work-projects overflow-hidden transition-[max-height] duration-300"
+                  data-company={work.company}
+                  style="max-height: 0"
+                >
+                  <div class="grid grid-cols-1 items-stretch gap-4 pb-5 sm:grid-cols-2">
+                    {companyProjects.map((project, j) => (
+                      <ProjectCard project={project} index={j} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </section>
-  )}
+
+    <!-- 03 — Writing -->
+    <section>
+      <SectionLabel num="03" label="Writing" />
+      {posts.length > 0 ? (
+        <div class="flex flex-col gap-4">
+          {posts.map((post) => <PostCard post={post} />)}
+        </div>
+      ) : (
+        <p class="py-4 type-subtitle text-[11px] text-muted">No posts yet.</p>
+      )}
+      <div class="mt-6">
+        <a href="/blog" class="btn btn-outline">
+          All posts
+          <Icon name="arrow-right" class="h-4 w-4" strokeWidth={2} />
+        </a>
+      </div>
+    </section>
+
+    <!-- 04 — Connect -->
+    {profile?.social && profile.social.length > 0 && (
+      <section>
+        <SectionLabel num="04" label="Connect" />
+        <p class="mb-8 text-body">
+          I'm always open to interesting conversations, collaborations, and opportunities.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          {profile.social.map((link, i) => (
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class:list={['btn', i === 0 ? 'btn-primary' : 'btn-outline']}
+            >
+              {link.name}
+              <Icon name="external" class="h-4 w-4" strokeWidth={2} />
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
 </Base>
 
 <script>
   import { onPageLoad } from '../scripts/lifecycle'
 
   onPageLoad(() => {
+    // Show more projects toggle
     const showMoreBtn = document.getElementById('show-more-projects')
     const extraProjects = document.getElementById('extra-projects')
-    if (!showMoreBtn || !extraProjects) return
-    showMoreBtn.addEventListener('click', () => {
-      const expanded = showMoreBtn.getAttribute('aria-expanded') !== 'true'
-      showMoreBtn.setAttribute('aria-expanded', String(expanded))
-      extraProjects.classList.toggle('hidden', !expanded)
-      extraProjects.classList.toggle('grid', expanded)
-      const remaining = showMoreBtn.dataset.remaining ?? '0'
-      showMoreBtn.textContent = expanded ? '− Show less' : `+ Show ${remaining} more`
+    if (showMoreBtn && extraProjects) {
+      showMoreBtn.addEventListener('click', () => {
+        const expanded = showMoreBtn.getAttribute('aria-expanded') !== 'true'
+        showMoreBtn.setAttribute('aria-expanded', String(expanded))
+        extraProjects.classList.toggle('hidden', !expanded)
+        extraProjects.classList.toggle('grid', expanded)
+        const remaining = showMoreBtn.dataset.remaining ?? '0'
+        showMoreBtn.textContent = expanded ? 'Show less' : `+${remaining} more projects`
+      })
+    }
+
+    // Work expand/collapse
+    document.querySelectorAll<HTMLButtonElement>('.work-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const company = btn.dataset.company!
+        const panel = document.querySelector<HTMLElement>(`.work-projects[data-company="${CSS.escape(company)}"]`)
+        if (!panel) return
+        const open = btn.getAttribute('aria-expanded') === 'true'
+        btn.setAttribute('aria-expanded', String(!open))
+        const svg = btn.querySelector('svg')
+        if (svg) svg.style.transform = open ? '' : 'rotate(180deg)'
+        const label = btn.querySelector('span')
+        if (label) label.textContent = open ? 'See projects' : 'Hide projects'
+        panel.style.maxHeight = open ? '0' : `${panel.scrollHeight}px`
+      })
     })
   })
 </script>
