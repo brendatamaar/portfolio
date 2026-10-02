@@ -1,42 +1,26 @@
 ---
 ---
 
+<!-- Toggle switch: off = light, on = dark (track turns navy) -->
 <button
   id="theme-toggle"
-  aria-label="Toggle theme"
-  class="border-2 border-black p-1.5 text-black transition-colors hover:bg-black hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black"
+  type="button"
+  role="switch"
+  aria-checked="false"
+  aria-label="Dark mode"
+  class="relative inline-flex h-[22px] w-10 shrink-0 cursor-pointer items-center rounded-full bg-grey-300 transition-colors dark:bg-teal-hover"
 >
-  <!-- Sun — shown in dark mode (click to go light) -->
-  <svg
-    class="hidden h-3.5 w-3.5 dark:block"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
+  <span
+    class="absolute left-0 flex h-[22px] w-[22px] items-center justify-center rounded-full border border-grey-300 bg-white text-navy shadow-card transition-transform duration-200 dark:translate-x-[18px] dark:border-teal"
   >
-    <circle cx="12" cy="12" r="4"></circle>
-    <path
-      d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-    ></path>
-  </svg>
-  <!-- Moon — shown in light mode (click to go dark) -->
-  <svg
-    class="block h-3.5 w-3.5 dark:hidden"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-  </svg>
+    <svg class="h-3 w-3 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+    </svg>
+    <svg class="hidden h-3 w-3 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 13.5A8 8 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z"></path>
+    </svg>
+  </span>
 </button>
 
 <script>
@@ -46,12 +30,19 @@
   onPageLoad(() => {
     const btn = document.getElementById('theme-toggle')
     if (!btn) return
+    const sync = () =>
+      btn.setAttribute('aria-checked', String(document.documentElement.classList.contains('dark')))
+    sync()
     btn.addEventListener('click', () => {
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       if (document.startViewTransition && !reduceMotion) {
-        document.startViewTransition(() => toggleTheme())
+        document.startViewTransition(() => {
+          toggleTheme()
+          sync()
+        })
       } else {
         toggleTheme()
+        sync()
       }
     })
   })

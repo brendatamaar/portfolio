@@ -5,7 +5,7 @@ export function initCodeblocks() {
       if (pre.querySelector('.copy-btn')) return
       const btn = document.createElement('button')
       btn.className =
-        'copy-btn font-mono text-[10px] uppercase tracking-widest border-2 border-black px-2 py-0.5 bg-white text-black hover:bg-[#FFE600] transition-colors absolute top-2 right-2 shadow-[2px_2px_0px_#000]'
+        'copy-btn absolute top-2.5 right-2.5 h-7 rounded-3xl border border-white/20 bg-white/5 px-3 text-[11px] font-bold tracking-[0.1em] text-white/80 uppercase transition-colors hover:border-teal hover:bg-teal hover:text-white'
       btn.textContent = 'copy'
       btn.addEventListener('click', async () => {
         try {
@@ -39,20 +39,21 @@ export function initImageZoom(signal: AbortSignal) {
     overlay.setAttribute('role', 'dialog')
     overlay.setAttribute('aria-modal', 'true')
     overlay.className =
-      'fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90'
+      'fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-navy/90 backdrop-blur-sm'
     overlay.addEventListener('click', close)
 
     const img = document.createElement('img')
     img.src = src
     img.alt = 'Zoomed'
     img.className =
-      'max-h-[90vh] max-w-[90vw] border-2 border-white object-contain shadow-[8px_8px_0px_#fff]'
+      'max-h-[90vh] max-w-[90vw] rounded-xs object-contain shadow-raised'
     img.addEventListener('click', (e) => e.stopPropagation())
 
     const closeBtn = document.createElement('button')
     closeBtn.className =
-      'absolute top-5 right-6 font-mono text-sm tracking-widest text-white uppercase hover:text-[#FFE600]'
-    closeBtn.textContent = '[close]'
+      'absolute top-5 right-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl leading-none text-navy hover:bg-teal hover:text-white'
+    closeBtn.setAttribute('aria-label', 'Close')
+    closeBtn.textContent = '×'
     closeBtn.addEventListener('click', close)
 
     overlay.appendChild(img)

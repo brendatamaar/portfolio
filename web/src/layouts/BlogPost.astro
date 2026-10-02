@@ -1,6 +1,8 @@
 ---
 import BaseHead from '../components/BaseHead.astro'
-import ThemeToggle from '../components/ThemeToggle.astro'
+import SiteHeader from '../components/SiteHeader.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import Icon from '../components/Icon.astro'
 import '../globals.css'
 import '../blog.css'
 
@@ -24,72 +26,51 @@ const {
   <head>
     <BaseHead {title} {description} ogType="article" {canonicalUrl} preconnectApi />
   </head>
-  <body class="bg-white text-black dark:bg-black dark:text-white">
+  <body class="flex min-h-screen flex-col">
     <!-- Scroll progress bar -->
     <div
       id="scroll-progress"
-      class="fixed top-0 left-0 z-50 h-[3px] w-full origin-left scale-x-0 bg-[#FFE600]"
+      class="fixed top-0 left-0 z-50 h-[3px] w-full origin-left scale-x-0 bg-teal"
       aria-hidden="true"
     ></div>
 
     <!-- Back to top -->
     <button
       id="back-to-top"
+      type="button"
       tabindex="-1"
-      class="fixed bottom-8 right-8 z-40 border-2 border-black bg-[#FFE600] px-3 py-2 font-mono text-[10px] font-bold tracking-widest text-black uppercase shadow-[4px_4px_0px_#000] opacity-0 pointer-events-none transition-all hover:shadow-[6px_6px_0px_#000] dark:border-white dark:shadow-[4px_4px_0px_#fff]"
+      class="pointer-events-none fixed right-5 bottom-6 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-teal text-white opacity-0 shadow-raised transition-all hover:bg-teal-hover sm:right-8 sm:bottom-8"
       aria-label="Back to top"
     >
-      ↑ top
+      <Icon name="arrow-up" class="h-5 w-5" strokeWidth={1.8} />
     </button>
 
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:border-2 focus:border-black focus:bg-[#FFE600] focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:font-bold focus:tracking-widest focus:text-black focus:uppercase"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-xs focus:bg-teal focus:px-4 focus:py-2 focus:type-button focus:text-white"
     >
       Skip to main content
     </a>
 
-    <!-- Nav — max-w-3xl -->
-    <div class="mx-auto max-w-3xl px-6 pt-10 sm:pt-16">
-      <header class="mb-16 flex items-center justify-between border-b-2 border-black pb-5 dark:border-white">
-        <a href="/" class="font-mono text-xs font-bold tracking-widest text-black uppercase dark:text-white">
-          home
-        </a>
-        <nav class="flex items-center gap-5">
-          <a href="/blog" class="font-mono text-xs tracking-widest text-black uppercase hover:underline dark:text-white">
-            writing
-          </a>
-          <ThemeToggle />
-        </nav>
-      </header>
+    <SiteHeader current="writing" />
+
+    <!-- Post header banner -->
+    <div class="bg-hero-alt">
+      <div class="mx-auto max-w-3xl px-4 sm:px-6">
+        <slot name="header" />
+      </div>
     </div>
 
-    <!-- Post header — max-w-3xl -->
-    <div class="mx-auto max-w-3xl px-6">
-      <slot name="header" />
-    </div>
-
-    <!-- 3-col content — max-w-[72rem] -->
-    <main id="main" class="mx-auto max-w-[72rem] px-6 pb-16">
+    <!-- 3-col content -->
+    <main id="main" class="mx-auto w-full max-w-[72rem] flex-1 px-4 pb-16 sm:px-6">
       <slot />
     </main>
 
-    <!-- Below content — max-w-3xl -->
-    <div class="mx-auto max-w-3xl px-6 pb-16">
+    <!-- Below content -->
+    <div class="mx-auto w-full max-w-3xl px-4 pb-16 sm:px-6">
       <slot name="footer" />
     </div>
 
-    <footer class="mx-auto max-w-3xl px-6 pb-10">
-      <div class="border-t-2 border-black pt-6 dark:border-white">
-        <div class="flex items-center justify-between">
-          <span class="font-mono text-[11px] tracking-widest text-black/60 uppercase dark:text-white/60">
-            © {new Date().getFullYear()} Brendatama Akbar Ramadan
-          </span>
-          <span class="font-mono text-[11px] tracking-widest text-black/60 uppercase dark:text-white/60">
-            Jakarta, Indonesia
-          </span>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter />
   </body>
 </html>

@@ -4,6 +4,7 @@ import TOC from './TOC.astro'
 import Sidenotes from './Sidenotes.astro'
 import GlossarySection from './GlossarySection.astro'
 import BibliographySection from './BibliographySection.astro'
+import Icon from './Icon.astro'
 import { formatDate, readingTime } from '../lib/utils'
 import type { PostDetail } from '../lib/types'
 
@@ -17,8 +18,8 @@ const { post, html, toc, sidenotes, bibliography, glossary } = data
 
 const t =
   lang === 'id'
-    ? { back: '← Tulisan', all: '← Semua tulisan', minRead: 'menit baca', share: 'Bagikan', copy: 'Salin tautan', copied: 'Tersalin!', fallback: 'Baca di brendatama.dev' }
-    : { back: '← Writing', all: '← All posts', minRead: 'min read', share: 'Share', copy: 'Copy link', copied: 'Copied!', fallback: 'Read on brendatama.dev' }
+    ? { back: 'Tulisan', all: 'Semua tulisan', minRead: 'menit baca', share: 'Bagikan', copy: 'Salin tautan', copied: 'Tersalin!', fallback: 'Baca di brendatama.dev' }
+    : { back: 'Writing', all: 'All posts', minRead: 'min read', share: 'Share', copy: 'Copy link', copied: 'Copied!', fallback: 'Read on brendatama.dev' }
 
 const blogPath = lang === 'id' ? '/id/blog' : '/blog'
 const date = new Date(post.publishedAt ?? post.createdAt)
@@ -27,70 +28,65 @@ const title = `${post.title} | Brendatama Akbar`
 const description = post.description || t.fallback
 const canonicalUrl = `https://www.brendatama.dev${blogPath}/${post.slug}`
 
+// Dropdown row — Poppins 14 bold, sunken on hover
 const menuItem =
-  'flex w-full items-center gap-2 px-3 py-2 font-mono text-[10px] font-bold tracking-wide uppercase text-black transition-colors hover:bg-[#FFE600] dark:text-white dark:hover:bg-[#FFE600] dark:hover:text-black'
+  'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-bold text-heading transition-colors hover:bg-sunken'
 ---
 
 <BlogPost {title} {description} {canonicalUrl} {lang}>
   <!-- Post header -->
-  <div slot="header" class="mb-10 border-b-2 border-black pb-10 dark:border-white">
-    <a
-      href={blogPath}
-      class="mb-8 inline-block font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-    >
+  <div slot="header" class="pt-10 pb-12 md:pt-14 md:pb-16">
+    <a href={blogPath} class="link-arrow mb-8">
+      <Icon name="arrow-left" class="h-4 w-5" />
       {t.back}
     </a>
 
     {post.tags.length > 0 && (
-      <div class="mb-5 flex flex-wrap gap-1.5">
-        {post.tags.map((tag) => (
-          <span class="inline-flex items-center border-2 border-black bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
-            #{tag.name}
-          </span>
+      <div class="mb-4 flex flex-wrap gap-2">
+        {post.tags.map((tag, i) => (
+          <span class:list={['tag', i > 0 && 'tag-outline']}>{tag.name}</span>
         ))}
       </div>
     )}
 
-    <h1 class="mb-4 text-5xl leading-[0.9] font-black tracking-tighter text-black uppercase sm:text-6xl dark:text-white">
-      {post.title}
-    </h1>
+    <h1 class="type-h1 text-heading">{post.title}</h1>
 
     {post.description && (
-      <p class="mb-8 max-w-2xl text-xl leading-relaxed text-black/60 dark:text-white/60">
-        {post.description}
-      </p>
+      <p class="mt-4 max-w-2xl text-base text-body md:text-lg">{post.description}</p>
     )}
 
-    <div class="flex flex-wrap items-center gap-3">
-      <span class="font-mono text-[11px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
-        {formatDate(date, lang)}
+    <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-[13px] text-muted">
+      <span class="flex items-center gap-1.5">
+        <Icon name="calendar" class="h-4 w-4 text-teal" />
+        <time datetime={date.toISOString()}>{formatDate(date, lang)}</time>
       </span>
-      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
-      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">{mins} {t.minRead}</span>
-      <span class="font-mono text-[11px] text-black/40 dark:text-white/40">·</span>
+      <span class="flex items-center gap-1.5">
+        <Icon name="clock" class="h-4 w-4 text-teal" />
+        {mins} {t.minRead}
+      </span>
 
       <!-- Share menu -->
       <div class="relative">
         <button
           id="share-trigger"
-          class="flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+          type="button"
+          class="flex items-center gap-1.5 font-semibold text-heading transition-colors hover:text-link"
           aria-haspopup="true"
           aria-expanded="false"
           aria-controls="share-menu"
           data-title={post.title}
         >
-          <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
+          <Icon name="share" class="h-4 w-4 text-peach" />
           {t.share}
+          <Icon name="chevron-down" class="h-3.5 w-3.5 text-teal" strokeWidth={2} />
         </button>
         <div
           id="share-menu"
-          class="hidden absolute top-full left-0 z-50 mt-2 min-w-[168px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+          class="absolute top-full left-0 z-50 mt-2 hidden min-w-[200px] rounded-xs border border-line-soft bg-surface py-1.5 shadow-raised"
           role="menu"
         >
           <button id="share-copy" role="menuitem" class={menuItem} data-label={t.copy} data-copied={t.copied}>{t.copy}</button>
+          <hr class="hairline mx-4 my-1" />
           <button id="share-twitter" role="menuitem" class={menuItem}>Twitter</button>
           <button id="share-linkedin" role="menuitem" class={menuItem}>LinkedIn</button>
           <button id="share-facebook" role="menuitem" class={menuItem}>Facebook</button>
@@ -110,7 +106,7 @@ const menuItem =
   )}
 
   <!-- 3-column layout -->
-  <div class="blog-layout flex w-full items-start gap-10">
+  <div class="blog-layout flex w-full items-start gap-10 pt-10">
     <Sidenotes {sidenotes} />
     <div class="blog-content prose-custom min-w-0 flex-1" set:html={html} />
     <TOC {toc} hasGlossary={glossary.length > 0} hasBibliography={bibliography.length > 0} />
@@ -120,11 +116,10 @@ const menuItem =
   <div slot="footer" class="space-y-4">
     <GlossarySection {glossary} />
     <BibliographySection {bibliography} />
-    <div class="border-t-2 border-black pt-6 dark:border-white">
-      <a
-        href={blogPath}
-        class="font-mono text-[11px] font-bold tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-      >
+    <hr class="hairline !mt-10" />
+    <div class="pt-2">
+      <a href={blogPath} class="link-arrow">
+        <Icon name="arrow-left" class="h-4 w-5" />
         {t.all}
       </a>
     </div>

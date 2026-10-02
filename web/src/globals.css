@@ -3,10 +3,78 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  Design system — based on the Sewagi Desktop UI Style Guide.
+  Brand palette is fixed; semantic tokens (page, heading, line…) swap in dark mode.
+*/
+
 @theme {
-  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
-  --font-mono:
-    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Poppins', system-ui, sans-serif;
+  --font-mono: 'PT Mono', ui-monospace, monospace;
+
+  /* Primary */
+  --color-teal: #6dc7be;
+  --color-teal-hover: #3a9a8d;
+  --color-peach: #f0b492;
+  --color-navy: #013240;
+
+  /* Secondary */
+  --color-navy-2: #1d5060;
+  --color-mist: #f7f9fa;
+  --color-butter: #ffe98a;
+  --color-lilac: #d1bcf4;
+  --color-apricot: #ffd1b6;
+  --color-grey-800: #424242;
+  --color-grey-600: #8a8989;
+  --color-grey-400: #bdbdbd;
+  --color-grey-300: #dcdbdb;
+  --color-grey-200: #e9e9e9;
+  --color-error: #eb5757;
+
+  --shadow-card: 0 1px 2px rgb(1 50 64 / 0.04);
+  --shadow-raised: 0 10px 30px -8px rgb(1 50 64 / 0.18);
+  --shadow-field: 0 6px 24px -6px rgb(1 50 64 / 0.16);
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-sunken: var(--sunken);
+  --color-surface: var(--surface);
+  --color-heading: var(--heading);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-link: var(--link);
+}
+
+:root {
+  --page: #ffffff;
+  --sunken: #f7f9fa;
+  --surface: #ffffff;
+  --heading: #013240;
+  --body: #424242;
+  --muted: #8a8989;
+  --line: #a0a1a3;
+  --line-soft: #e9e9e9;
+  /* #6DC7BE is too light for small text on white — darker teal keeps links legible */
+  --link: #2b7f75;
+  --hero-from: #f0e7e1;
+  --hero-from-alt: #ecf0f4;
+}
+
+.dark {
+  --page: #00222b;
+  --sunken: #012b36;
+  --surface: #013240;
+  --heading: #f7f9fa;
+  --body: #dcdbdb;
+  --muted: #9aaeb3;
+  --line: rgb(160 161 163 / 0.45);
+  --line-soft: rgb(255 255 255 / 0.1);
+  --link: #6dc7be;
+  --hero-from: #013240;
+  --hero-from-alt: #012b36;
 }
 
 @layer base {
@@ -15,11 +83,12 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: currentColor;
+    border-color: var(--line-soft);
   }
 
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
     color-scheme: light;
   }
 
@@ -29,8 +98,315 @@
 
   body {
     font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--body);
+    background: var(--page);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
+    @media (min-width: 768px) {
+      font-size: 15px;
+    }
+  }
+
+  ::selection {
+    background: var(--color-apricot);
+    color: var(--color-navy);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 2px;
+  }
+}
+
+/* Typography — desktop (≥768px) / mobile sizes from the responsive type spec */
+
+@utility type-h1 {
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  @media (min-width: 768px) {
+    font-size: 40px;
+  }
+}
+
+@utility type-h2 {
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 700;
+  @media (min-width: 768px) {
+    font-size: 34px;
+  }
+}
+
+@utility type-h3 {
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 700;
+  @media (min-width: 768px) {
+    font-size: 28px;
+  }
+}
+
+@utility type-h4 {
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+@utility type-subtitle {
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@utility type-button {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@utility type-banner-tag {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@utility type-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Components */
+
+@layer components {
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1140px;
+    padding-inline: 16px;
+    @media (min-width: 640px) {
+      padding-inline: 24px;
+    }
+  }
+
+  /* Buttons — 48px, Poppins 13 bold uppercase, 2px corners */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 48px;
+    padding-inline: 28px;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      color 150ms;
+  }
+  .btn-primary {
+    background: var(--color-teal);
+    color: #fff;
+    &:hover,
+    &:active {
+      background: var(--color-teal-hover);
+    }
+  }
+  .btn-outline {
+    border-color: var(--color-teal);
+    color: var(--link);
+    background: transparent;
+    &:hover,
+    &:active {
+      background: var(--color-teal);
+      border-color: var(--color-teal);
+      color: #fff;
+    }
+  }
+
+  /* Pill — 40px, rounded 24px */
+  .btn-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 40px;
+    padding-inline: 20px;
+    border-radius: 24px;
+    border: 1px solid var(--color-grey-300);
+    color: var(--heading);
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      color 150ms;
+    &:hover,
+    &[aria-pressed='true'] {
+      background: var(--color-teal);
+      border-color: var(--color-teal);
+      color: #fff;
+    }
+    .dark & {
+      border-color: var(--line);
+    }
+  }
+
+  /* Chip — small outlined pill (recent-search style) */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 30px;
+    padding-inline: 16px;
+    border-radius: 24px;
+    border: 1px solid var(--heading);
+    color: var(--heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition:
+      background-color 150ms,
+      color 150ms;
+    &:hover {
+      background: var(--heading);
+      color: var(--page);
+    }
+  }
+
+  /* "See all" link — teal, long arrow, underline on hover */
+  .link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--link);
+    text-underline-offset: 4px;
+    & svg {
+      transition: transform 150ms;
+    }
+    &:hover {
+      text-decoration: underline;
+      & svg {
+        transform: translateX(3px);
+      }
+    }
+    &:active {
+      color: var(--color-teal-hover);
+    }
+  }
+
+  /* Card tags — PT Mono 10 bold uppercase, 19px high, 4px corners */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    height: 19px;
+    padding-inline: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--color-peach);
+    background: var(--color-peach);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .tag-outline {
+    background: transparent;
+    color: #b9683a;
+    .dark & {
+      color: var(--color-peach);
+    }
+  }
+
+  /* Banner tag — white pill, Poppins 13 semibold */
+  .banner-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 34px;
+    padding-inline: 16px;
+    border-radius: 24px;
+    background: var(--surface);
+    color: var(--heading);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Cards — 2px corners, hairline border, lift on hover */
+  .card {
+    border-radius: 2px;
+    border: 1px solid var(--line-soft);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    transition:
+      box-shadow 200ms,
+      transform 200ms;
+  }
+  .card-hover:hover {
+    box-shadow: var(--shadow-raised);
+  }
+
+  /* Detail panels (order / price details) — 8px corners */
+  .panel {
+    border-radius: 8px;
+    border: 1px solid var(--line-soft);
+    background: var(--surface);
+  }
+
+  /* Section divider — 0.5px #A0A1A3 */
+  .hairline {
+    border: 0;
+    border-top: 0.5px solid var(--line);
+  }
+
+  /* Hexagon clip (hive pattern) */
+  .hex {
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%);
+  }
+  .hex-tilt {
+    clip-path: polygon(30% 0%, 88% 12%, 100% 60%, 62% 100%, 6% 86%, 0% 30%);
+  }
+
+  /* Dot pattern — use only once per view */
+  .dots {
+    background-image: radial-gradient(currentColor 2.2px, transparent 2.6px);
+    background-size: 12px 12px;
+  }
+
+  /* Banner gradients (header background) */
+  .bg-hero {
+    background: linear-gradient(180deg, var(--hero-from) 0%, var(--page) 100%);
+  }
+  .bg-hero-alt {
+    background: linear-gradient(
+      180deg,
+      var(--hero-from-alt) 0%,
+      var(--page) 100%
+    );
   }
 }
 
