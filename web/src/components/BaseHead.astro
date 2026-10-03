@@ -8,8 +8,6 @@ import poppins600 from '@fontsource/poppins/files/poppins-latin-600-normal.woff2
 import poppins600Ext from '@fontsource/poppins/files/poppins-latin-ext-600-normal.woff2?url'
 import poppins700 from '@fontsource/poppins/files/poppins-latin-700-normal.woff2?url'
 import poppins700Ext from '@fontsource/poppins/files/poppins-latin-ext-700-normal.woff2?url'
-import monoLatin from '@fontsource/pt-mono/files/pt-mono-latin-400-normal.woff2?url'
-import monoLatinExt from '@fontsource/pt-mono/files/pt-mono-latin-ext-400-normal.woff2?url'
 
 interface Props {
   title: string
@@ -42,9 +40,6 @@ const fontCss = [
   fontFace('Poppins', '600', poppins600, LATIN),
   fontFace('Poppins', '700', poppins700Ext, LATIN_EXT),
   fontFace('Poppins', '700', poppins700, LATIN),
-  // PT Mono ships a single weight; bold card tags are synthesized
-  fontFace('PT Mono', '400', monoLatinExt, LATIN_EXT),
-  fontFace('PT Mono', '400', monoLatin, LATIN),
 ].join('')
 ---
 

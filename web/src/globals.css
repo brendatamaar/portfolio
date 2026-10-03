@@ -10,7 +10,8 @@
 
 @theme {
   --font-sans: 'Poppins', system-ui, sans-serif;
-  --font-mono: 'PT Mono', ui-monospace, monospace;
+  /* Poppins is the only webfont; code falls back to the system monospace */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Primary */
   --color-teal: #6dc7be;
@@ -102,8 +103,6 @@
     line-height: 1.7;
     color: var(--body);
     background: var(--page);
-    /* Decorative hexagons bleed past the content column — never scroll sideways */
-    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
@@ -175,7 +174,6 @@
 }
 
 @utility type-tag {
-  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -185,6 +183,16 @@
 /* Components */
 
 @layer components {
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1140px;
+    padding-inline: 16px;
+    @media (min-width: 640px) {
+      padding-inline: 24px;
+    }
+  }
+
   /* Buttons — 48px, Poppins 13 bold uppercase, 2px corners */
   .btn {
     display: inline-flex;
@@ -256,6 +264,45 @@
     }
   }
 
+  /* Chip — small outlined pill (recent-search style) */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 30px;
+    padding-inline: 16px;
+    border-radius: 24px;
+    border: 1px solid var(--heading);
+    color: var(--heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition:
+      background-color 150ms,
+      color 150ms;
+    &:hover {
+      background: var(--heading);
+      color: var(--page);
+    }
+  }
+
+  /* Banner tag — white pill, Poppins 13 semibold */
+  .banner-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 34px;
+    padding-inline: 16px;
+    border-radius: 24px;
+    background: var(--surface);
+    color: var(--heading);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-card);
+  }
+
   /* "See all" link — teal, long arrow, underline on hover */
   .link-arrow {
     display: inline-flex;
@@ -279,7 +326,7 @@
     }
   }
 
-  /* Card tags — PT Mono 10 bold uppercase, 19px high, 4px corners */
+  /* Card tags — 10 bold uppercase, 19px high, 4px corners */
   .tag {
     display: inline-flex;
     align-items: center;
@@ -289,7 +336,6 @@
     border: 1px solid var(--color-peach);
     background: var(--color-peach);
     color: #fff;
-    font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.14em;

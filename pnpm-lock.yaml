@@ -123,9 +123,6 @@ importers:
       '@fontsource/poppins':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/pt-mono':
-        specifier: ^5.3.0
-        version: 5.3.0
       '@tailwindcss/vite':
         specifier: ~4.0.4
         version: 4.0.17(vite@6.4.2(@types/node@24.12.4)(jiti@2.7.0)(lightningcss@1.29.2)(yaml@2.9.0))
@@ -872,9 +869,6 @@ packages:
 
   '@fontsource/poppins@5.3.0':
     resolution: {integrity: sha512-cms1nM7U6SN8epIV1WMVOV8VsA645aSm3wHfzIQnkk188U341ThbJGSl2Sv54V29gnDbT2arMPfLzvVIIVCceQ==}
-
-  '@fontsource/pt-mono@5.3.0':
-    resolution: {integrity: sha512-AKXUTYCdv53jAJyzk3AEns6PdOvL3u+AD9Y4Ms6BFFRC7WCqYOvywujYT3gs00sMBIPs/J8iY7SQljk3wRfovw==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -4251,8 +4245,6 @@ snapshots:
       levn: 0.4.1
 
   '@fontsource/poppins@5.3.0': {}
-
-  '@fontsource/pt-mono@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

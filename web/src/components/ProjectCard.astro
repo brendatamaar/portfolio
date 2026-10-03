@@ -9,34 +9,59 @@ interface Props {
 
 const { project, index } = Astro.props
 const hasLink = !!project.link
-const [type, ...tech] = project.techStack
+const [, ...tech] = project.techStack
+const badge = !hasLink ? 'Internal' : project.link!.href.includes('github.com') ? 'Open source' : 'Live'
 const num = String(index + 1).padStart(2, '0')
-const MAX_TECH = 5
+
+// Pastel header in place of a photo — hive pattern + project initial
+const PASTELS = ['bg-butter', 'bg-lilac', 'bg-apricot', 'bg-teal/35']
+const pastel = PASTELS[index % PASTELS.length]
+const initial = project.title.trim().charAt(0).toUpperCase()
+
 const Tag = hasLink ? 'a' : 'article'
 const linkProps = hasLink
   ? { href: project.link!.href, target: '_blank', rel: 'noopener noreferrer' }
   : {}
 ---
 
-<Tag {...linkProps} class:list={['card group flex h-full flex-col p-5', hasLink && 'card-hover']}>
-  <div class="mb-5 flex items-center justify-between">
-    {type && <span class="tag">{type}</span>}
-    <span class="font-mono text-[11px] font-bold text-muted">{num}</span>
-  </div>
-  <div class="mb-2 flex items-start justify-between gap-2">
-    <h3 class="type-h4 text-heading group-hover:text-link">{project.title}</h3>
-    <Icon
-      name="external"
-      class:list={[
-        'mt-1 h-4 w-4 shrink-0 transition-transform',
-        hasLink ? 'text-teal group-hover:translate-x-0.5 group-hover:-translate-y-0.5' : 'text-grey-300',
-      ]}
-    />
-  </div>
-  <p class="text-sm text-body">{project.description}</p>
-  {tech.length > 0 && (
-    <div class="mt-auto flex flex-wrap gap-1.5 pt-5">
-      {tech.slice(0, MAX_TECH).map((t) => <span class="tag tag-outline">{t}</span>)}
+<Tag {...linkProps} class="card card-hover group flex h-full flex-col overflow-hidden">
+  <div class={`relative h-32 overflow-hidden ${pastel}`}>
+    <span class="absolute top-0 left-0 z-10 bg-teal px-3 py-1.5 text-[12px] font-semibold text-white">{badge}</span>
+    {hasLink && (
+      <span class="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white text-navy shadow-card transition-transform group-hover:-translate-y-0.5">
+        <Icon name="external" class="h-4 w-4" />
+      </span>
+    )}
+    <div
+      class="hex absolute -right-4 -bottom-10 flex aspect-[1.15] w-36 items-center justify-center bg-white/45 pb-6 text-4xl font-bold text-navy/70 transition-transform duration-500 group-hover:-translate-y-2"
+      aria-hidden="true"
+    >
+      {initial}
     </div>
-  )}
+    <div class="hex absolute bottom-5 left-[38%] aspect-[1.15] w-6 bg-white/70" aria-hidden="true"></div>
+    <span class="absolute bottom-3 left-4 text-[11px] font-bold text-navy/60 tabular-nums">{num}</span>
+
+    <!-- Hover reveal: hashtag -->
+    {tech[0] && (
+      <span class="absolute bottom-3 left-12 type-tag text-[11px] text-navy opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        #{tech[0]}
+      </span>
+    )}
+  </div>
+
+  <div class="flex flex-1 flex-col p-5">
+    <h3 class="type-h4 text-heading group-hover:text-link">{project.title}</h3>
+    <p class="mt-1 line-clamp-3 text-sm text-body">{project.description}</p>
+
+    <div class="mt-auto pt-5">
+      <hr class="hairline mb-3" />
+      <div class="flex items-center justify-between gap-3 text-[13px]">
+        <span class="flex min-w-0 items-center gap-1.5 text-muted">
+          <Icon name="code" class="h-4 w-4 shrink-0 text-teal" />
+          <span class="truncate">{tech.slice(0, 3).join(' · ') || '—'}</span>
+        </span>
+        {hasLink && <span class="shrink-0 font-bold text-link group-hover:underline">Details</span>}
+      </div>
+    </div>
+  </div>
 </Tag>

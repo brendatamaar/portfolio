@@ -10,29 +10,34 @@ interface Props {
 
 const { post, lang = 'en' } = Astro.props
 const date = new Date(post.publishedAt ?? post.createdAt)
+const readLabel = lang === 'id' ? 'Baca tulisan' : 'Read article'
 ---
 
 <a
   href={`${lang === 'id' ? '/id' : ''}/blog/${post.slug}`}
-  class="card card-hover group block p-5"
+  class="card card-hover group relative flex h-full flex-col overflow-hidden p-6"
 >
-  <div class="mb-3 flex items-start justify-between gap-4">
-    <span class="flex items-center gap-1.5 type-subtitle text-[11px] text-muted">
-      <Icon name="calendar" class="h-3.5 w-3.5 text-teal" />
-      <time datetime={date.toISOString()}>{formatDate(date, lang)}</time>
+  <div class="hex pointer-events-none absolute -top-6 -right-6 aspect-[1.15] w-20 bg-apricot/60 transition-transform duration-300 group-hover:translate-y-1" aria-hidden="true"></div>
+
+  <p class="relative mb-4 flex items-center gap-1.5 type-subtitle text-[11px] text-muted">
+    <Icon name="calendar" class="h-3.5 w-3.5 text-teal" />
+    <time datetime={date.toISOString()}>{formatDate(date, lang)}</time>
+  </p>
+  <h3 class="relative type-h4 text-heading group-hover:text-link">{post.title}</h3>
+  {post.description && <p class="mt-2 line-clamp-3 text-sm text-body">{post.description}</p>}
+
+  <div class="mt-auto pt-5">
+    {post.tags.length > 0 && (
+      <div class="mb-4 flex flex-wrap gap-1.5">
+        {post.tags.map((tag, i) => (
+          <span class:list={['tag', i > 0 && 'tag-outline']}>{tag.name}</span>
+        ))}
+      </div>
+    )}
+    <hr class="hairline mb-3" />
+    <span class="link-arrow text-[13px] group-hover:underline">
+      {readLabel}
+      <Icon name="arrow-right" class="h-4 w-5" />
     </span>
-    <Icon
-      name="external"
-      class="h-4 w-4 shrink-0 text-teal transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-    />
   </div>
-  <h3 class="mb-1 type-h4 text-heading group-hover:text-link">{post.title}</h3>
-  {post.description && <p class="line-clamp-2 text-sm text-body">{post.description}</p>}
-  {post.tags.length > 0 && (
-    <div class="mt-4 flex flex-wrap gap-1.5">
-      {post.tags.map((tag, i) => (
-        <span class:list={['tag', i > 0 && 'tag-outline']}>#{tag.name}</span>
-      ))}
-    </div>
-  )}
 </a>

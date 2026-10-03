@@ -34,7 +34,7 @@ const linkClass =
         {numbered.map((item) => (
           <li style={`padding-left: ${(item.level - minLevel) * 10}px`}>
             <a href={`#${item.id}`} data-toc-link={item.id} class={linkClass}>
-              <span class="mr-1.5 font-mono text-[11px] text-peach">{item.num}</span>
+              <span class="mr-1.5 text-[11px] font-semibold text-peach tabular-nums">{item.num}</span>
               {item.text}
             </a>
           </li>

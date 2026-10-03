@@ -2,13 +2,25 @@
 interface Props {
   num: string
   label: string
+  /** Small uppercase line above the heading */
+  eyebrow?: string
+  /** Render on the navy band */
+  inverse?: boolean
 }
-const { num, label } = Astro.props
+const { num, label, eyebrow, inverse = false } = Astro.props
 ---
 
-<div class="mb-8 flex items-center gap-3 border-b border-line pb-4">
-  <span class="hex flex aspect-[1.15] w-9 shrink-0 items-center justify-center bg-peach font-mono text-[11px] font-bold text-white">
-    {num}
-  </span>
-  <h2 class="type-subtitle font-semibold text-heading">{label}</h2>
+<div class="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-12">
+  <div>
+    {eyebrow && (
+      <p class:list={['mb-3 flex items-center gap-2 type-subtitle text-[11px]', inverse ? 'text-white/60' : 'text-muted']}>
+        <span class="hex inline-block aspect-[1.15] w-2.5 bg-teal" aria-hidden="true"></span>
+        {eyebrow}
+      </p>
+    )}
+    <h2 class:list={['type-h2', inverse ? 'text-white' : 'text-heading']}>
+      <span class="text-peach">{num}.</span> {label}
+    </h2>
+  </div>
+  <slot />
 </div>
