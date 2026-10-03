@@ -50,7 +50,8 @@ const {
 
     <SiteHeader {current} />
 
-    <main id="main" class="relative mx-auto w-full max-w-3xl flex-1 px-4 pt-14 pb-24 sm:px-6 sm:pt-20">
+    <!-- Pages own their containers so sections can run full-bleed; decorative hexagons never cause sideways scroll -->
+    <main id="main" class="relative flex-1 overflow-x-clip">
       <slot />
     </main>
 

@@ -1,0 +1,122 @@
+---
+import type { ResumeProjectItem, ResumeWorkItem } from '../lib/types'
+import Icon from './Icon.astro'
+
+interface Props {
+  work: ResumeWorkItem[]
+  projectsByCompany: Record<string, ResumeProjectItem[]>
+}
+
+const { work, projectsByCompany } = Astro.props
+
+const realLink = (href?: string) => (href && href !== '#' ? href : undefined)
+const isCurrent = (w: ResumeWorkItem) => w.end.toLowerCase() === 'now'
+---
+
+<ol class="border-t border-line">
+  {work.map((w) => {
+    const projects = projectsByCompany[w.company] ?? []
+    const link = realLink(w.link)
+    const current = isCurrent(w)
+    const panelId = `work-projects-${w.id}`
+    return (
+      <li class="border-b border-line">
+        <!-- Row: identity column | content column -->
+        <div class="-mx-4 grid gap-6 rounded-xs px-4 py-8 transition-colors hover:bg-surface/70 sm:-mx-6 sm:px-6 md:py-10 lg:grid-cols-[340px_1fr] lg:gap-14">
+          <!-- Sticky on desktop so the company stays in view beside a long project list -->
+          <div class="flex items-start gap-4 lg:sticky lg:top-24 lg:self-start">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <h3 class="text-xl leading-snug font-bold text-heading md:text-2xl">
+                  {link ? (
+                    <a href={link} target="_blank" rel="noopener noreferrer" class="group/link inline-flex items-center gap-1.5 transition-colors hover:text-link">
+                      {w.company}
+                      <Icon name="external" class="h-4 w-4 text-teal transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+                    </a>
+                  ) : w.company}
+                </h3>
+                {current && <span class="tag">Now</span>}
+              </div>
+              <p class="mt-0.5 text-muted">{w.title}</p>
+
+              <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span class="inline-flex h-7 items-center gap-1.5 rounded-3xl border border-line-soft bg-surface px-3 text-[12px] font-semibold text-heading tabular-nums">
+                  <Icon name="calendar" class="h-3.5 w-3.5 text-teal" />
+                  {w.start} – {w.end}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="min-w-0 lg:pt-1">
+            <p class="text-base leading-relaxed text-body">{w.description}</p>
+
+            {projects.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  class="work-toggle mt-5 inline-flex h-9 items-center gap-1.5 rounded-3xl border border-teal px-4 text-[13px] font-bold text-link transition-colors hover:bg-teal hover:text-white aria-expanded:bg-teal aria-expanded:text-white"
+                  aria-expanded="false"
+                  aria-controls={panelId}
+                >
+                  <span>See projects</span>
+                  <Icon name="chevron-down" class="h-4 w-4 transition-transform" strokeWidth={2} />
+                </button>
+
+                <div id={panelId} class="work-projects overflow-hidden transition-[max-height] duration-300" style="max-height: 0">
+                  <!-- Swipeable strip on small screens (bleeds to the edge), grid on desktop -->
+                  <ul class="-mr-4 flex snap-x snap-mandatory gap-4 overflow-x-auto pt-5 pr-4 pb-3 [scrollbar-width:thin] sm:-mr-6 sm:pr-6 lg:mr-0 lg:grid lg:grid-cols-2 lg:overflow-visible lg:pr-0 lg:pb-1">
+                    {projects.map((p) => {
+                      const inner = (
+                        <Fragment>
+                          <span class="flex items-center justify-between gap-2">
+                            <span class="font-semibold text-heading group-hover/p:text-link">{p.title}</span>
+                            {p.link && <Icon name="external" class="h-3.5 w-3.5 shrink-0 text-teal" />}
+                          </span>
+                          <span class="mt-1 line-clamp-3 block text-[13px] text-muted">{p.description}</span>
+                          <span class="mt-auto flex flex-wrap gap-1.5 pt-4">
+                            {p.techStack.slice(1, 4).map((t) => <span class="tag tag-outline">{t}</span>)}
+                          </span>
+                        </Fragment>
+                      )
+                      const cls = 'group/p card flex h-full flex-col p-4'
+                      return (
+                        <li class="w-[250px] shrink-0 snap-start lg:w-auto">
+                          {p.link ? (
+                            <a href={p.link.href} target="_blank" rel="noopener noreferrer" class={`${cls} card-hover`}>{inner}</a>
+                          ) : (
+                            <div class={cls}>{inner}</div>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </li>
+    )
+  })}
+</ol>
+
+<script>
+  import { onPageLoad } from '../scripts/lifecycle'
+
+  onPageLoad(() => {
+    document.querySelectorAll<HTMLButtonElement>('.work-toggle').forEach((btn) => {
+      const panel = document.getElementById(btn.getAttribute('aria-controls')!)
+      const label = btn.querySelector('span')
+      const svg = btn.querySelector('svg')
+      if (!panel || !label) return
+      btn.addEventListener('click', () => {
+        const open = btn.getAttribute('aria-expanded') === 'true'
+        btn.setAttribute('aria-expanded', String(!open))
+        label.textContent = open ? 'See projects' : 'Hide projects'
+        if (svg) svg.style.transform = open ? '' : 'rotate(180deg)'
+        panel.style.maxHeight = open ? '0' : `${panel.scrollHeight}px`
+      })
+    })
+  })
+</script>

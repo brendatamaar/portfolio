@@ -301,7 +301,6 @@
 
 .code-lang {
   display: block;
-  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -472,7 +471,7 @@
   --tint: rgb(255 255 255 / 0.06);
 }
 
-/* Inline refs — PT Mono card tags */
+/* Inline refs — card-tag style badges */
 
 .gloss-ref a,
 .cite-ref.bib-ref a,
@@ -482,7 +481,6 @@
   height: 17px;
   padding: 0 5px;
   border-radius: 4px;
-  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
@@ -696,7 +694,6 @@
   border-radius: 4px;
   background: var(--color-peach);
   color: #fff;
-  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
@@ -708,7 +705,6 @@
 
 .bib-link {
   display: block;
-  font-family: var(--font-mono);
   font-size: 0.75em;
   color: var(--muted);
   font-weight: 400 !important;

@@ -1,0 +1,42 @@
+---
+interface Props {
+  lang?: 'en' | 'id'
+  /** Dot pattern is used once per view — turn off where the page already has one */
+  dots?: boolean
+}
+
+const { lang = 'en', dots = true } = Astro.props
+
+const t =
+  lang === 'id'
+    ? {
+        eyebrow: 'Segera hadir',
+        title: 'Belum ada tulisan.',
+        body: 'Tulisan pertama sedang disusun, nantikan segera.',
+      }
+    : {
+        eyebrow: 'Coming soon',
+        title: 'No posts yet.',
+        body: 'The first essays are being drafted, check back soon.',
+      }
+---
+
+<!-- Dashed placeholder panel: hive cluster + message -->
+<div class="relative overflow-hidden rounded-lg border border-dashed border-line bg-surface/60 px-6 py-10 sm:px-10 sm:py-12">
+  {dots && <div class="dots pointer-events-none absolute top-6 right-8 hidden h-20 w-40 text-peach/40 md:block" aria-hidden="true"></div>}
+
+  <div class="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
+    <!-- Hive cluster -->
+    <div class="relative h-20 w-24 shrink-0" aria-hidden="true">
+      <div class="hex absolute top-0 left-1 aspect-[1.15] w-[76px] bg-butter"></div>
+      <div class="hex absolute right-0 bottom-0 aspect-[1.15] w-7 bg-apricot"></div>
+      <div class="hex absolute top-1 right-1 aspect-[1.15] w-4 bg-lilac"></div>
+    </div>
+
+    <div class="min-w-0">
+      <p class="mb-1 type-subtitle text-[11px] text-muted">{t.eyebrow}</p>
+      <p class="text-lg font-bold text-heading sm:text-xl">{t.title}</p>
+      <p class="mt-1 text-muted">{t.body}</p>
+    </div>
+  </div>
+</div>

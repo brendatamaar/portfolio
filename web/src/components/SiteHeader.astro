@@ -4,7 +4,6 @@ import ThemeToggle from './ThemeToggle.astro'
 import Icon from './Icon.astro'
 
 interface Props {
-  /** Highlights the matching nav tab; on the homepage tabs follow scroll position */
   current?: 'home' | 'writing'
 }
 
@@ -13,10 +12,7 @@ const { current = 'home' } = Astro.props
 const RESUME = '/pdf/Resume Brendatama Akbar (2026) - English.pdf'
 
 const links = [
-  { href: '/#projects', label: 'Projects', section: 'projects' },
-  { href: '/#work', label: 'Work', section: 'work' },
   { href: '/blog', label: 'Writing', section: 'writing' },
-  { href: '/#connect', label: 'Contact', section: 'connect' },
 ]
 ---
 
@@ -24,10 +20,12 @@ const links = [
   id="site-header"
   class="sticky top-0 z-40 border-b border-line-soft bg-page/85 backdrop-blur-md"
 >
-  <div class="mx-auto flex h-[68px] max-w-3xl items-center justify-between gap-6 px-4 sm:px-6">
+  <div class="container-page flex h-[68px] items-center justify-between gap-6">
     <div class="flex h-full items-center gap-9">
       <Logo />
-      <nav class="hidden h-full items-center gap-6 md:flex" aria-label="Primary">
+    </div>
+
+    <div class="flex items-center gap-5">
         {links.map((l) => (
           <a
             href={l.href}
@@ -39,46 +37,9 @@ const links = [
             {l.label}
           </a>
         ))}
-      </nav>
-    </div>
-
-    <div class="flex items-center gap-5">
-      <ThemeToggle />
-      <a href={RESUME} download class="link-arrow hidden text-[13px] sm:inline-flex">
-        Résumé
-        <Icon name="arrow-right" class="h-4 w-5" />
-      </a>
-      <button
-        id="nav-toggle"
-        type="button"
-        class="-mr-2 p-2 text-heading md:hidden"
-        aria-expanded="false"
-        aria-controls="nav-mobile"
-        aria-label="Menu"
-      >
-        <Icon name="menu" class="h-6 w-6" />
-      </button>
+        <ThemeToggle />
     </div>
   </div>
-
-  <!-- Mobile menu (dropdown style) -->
-  <nav
-    id="nav-mobile"
-    class="absolute inset-x-4 top-[60px] hidden rounded-xs border border-line-soft bg-surface py-2 shadow-raised md:hidden"
-    aria-label="Primary"
-  >
-    {links.map((l) => (
-      <a href={l.href} class="flex items-center justify-between px-5 py-3 text-sm font-bold text-heading hover:bg-sunken">
-        {l.label}
-        <Icon name="arrow-right" class="h-4 w-5 text-teal" />
-      </a>
-    ))}
-    <hr class="hairline mx-5 my-2" />
-    <a href={RESUME} download class="flex items-center justify-between px-5 py-3 text-sm font-bold text-link hover:bg-sunken">
-      Download résumé
-      <Icon name="download" class="h-4 w-4" />
-    </a>
-  </nav>
 </header>
 
 <script>
@@ -106,24 +67,5 @@ const links = [
       )
     }
 
-    // Homepage: nav tabs follow the section in view
-    const sections = Array.from(document.querySelectorAll<HTMLElement>('main section[data-section]'))
-    if (!sections.length) return
-    const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('#site-header [data-nav]'))
-    const visible = new Set<string>()
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          const id = (e.target as HTMLElement).dataset.section!
-          if (e.isIntersecting) visible.add(id)
-          else visible.delete(id)
-        }
-        const top = sections.find((s) => visible.has(s.dataset.section!))?.dataset.section
-        for (const l of links) l.toggleAttribute('data-active', l.dataset.nav === top)
-      },
-      { rootMargin: '-80px 0px -55% 0px' },
-    )
-    sections.forEach((s) => observer.observe(s))
-    signal.addEventListener('abort', () => observer.disconnect())
-  })
+    })
 </script>

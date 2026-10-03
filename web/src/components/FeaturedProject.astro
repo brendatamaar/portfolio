@@ -1,0 +1,56 @@
+---
+import type { ResumeProjectItem } from '../lib/types'
+import Icon from './Icon.astro'
+
+interface Props {
+  project: ResumeProjectItem
+}
+
+const { project } = Astro.props
+const [type, ...tech] = project.techStack
+const link = project.link
+const initial = project.title.trim().charAt(0).toUpperCase()
+---
+
+<!-- Featured card: spans two grid columns; hive composition stands in for a cover image -->
+<article class="card card-hover group grid h-full overflow-hidden sm:col-span-2 md:grid-cols-[0.9fr_1.1fr]">
+  <div class="relative min-h-56 overflow-hidden bg-butter" aria-hidden="true">
+    <span class="absolute top-0 left-0 z-10 bg-teal px-3 py-1.5 text-[12px] font-semibold text-white">Featured</span>
+    <div class="dots absolute top-10 left-6 h-20 w-28 text-white/80"></div>
+    <div class="hex absolute top-1/2 left-1/2 flex aspect-[1.15] w-44 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-white/60 text-6xl font-bold text-navy transition-transform duration-500 group-hover:-translate-y-[56%]">
+      {initial}
+    </div>
+    <div class="hex absolute right-6 bottom-6 aspect-[1.15] w-12 bg-lilac"></div>
+    <div class="hex absolute -top-5 right-14 aspect-[1.15] w-16 bg-apricot"></div>
+    {tech[0] && (
+      <span class="absolute bottom-4 left-5 type-tag text-xs text-navy opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        #{tech[0]}
+      </span>
+    )}
+  </div>
+
+  <div class="flex flex-col p-6 sm:p-8">
+    <div class="mb-4 flex flex-wrap gap-2">
+      <span class="tag">Featured</span>
+      {type && <span class="tag tag-outline">{type}</span>}
+    </div>
+    <h3 class="type-h3 text-heading">{project.title}</h3>
+    <p class="mt-3 text-body">{project.description}</p>
+
+    <div class="mt-auto pt-6">
+      <p class="mb-2 type-subtitle text-[11px] text-muted">Built with</p>
+      <div class="flex flex-wrap gap-1.5">
+        {tech.map((t) => <span class="tag tag-outline">{t}</span>)}
+      </div>
+      {link && (
+        <>
+          <hr class="hairline mt-5 mb-4" />
+          <a href={link.href} target="_blank" rel="noopener noreferrer" class="link-arrow">
+            {link.href.includes('github.com') ? 'View source' : 'Visit project'}
+            <Icon name="arrow-right" class="h-4 w-5" />
+          </a>
+        </>
+      )}
+    </div>
+  </div>
+</article>

@@ -2,22 +2,9 @@
 import Logo from './Logo.astro'
 ---
 
-<footer class="bg-navy text-white/70">
-  <div class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-    <div class="flex items-center gap-4">
-      <Logo inverse />
-      <span class="hidden h-4 w-px bg-white/40 sm:block" aria-hidden="true"></span>
-      <span class="hidden text-sm font-medium text-white sm:block">Web Software Developer</span>
-    </div>
-    <nav class="flex flex-wrap gap-x-6 gap-y-2 text-[13px] font-medium" aria-label="Footer">
-      <a href="/#projects" class="hover:text-teal">Projects</a>
-      <a href="/#work" class="hover:text-teal">Work</a>
-      <a href="/blog" class="hover:text-teal">Writing</a>
-      <a href="/#connect" class="hover:text-teal">Contact</a>
-    </nav>
-  </div>
+<footer class="border-t border-white/10 bg-navy text-white/70">
   <div class="border-t border-white/10">
-    <div class="mx-auto flex max-w-3xl flex-col gap-1 px-4 py-5 type-subtitle text-[11px] text-white/50 sm:flex-row sm:justify-between sm:px-6">
+    <div class="container-page flex flex-col gap-1 py-5 type-subtitle text-[11px] text-white/50 sm:flex-row sm:justify-between">
       <span>© {new Date().getFullYear()} Brendatama Akbar Ramadan</span>
       <span>Jakarta, Indonesia</span>
     </div>
