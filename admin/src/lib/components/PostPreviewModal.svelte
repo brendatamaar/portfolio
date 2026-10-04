@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte'
   import { X } from 'lucide-svelte'
   import { parse } from '@portfolio/shared/markdown/parser'
+  import { formatCitation } from '@portfolio/shared/markdown/citation'
   import type { GlossaryEntry, BibliographyEntry, PostTag } from '$lib/types'
 
   interface Props {
@@ -52,15 +53,6 @@
       .replace(/<[^>]+>/g, ' ')
       .replace(/[#>*_~`[\]()\\-]/g, ' ')
       .trim()
-  }
-
-  function formatBibliographyText(text: string) {
-    return escapeHtml(text)
-      .replace(/&quot;(.*?)&quot;/g, '&quot;<strong>$1</strong>&quot;')
-      .replace(
-        /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/g,
-        (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`,
-      )
   }
 
   // ----- numbered + sorted entries (matches React PostPreviewModalContent) -----
@@ -473,7 +465,7 @@
                           {entry.num}
                         </span>
                         <span class="text-[14px] leading-relaxed text-black/70 dark:text-white/70">
-                          {@html formatBibliographyText(entry.text)}
+                          {@html formatCitation(entry.text)}
                         </span>
                       </div>
                     </li>
@@ -506,7 +498,7 @@
       <div class="mb-2 border-l-3 border-[#FFE600] pl-2 font-mono text-[0.65rem] font-black tracking-widest uppercase">
         {popupCite.sourceType}
       </div>
-      <div>{@html formatBibliographyText(popupCite.text)}</div>
+      <div>{@html formatCitation(popupCite.text)}</div>
     </div>
   {/if}
 </div>

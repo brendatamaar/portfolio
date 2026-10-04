@@ -1,3 +1,4 @@
+import { formatCitation } from '@portfolio/shared/markdown/citation'
 import type { GlossaryEntry, BibliographyEntry } from '../lib/types'
 
 interface PopupDimensions {
@@ -114,7 +115,8 @@ function initPopups<T>(cfg: PopupConfig<T>, signal: AbortSignal) {
     (e) => {
       const ref = findRef(e)
       if (!ref) {
-        removeClick()
+        // Clicks inside the pinned popup (e.g. a source link) keep it open
+        if (!clickEl?.contains(e.target as Node)) removeClick()
         return
       }
       e.preventDefault()
@@ -189,7 +191,7 @@ export function initBibliographyPopups(
       width: 320,
       render: (entry, closeBtn) => {
         const icon = SOURCE_ICONS[entry.sourceType] ?? SOURCE_ICONS.other
-        return `${closeBtn}<div class="bib-popup-source"><span class="bib-popup-icon">${icon}</span>${entry.sourceType.toUpperCase()}</div><div>${entry.text}</div>`
+        return `${closeBtn}<div class="bib-popup-source"><span class="bib-popup-icon">${icon}</span>${entry.sourceType.toUpperCase()}</div><div>${formatCitation(entry.text)}</div>`
       },
     },
     signal,
