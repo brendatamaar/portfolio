@@ -2,8 +2,7 @@
 import Base from '../layouts/Base.astro'
 import SectionLabel from '../components/SectionLabel.astro'
 import PostCard from '../components/PostCard.astro'
-import ProjectCard from '../components/ProjectCard.astro'
-import FeaturedProject from '../components/FeaturedProject.astro'
+import ProjectGallery from '../components/ProjectGallery.astro'
 import WorkList from '../components/WorkList.astro'
 import EmptyPosts from '../components/EmptyPosts.astro'
 import Icon from '../components/Icon.astro'
@@ -11,7 +10,6 @@ import { api } from '../lib/api'
 import type { PostSummary, ResumeData, ResumeProjectItem } from '../lib/types'
 
 const BLOG_PREVIEW = 3
-const PROJECT_PREVIEW = 4
 const RESUME = '/pdf/Resume Brendatama Akbar (2026) - English.pdf'
 
 const [postsRes, resumeRes] = await Promise.allSettled([
@@ -33,10 +31,8 @@ for (const p of resume.projects) {
   }
 }
 
-const featured = sideProjects.find((p) => p.isFeatured)
-const gridProjects = sideProjects.filter((p) => p !== featured)
-const visibleProjects = gridProjects.slice(0, PROJECT_PREVIEW)
-const remaining = gridProjects.length - PROJECT_PREVIEW
+// Featured projects lead the gallery
+const galleryProjects = [...sideProjects].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured))
 
 const profile = resume.profile
 const firstName = profile?.name.split(' ')[0] ?? ''
@@ -109,45 +105,12 @@ const skillPill =
     </section>
   )}
 
-  <!-- 01 — Projects: bento grid -->
+  <!-- 01 — Projects: scattered screenshot collage, each opens a detail modal -->
   <section id="projects" data-section="projects" class="container-page py-16 md:py-24">
     <SectionLabel num="01" label="Projects" eyebrow="What I've built">
-      {github && (
-        <a href={github.url} target="_blank" rel="noopener noreferrer" class="link-arrow">
-          More on GitHub
-          <Icon name="arrow-right" class="h-4 w-5" />
-        </a>
-      )}
     </SectionLabel>
 
-    <div class="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {featured && <FeaturedProject project={featured} />}
-      {visibleProjects.map((project, i) => (
-        <ProjectCard project={project} index={i} />
-      ))}
-    </div>
-
-    {remaining > 0 && (
-      <>
-        <div id="extra-projects" class="mt-6 hidden grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {gridProjects.slice(PROJECT_PREVIEW).map((project, i) => (
-            <ProjectCard project={project} index={PROJECT_PREVIEW + i} />
-          ))}
-        </div>
-        <div class="mt-10 flex justify-center">
-          <button
-            id="show-more-projects"
-            type="button"
-            data-remaining={remaining}
-            aria-expanded="false"
-            aria-controls="extra-projects"
-            class="btn-pill"
-          >
-            + Show {remaining} more
-          </button>
-        </div>
-      </>
-    )}
+    {galleryProjects.length > 0 && <ProjectGallery projects={galleryProjects} />}
   </section>
 
   <!-- 02 — Work: collapsible list -->
@@ -246,21 +209,3 @@ const skillPill =
     </section>
   )}
 </Base>
-
-<script>
-  import { onPageLoad } from '../scripts/lifecycle'
-
-  onPageLoad(() => {
-    const showMoreBtn = document.getElementById('show-more-projects')
-    const extraProjects = document.getElementById('extra-projects')
-    if (!showMoreBtn || !extraProjects) return
-    showMoreBtn.addEventListener('click', () => {
-      const expanded = showMoreBtn.getAttribute('aria-expanded') !== 'true'
-      showMoreBtn.setAttribute('aria-expanded', String(expanded))
-      extraProjects.classList.toggle('hidden', !expanded)
-      extraProjects.classList.toggle('grid', expanded)
-      const remaining = showMoreBtn.dataset.remaining ?? '0'
-      showMoreBtn.textContent = expanded ? '− Show less' : `+ Show ${remaining} more`
-    })
-  })
-</script>

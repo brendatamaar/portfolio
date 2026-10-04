@@ -1,0 +1,39 @@
+---
+import type { ResumeProjectItem } from '../lib/types'
+import Icon from './Icon.astro'
+
+interface Props {
+  project: ResumeProjectItem
+}
+
+const { project } = Astro.props
+const [type, ...tech] = project.techStack
+const link = project.link
+
+const Tag = link ? 'a' : 'article'
+const linkProps = link ? { href: link.href, target: '_blank', rel: 'noopener noreferrer' } : {}
+---
+
+<!-- Spotlight: the featured project — full description + stack, hive cluster on the right -->
+<Tag
+  {...linkProps}
+  class:list={['card group relative grid overflow-hidden bg-teal/8 md:grid-cols-[1fr_300px]', link && 'card-hover']}
+>
+  <div class="relative p-6 pr-14 sm:p-8 sm:pr-16">
+    <h3 class:list={['mt-2 type-h3 text-heading', link && 'group-hover:text-link']}>{project.title}</h3>
+    <p class="mt-3 max-w-2xl text-body">{project.description}</p>
+
+    {tech.length > 0 && (
+      <div class="mt-5 flex flex-wrap gap-1.5">
+        {tech.map((t) => <span class="tag tag-outline">{t}</span>)}
+      </div>
+    )}
+  </div>
+
+  {link && (
+    <Icon
+      name="external"
+      class="absolute top-6 right-6 h-4 w-4 text-muted transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-teal sm:top-8 sm:right-8"
+    />
+  )}
+</Tag>

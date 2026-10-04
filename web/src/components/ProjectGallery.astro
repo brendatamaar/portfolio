@@ -1,0 +1,227 @@
+---
+import type { ResumeProjectItem } from '../lib/types'
+import Icon from './Icon.astro'
+
+interface Props {
+  projects: ResumeProjectItem[]
+}
+
+// The scattered layout reads well up to ~6 shots; beyond that they bury each other
+const MAX_SHOTS = 6
+const shots = Astro.props.projects.slice(0, MAX_SHOTS)
+const n = shots.length
+
+// Desktop collage: spread shots evenly across the stage with a tilt and a vertical jitter
+const SHOT_WIDTH = 40 // % of stage width — keep in sync with .shot width below
+const TOPS = [16, 2, 24, 8, 20, 4]
+const TILTS = [-6, 4, -3, 5, -4, 3]
+const layout = (i: number) => {
+  const x = n === 1 ? (100 - SHOT_WIDTH) / 2 : ((100 - SHOT_WIDTH) * i) / (n - 1)
+  return `--x:${x}%;--y:${TOPS[i]}%;--r:${TILTS[i]}deg;--z:${i % 2 ? 2 : 1}`
+}
+
+const dialogId = (p: ResumeProjectItem) => `project-dialog-${p.id}`
+---
+
+<div class="relative">
+  <div
+    class="dots pointer-events-none absolute -inset-x-6 -inset-y-10 hidden text-teal/25 [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_72%)] md:block"
+    aria-hidden="true"
+  >
+  </div>
+
+  <ul class="stage relative" role="list">
+    {shots.map((p, i) => (
+      <li class="shot" style={layout(i)}>
+        <button type="button" class="group block w-full text-left" data-dialog={dialogId(p)} aria-haspopup="dialog">
+          <span class="shot-frame block">
+            {p.img ? (
+              <img src={p.img} alt="" loading="lazy" decoding="async" class="aspect-[16/10] w-full rounded-[4px] object-cover object-top" />
+            ) : (
+              <span class="relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-[4px] bg-teal/15">
+                <span class="hex absolute -right-6 -bottom-8 aspect-[1.15] w-32 bg-teal/25" aria-hidden="true"></span>
+                <span class="hex absolute top-4 left-6 aspect-[1.15] w-8 bg-peach/60" aria-hidden="true"></span>
+                <span class="relative px-6 text-center type-h4 text-heading">{p.title}</span>
+              </span>
+            )}
+          </span>
+          <span class="shot-title">{p.title}</span>
+        </button>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<p class="mt-8 text-center text-[13px] text-muted md:mt-12">Click a project to see the details</p>
+
+{shots.map((p) => {
+  const [, ...tech] = p.techStack
+  return (
+    <dialog id={dialogId(p)} class="project-dialog" aria-labelledby={`${dialogId(p)}-title`}>
+      <div class="panel relative overflow-hidden">
+        <form method="dialog">
+          <button
+            class="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-surface/90 text-heading shadow-card transition-colors hover:bg-teal hover:text-white"
+            aria-label="Close"
+          >
+            <Icon name="close" class="h-4 w-4" />
+          </button>
+        </form>
+
+        {p.img && <img src={p.img} alt={`Screenshot of ${p.title}`} class="aspect-[16/10] w-full border-b border-line-soft object-cover object-top" />}
+
+        <div class="p-6 sm:p-8">
+          <h3 id={`${dialogId(p)}-title`} class="type-h3 text-heading">{p.title}</h3>
+          <p class="mt-3 text-body">{p.description}</p>
+
+          {tech.length > 0 && (
+            <div class="mt-5 flex flex-wrap gap-1.5">
+              {tech.map((t) => <span class="tag tag-outline">{t}</span>)}
+            </div>
+          )}
+
+          {p.link && (
+            <a href={p.link.href} target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-7">
+              {p.link.href.includes('github.com') ? 'View source' : 'Visit project'}
+              <Icon name="external" class="h-4 w-4" strokeWidth={2} />
+            </a>
+          )}
+        </div>
+      </div>
+    </dialog>
+  )
+})}
+
+<style>
+  /* Mobile: swipeable row of flat shots with titles underneath */
+  .stage {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+  }
+  .shot {
+    flex: 0 0 80%;
+    scroll-snap-align: center;
+  }
+  .shot-frame {
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--line-soft);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+  .shot-title {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--heading);
+  }
+
+  /* Desktop: scattered, tilted collage; hovered shot straightens and lifts to the front */
+  @media (min-width: 768px) {
+    .stage {
+      display: block;
+      overflow: visible;
+      aspect-ratio: 12 / 5;
+      padding: 0;
+    }
+    .shot {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 40%;
+      z-index: var(--z);
+      transform: rotate(var(--r));
+      transition:
+        transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 300ms;
+
+      &:hover,
+      &:focus-within {
+        z-index: 10;
+        transform: rotate(0deg) translateY(-10px) scale(1.04);
+      }
+    }
+    .stage:has(.shot:hover) .shot:not(:hover) {
+      opacity: 0.7;
+    }
+    .shot-frame {
+      box-shadow: var(--shadow-raised);
+    }
+    .shot-title {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      margin: 0;
+      padding: 4px 12px;
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: var(--shadow-card);
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(4px);
+      transition:
+        opacity 200ms,
+        transform 200ms;
+    }
+    .shot:hover .shot-title,
+    .shot:focus-within .shot-title {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shot,
+    .shot-title {
+      transition: none;
+    }
+  }
+
+  /* Project modal */
+  .project-dialog {
+    width: min(640px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    margin: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+    overflow-y: auto;
+
+    &[open] {
+      animation: dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    &::backdrop {
+      background: rgb(1 50 64 / 0.55);
+      backdrop-filter: blur(4px);
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+  }
+  :global(html:has(.project-dialog[open])) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  import { onPageLoad } from '../scripts/lifecycle'
+
+  onPageLoad(() => {
+    document.querySelectorAll<HTMLElement>('[data-dialog]').forEach((btn) => {
+      const dialog = document.getElementById(btn.dataset.dialog ?? '')
+      if (!(dialog instanceof HTMLDialogElement)) return
+      btn.addEventListener('click', () => dialog.showModal())
+      // Clicking the backdrop (the dialog element itself, outside the panel) closes it
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) dialog.close()
+      })
+    })
+  })
+</script>
