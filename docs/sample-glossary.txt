@@ -1,0 +1,11 @@
+admonition :: Admonition
+A highlighted callout block (note, tip, warning…) that sets content apart from the main text. Written here as `:::type … :::`.
+
+tokenizer :: Tokenizer
+The first stage of a parser. It splits raw text into **tokens**, small labeled chunks like "heading" or "code block", that later stages can work with.
+
+ast :: Abstract Syntax Tree (AST)
+A tree representation of a document's structure. Each node is a construct (paragraph, list, link) and children are the things nested inside it.
+
+xss :: Cross-Site Scripting (XSS)
+An attack where untrusted input ends up executed as script in someone else's browser, for example through an unsanitized `href` or raw HTML.

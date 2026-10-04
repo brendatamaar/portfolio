@@ -1,0 +1,23 @@
+commonmark [docs]
+John MacFarlane. "CommonMark Spec", version 0.31.2. https://spec.commonmark.org/0.31.2/
+
+crafting-interpreters [book]
+Robert Nystrom. "Crafting Interpreters". Genever Benning, 2021. https://craftinginterpreters.com/
+
+markdown-it [repo]
+"markdown-it": Markdown parser, done right. GitHub. https://github.com/markdown-it/markdown-it
+
+unified [web]
+"unified": Content as structured data. https://unifiedjs.com/
+
+greenspun [other]
+Philip Greenspun. "Greenspun's tenth rule of programming", c. 1993.
+
+owasp-xss [docs]
+OWASP Foundation. "Cross Site Scripting Prevention Cheat Sheet". https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+
+pike-lexer [video]
+Rob Pike. "Lexical Scanning in Go". Google Technology User Group Sydney, 2011. https://www.youtube.com/watch?v=HxaD_trXwRE
+
+portfolio-repo [repo]
+brendatamaar. "portfolio". GitHub. https://github.com/brendatamaar/portfolio

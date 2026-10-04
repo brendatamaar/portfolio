@@ -356,25 +356,23 @@
   color: #8fa8ae;
 }
 
-/* Admonitions — 8px panel, colored left accent, tinted header */
+/* Admonitions — tinted 8px card, hexagon icon badge, accent hairline */
 
 .admonition {
   --accent: var(--color-teal);
   --tint: rgb(109 199 190 / 0.14);
-  border: 1px solid var(--line-soft);
-  border-left: 4px solid var(--accent);
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--tint);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+  padding: 1rem 1.25rem 1.1rem;
   margin-bottom: 1.5rem;
-  overflow: hidden;
 }
 
 .admonition-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  background: var(--tint);
+  gap: 0.65rem;
+  margin-bottom: 0.6rem;
   color: var(--heading);
   font-size: 12px;
   font-weight: 600;
@@ -383,7 +381,16 @@
 }
 
 .admonition-icon {
-  font-size: 0.9rem;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 30px;
+  background: var(--surface);
+  color: var(--accent);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  font-size: 0.85rem;
+  line-height: 1;
 }
 .admonition-label {
   flex: 1;
@@ -412,7 +419,6 @@
 }
 
 .admonition-body {
-  padding: 0.85rem 1rem;
   font-size: 0.93rem;
 
   & p:last-child {
@@ -703,17 +709,28 @@
   flex: 1;
 }
 
-.bib-link {
-  display: block;
-  font-size: 0.75em;
-  color: var(--muted);
-  font-weight: 400 !important;
+/* Source link chip appended to citation text (shared/markdown/citation.ts) */
+:is(.bib-popup, #bibliography-section) .bib-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-left: 0.35em;
+  padding: 0.1em 0.6em;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
   text-decoration: none;
-  word-break: break-all;
-  margin-top: 0.1em;
+  transition:
+    border-color 150ms,
+    background-color 150ms;
 
   &:hover {
-    color: var(--link);
+    border-color: var(--link);
+    background: var(--sunken);
+    text-decoration: none;
   }
 }
 

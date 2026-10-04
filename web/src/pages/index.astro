@@ -44,6 +44,14 @@ const city = profile?.location.split(',')[0] ?? ''
 const email = profile?.email
 const socials = profile?.social.filter((s) => !s.url.startsWith('mailto:')) ?? []
 const github = socials.find((s) => s.name.toLowerCase() === 'github')
+
+// Tech stack marquee: repeat short lists so each loop half is wider than the column
+const MARQUEE_MIN_ITEMS = 12
+const marqueeSkills = resume.skills.length
+  ? Array.from({ length: Math.ceil(MARQUEE_MIN_ITEMS / resume.skills.length) }, () => resume.skills).flat()
+  : []
+const skillPill =
+  'inline-flex h-[30px] shrink-0 items-center rounded-3xl border border-line-soft bg-surface px-4 text-[13px] font-semibold whitespace-nowrap text-heading'
 ---
 
 <Base
@@ -103,7 +111,7 @@ const github = socials.find((s) => s.name.toLowerCase() === 'github')
 
   <!-- 01 — Projects: bento grid -->
   <section id="projects" data-section="projects" class="container-page py-16 md:py-24">
-    <SectionLabel num="01" label="Projects" eyebrow="Things I've built">
+    <SectionLabel num="01" label="Projects" eyebrow="What I've built">
       {github && (
         <a href={github.url} target="_blank" rel="noopener noreferrer" class="link-arrow">
           More on GitHub
@@ -151,14 +159,27 @@ const github = socials.find((s) => s.name.toLowerCase() === 'github')
 
       {resume.skills.length > 0 && (
         <div class="mt-10 grid gap-4 lg:grid-cols-[340px_1fr] lg:items-center lg:gap-14">
-          <p class="type-subtitle text-[11px] text-muted">Toolkit</p>
-          <ul class="flex flex-wrap gap-2.5">
-            {resume.skills.map((s) => (
-              <li class="inline-flex h-[30px] items-center rounded-3xl border border-line-soft bg-surface px-4 text-[13px] font-semibold text-heading">
-                {s}
-              </li>
-            ))}
+          <p id="tech-stack-label" class="type-subtitle text-[11px] text-muted">Tech stack</p>
+
+          <!-- Accessible list: read by screen readers; shown as static pills when motion is reduced -->
+          <ul aria-labelledby="tech-stack-label" class="sr-only motion-reduce:not-sr-only motion-reduce:flex motion-reduce:flex-wrap motion-reduce:gap-2.5">
+            {resume.skills.map((s) => <li class={skillPill}>{s}</li>)}
           </ul>
+
+          <!-- Marquee: two identical halves, the track slides by -50% for a seamless loop -->
+          <div
+            class="marquee group/marquee min-w-0 overflow-hidden motion-reduce:hidden"
+            style={`--marquee-duration: ${Math.max(20, marqueeSkills.length * 3)}s`}
+            aria-hidden="true"
+          >
+            <div class="marquee-track flex w-max group-hover/marquee:[animation-play-state:paused]">
+              {[0, 1].map(() => (
+                <div class="flex shrink-0 gap-2.5 pr-2.5">
+                  {marqueeSkills.map((s) => <span class={skillPill}>{s}</span>)}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -166,7 +187,7 @@ const github = socials.find((s) => s.name.toLowerCase() === 'github')
 
   <!-- 03 — Writing -->
   <section id="writing" data-section="writing" class="container-page py-16 md:py-24">
-    <SectionLabel num="03" label="Writing" eyebrow="Notes & essays">
+    <SectionLabel num="03" label="Writing" eyebrow="What I've been thinking">
       <a href="/blog" class="link-arrow">
         See all posts
         <Icon name="arrow-right" class="h-4 w-5" />

@@ -1,4 +1,5 @@
 ---
+import { formatCitation } from '@portfolio/shared/markdown/citation'
 import type { BibliographyEntry } from '../lib/types'
 import Icon from './Icon.astro'
 
@@ -36,7 +37,7 @@ if (!bibliography.length) return
           data-cite-key={entry.key}
         >
           <span class="tag shrink-0">{entry.num}</span>
-          <span class="text-sm text-body" set:html={entry.text} />
+          <span class="text-sm text-body" set:html={formatCitation(entry.text)} />
         </li>
       ))}
     </ol>

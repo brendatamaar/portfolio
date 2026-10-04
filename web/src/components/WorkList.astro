@@ -22,7 +22,7 @@ const isCurrent = (w: ResumeWorkItem) => w.end.toLowerCase() === 'now'
     return (
       <li class="border-b border-line">
         <!-- Row: identity column | content column -->
-        <div class="-mx-4 grid gap-6 rounded-xs px-4 py-8 transition-colors hover:bg-surface/70 sm:-mx-6 sm:px-6 md:py-10 lg:grid-cols-[340px_1fr] lg:gap-14">
+        <div class="grid gap-6 py-8 md:py-10 lg:grid-cols-[340px_1fr] lg:gap-14">
           <!-- Sticky on desktop so the company stays in view beside a long project list -->
           <div class="flex items-start gap-4 lg:sticky lg:top-24 lg:self-start">
             <div class="min-w-0">
