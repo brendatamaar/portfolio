@@ -191,7 +191,7 @@
             <input type="file" accept="image/*" class="hidden" disabled={uploading} onchange={handleUpload} />
           </label>
         </div>
-        {#if draft.img}<img src={draft.img.startsWith('/') ? API_ORIGIN + draft.img : draft.img}alt="" class="mt-1 h-20 w-32 border border-black/10 object-cover object-top dark:border-white/10" />{/if}
+        {#if draft.img}<img src={draft.img.startsWith('/') ? API_ORIGIN + draft.img : draft.img} alt="" class="mt-1 h-20 w-32 border border-black/10 object-cover object-top dark:border-white/10" />{/if}
       </div>
       <div class="flex flex-col gap-1"><label class={labelCls}>Sort Order</label><input type="number" class={inputCls} value={draft.sortOrder} oninput={(e) => setField('sortOrder', Number((e.target as HTMLInputElement).value))} /></div>
     </div>
