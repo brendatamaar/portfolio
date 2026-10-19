@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Loader, Plus, Pencil, Trash2, Check } from 'lucide-svelte'
+  import { Loader, Plus, Pencil, Trash2, Check, Upload } from 'lucide-svelte'
   import type { Lang, ResumeProjectItem, ProjectDraft } from '$lib/types'
   import { api } from '$lib/api'
 
@@ -10,6 +10,9 @@
   const btnGhost = 'px-3 py-1.5 font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white'
   const labelCls = 'font-mono text-[10px] font-bold tracking-widest text-black/50 uppercase dark:text-white/50'
 
+  // Admin origin has no /uploads route; stored paths are relative to the API origin.
+  const API_ORIGIN = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
+
   const EMPTY: ProjectDraft = { locale: 'en', title: '', type: 'side_project', company: null, techStack: '', description: '', linkLabel: null, linkHref: null, img: '', isFeatured: 0, sortOrder: 0 }
 
   let locale = $state<Lang>('en')
@@ -19,6 +22,7 @@
   let draft = $state<ProjectDraft>({ ...EMPTY })
   let saving = $state(false)
   let copying = $state(false)
+  let uploading = $state(false)
 
   async function load(l: Lang) {
     loading = true
@@ -57,6 +61,22 @@
 
   function setField<K extends keyof ProjectDraft>(key: K, value: ProjectDraft[K]) {
     draft = { ...draft, [key]: value }
+  }
+
+  async function handleUpload(e: Event) {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+    uploading = true
+    try {
+      const img = await api.uploadImage(file)
+      setField('img', img.url)
+    } catch (err) {
+      alert(`Upload failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      uploading = false
+      input.value = ''
+    }
   }
 
   async function handleSave() {
@@ -162,7 +182,17 @@
       <div class="flex flex-col gap-1 col-span-2"><label class={labelCls}>Tech Stack</label><input class={inputCls} value={draft.techStack} placeholder="React, TypeScript, ..." oninput={(e) => setField('techStack', (e.target as HTMLInputElement).value)} /></div>
       <div class="flex flex-col gap-1"><label class={labelCls}>Link Label</label><input class={inputCls} value={draft.linkLabel ?? ''} oninput={(e) => setField('linkLabel', (e.target as HTMLInputElement).value || null)} /></div>
       <div class="flex flex-col gap-1"><label class={labelCls}>Link Href</label><input class={inputCls} value={draft.linkHref ?? ''} oninput={(e) => setField('linkHref', (e.target as HTMLInputElement).value || null)} /></div>
-      <div class="flex flex-col gap-1"><label class={labelCls}>Image URL</label><input class={inputCls} value={draft.img} oninput={(e) => setField('img', (e.target as HTMLInputElement).value)} /></div>
+      <div class="flex flex-col gap-1">
+        <label class={labelCls}>Image</label>
+        <div class="flex gap-2">
+          <input class={inputCls} value={draft.img} placeholder="URL or upload" oninput={(e) => setField('img', (e.target as HTMLInputElement).value)} />
+          <label class={[btnPrimary, 'cursor-pointer'].join(' ')}>
+            {#if uploading}<Loader size={12} class="animate-spin" />{:else}<Upload size={12} />{/if}
+            <input type="file" accept="image/*" class="hidden" disabled={uploading} onchange={handleUpload} />
+          </label>
+        </div>
+        {#if draft.img}<img src={draft.img.startsWith('/') ? API_ORIGIN + draft.img : draft.img}alt="" class="mt-1 h-20 w-32 border border-black/10 object-cover object-top dark:border-white/10" />{/if}
+      </div>
       <div class="flex flex-col gap-1"><label class={labelCls}>Sort Order</label><input type="number" class={inputCls} value={draft.sortOrder} oninput={(e) => setField('sortOrder', Number((e.target as HTMLInputElement).value))} /></div>
     </div>
     <div class="flex flex-col gap-1"><label class={labelCls}>Description</label><textarea rows={3} class={textareaCls} value={draft.description} oninput={(e) => setField('description', (e.target as HTMLTextAreaElement).value)}></textarea></div>
