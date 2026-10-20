@@ -13,6 +13,7 @@ import {
   resetScroll,
   startScroll,
   stopScroll,
+  syncScroll,
 } from './scroll'
 import { finishIntro, initReveals } from './reveal'
 import { runLoader } from './loader'
@@ -116,6 +117,7 @@ export async function enter({
     ? document.getElementById(decodeURIComponent(location.hash.slice(1)))
     : null
   if (scrollTop) resetScroll()
+  else syncScroll()
   initPage()
   if (hashTarget) jumpTo(hashTarget)
   if (instant) {
