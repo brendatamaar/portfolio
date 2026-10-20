@@ -15,7 +15,7 @@ const state: ScrollState = { y: 0, velocity: 0, progress: 0 }
 
 export function initScroll() {
   if (lenis || prefersReducedMotion()) {
-    // Still publish native scroll position for the driver modules
+    // Still publish native scroll position for WebGL sync.
     if (!lenis) addEventListener('scroll', nativeTick, { passive: true })
     return
   }
@@ -51,22 +51,11 @@ export const onScroll = (fn: (s: ScrollState) => void) => {
 export const scrollState = () => state
 export const stopScroll = () => lenis?.stop()
 export const startScroll = () => lenis?.start()
-/** Adopt the scroll position the browser restored (back/forward) so Lenis does not pull to 0. */
-export function syncScroll() {
-  if (lenis) lenis.scrollTo(scrollY, { immediate: true, force: true })
-  state.y = scrollY
-}
 export function resetScroll() {
   if (lenis) lenis.scrollTo(0, { immediate: true, force: true })
   else scrollTo(0, 0)
   state.y = 0
   state.velocity = 0
-}
-/** Land on an element instantly (cross-page #hash links). */
-export function jumpTo(target: HTMLElement) {
-  if (lenis) lenis.scrollTo(target, { immediate: true, force: true })
-  else target.scrollIntoView()
-  state.y = scrollY
 }
 export function scrollToTarget(target: string | HTMLElement | number) {
   if (lenis)

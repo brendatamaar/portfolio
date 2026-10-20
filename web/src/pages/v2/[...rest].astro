@@ -1,10 +1,10 @@
 ---
 import V2 from '../../v2/layouts/V2.astro'
-import EmptyCell from '../../v2/components/EmptyCell.astro'
+import NotFound from '../../v2/components/NotFound.astro'
 
 Astro.response.status = 404
 ---
 
-<V2 title="Page not found" description="This page isn’t part of Brendatama’s portfolio. Head back home for projects, work history and writing." banner="cool">
-  <EmptyCell />
+<V2 title="Not found" description="This address returned 404. Nothing was ever served here, but the projects, the work history and the writing are one click away.">
+  <NotFound />
 </V2>

@@ -1,11 +1,11 @@
 // First-load sequence. Progress follows REAL work (fonts + critical images), eased by GSAP,
 // with a floor so it reads as intentional and a ceiling so it never becomes a usability problem.
-// Markup (#loader) lives in the home hero; it is the source label counting up to 220 V.
+// Markup (#loader) lives in the layout; its look is authored per project.
 import { gsap } from 'gsap'
-import { prefersReducedMotion } from './env'
+import { ease, prefersReducedMotion } from './env'
 
 let format = (p: number) => String(Math.round(p)).padStart(3, '0')
-/** Customize the counter text. p goes 0 → 100. */
+/** Customize the counter text, e.g. a clock, a year, a frame count. p goes 0 → 100. */
 export const setLoaderFormat = (fn: (p: number) => string) => {
   format = fn
 }
@@ -17,14 +17,13 @@ export const setLoaderExit = (
   exit = fn
 }
 
-// Both measured from navigation start, so a slow boot on a weak phone eats into the budget
-const MIN = 1.0 // seconds: long enough to read as a designed moment
-const MAX = 1.7 // seconds: a longer loader is a usability problem
+const MIN = 0.6 // seconds: long enough to read the rows as they land
+const MAX = 2.6 // seconds: a longer loader is a usability problem
 
 function criticalAssets(): Promise<unknown>[] {
   const imgs = [
     ...document.querySelectorAll<HTMLImageElement>(
-      'img[data-critical], [data-intro] img',
+      'img[data-critical], [data-intro] img, [data-gl-instant] img',
     ),
   ]
   return [
@@ -37,17 +36,14 @@ function criticalAssets(): Promise<unknown>[] {
 
 export async function runLoader(): Promise<void> {
   const root = document.getElementById('loader')
-  if (!root) return finish(null)
+  if (!root) return
   if (prefersReducedMotion()) {
     await Promise.race([Promise.all(criticalAssets()), wait(MAX)])
+    await gsap.to(root, { autoAlpha: 0, duration: 0.3 })
     return finish(root)
   }
   const count = root.querySelector<HTMLElement>('[data-loader-count]')
-  // Booted after the budget already ran out (slow phone): show the end reading, no count
-  if (performance.now() / 1000 > MAX) {
-    if (count) count.textContent = format(100)
-    return finish(root)
-  }
+  const bar = root.querySelector<HTMLElement>('[data-loader-bar]')
   const tasks = criticalAssets()
   let done = 0
   const shown = { v: 0 }
@@ -59,19 +55,21 @@ export async function runLoader(): Promise<void> {
     }),
   )
   const start = performance.now()
-  const floor = Math.max(0.35, MIN - start / 1000) // the count itself always gets a moment
+  // A slow connection already made the visitor wait: show what arrived and get out of the way.
+  const floor = start > 1200 ? 0.15 : MIN
 
   await new Promise<void>((resolve) => {
     const tick = () => {
       const elapsed = (performance.now() - start) / 1000
-      const sinceNav = performance.now() / 1000
       const timeCap = Math.min(100, (elapsed / floor) * 100) // never faster than the floor
-      const goal = sinceNav > MAX ? 100 : Math.min(target.v, timeCap)
-      shown.v += (goal - shown.v) * (goal === 100 ? 0.3 : 0.12)
-      // Slow devices: never let easing stretch the count past the cap
-      if ((goal === 100 && shown.v > 99.5) || sinceNav > MAX + 0.3)
-        shown.v = 100
+      const goal =
+        elapsed > (start > 1200 ? 0.6 : MAX) ? 100 : Math.min(target.v, timeCap) // slow boot: stop waiting on fonts sooner
+      shown.v +=
+        (goal - shown.v) *
+        (start > 1200 ? 1 : Math.min(1, 0.16 * gsap.ticker.deltaRatio())) // slow boot: no easing
+      if (goal === 100 && shown.v > 99.5) shown.v = 100
       if (count) count.textContent = format(shown.v)
+      if (bar) bar.style.transform = `scaleX(${shown.v / 100})`
       if (shown.v === 100) {
         gsap.ticker.remove(tick)
         resolve()
@@ -80,13 +78,32 @@ export async function runLoader(): Promise<void> {
     gsap.ticker.add(tick)
   })
 
-  if (exit) await exit(root)
+  // Exit. Author per project with setLoaderExit(): it is the first handoff every visitor sees.
+  if (exit) {
+    await exit(root)
+    return finish(root)
+  }
+  await gsap
+    .timeline()
+    .to(root.querySelectorAll('[data-loader-out]'), {
+      yPercent: -110,
+      duration: 0.7,
+      ease: ease.inOut,
+      stagger: 0.05,
+    })
+    .to(
+      root,
+      { clipPath: 'inset(0% 0% 100% 0%)', duration: 1, ease: ease.inOut },
+      '-=0.35',
+    )
   finish(root)
 }
 
-function finish(root: HTMLElement | null) {
-  if (root) root.hidden = true
+// Hide rather than remove: in React apps the loader node belongs to React.
+function finish(root: HTMLElement) {
+  root.hidden = true
   document.documentElement.classList.add('is-loaded')
+  document.dispatchEvent(new Event('loader:done'))
 }
 
 const wait = (s: number) => new Promise((r) => setTimeout(r, s * 1000))

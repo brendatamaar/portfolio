@@ -1,0 +1,36 @@
+---
+import Sticker from './Sticker.astro'
+---
+
+<section class="nf">
+  <Sticker kind="squiggle" color="#9c8cff" class="nf__s1" />
+  <Sticker kind="star" color="#d7ec4a" class="nf__s2" />
+  <Sticker kind="sparkle" color="#ff8a1e" class="nf__s3" />
+  <h1 class="nf__title" data-split="words" data-intro>404</h1>
+  <p class="nf__text" data-reveal="fade" data-intro data-delay="0.25">
+    The request went out and came back empty. Nothing lives at this address, and nothing ever has.
+  </p>
+  <table class="nf__table" data-notfound data-reveal="up" data-intro data-delay="0.35">
+    <caption class="sr-only">The request for this page</caption>
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Status</th>
+        <th scope="col" class="nf__c-time">Time</th>
+        <th scope="col"><span class="sr-only">Waterfall</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="nf__path" data-nf-path>this address</td>
+        <td class="nf__status">404 Not Found</td>
+        <td class="nf__c-time" data-nf-time></td>
+        <td><span class="nf__track"><span class="nf__bar" data-nf-bar></span></span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="nf__links" data-reveal="fade" data-intro data-delay="0.5">
+    <a class="pill pill--light" href="/v2/"><span>Back to the home page</span><span class="pill__arrow" aria-hidden="true">→</span></a>
+    <a class="pill pill--ghost" href="/blog" data-astro-reload><span>Read the blog</span><span class="pill__arrow" aria-hidden="true">→</span></a>
+  </p>
+</section>

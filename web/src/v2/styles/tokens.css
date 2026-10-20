@@ -1,0 +1,91 @@
+/* Design tokens. See DESIGN.md for the reasoning behind each value. */
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('/v2/fonts/archivo-100_900-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JB Mono';
+  src: url('/v2/fonts/jb-mono-400-normal.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+/* Fallback tuned to Archivo's width so the swap barely moves the layout. */
+@font-face {
+  font-family: 'Archivo Fallback';
+  src:
+    local('Arial'), local('Liberation Sans'), local('Helvetica'), local('Arimo');
+  size-adjust: 98.2%;
+  ascent-override: 88%;
+  descent-override: 21%;
+}
+
+:root {
+  /* Color: navy night, white day, and the network panel's type colors (DESIGN.md) */
+  --c-navy: #0e1a2b;
+  --c-navy-2: #1b2a42;
+  --c-bg: #ffffff;
+  --c-raised: #f3f4f8;
+  --c-fg: #0e1a2b;
+  --c-muted: #5b6577;
+  --c-muted-dark: #a9b3c7;
+  --c-line: rgb(14 26 43 / 0.12);
+  --c-orange: #ff8a1e;
+  --c-lavender: #9c8cff;
+  --c-coral: #ff5b3a;
+  --c-green: #21b47d;
+  --c-lime: #d7ec4a;
+  --c-eyebrow: #c4351a;
+  --c-accent: var(--c-lavender);
+  --c-signal: var(--c-coral);
+  --c-curtain: var(--c-navy);
+  --focus: var(--c-navy);
+
+  /* Type */
+  --f-display: 'Archivo', 'Archivo Fallback', system-ui, sans-serif;
+  --f-body: 'Archivo', 'Archivo Fallback', system-ui, sans-serif;
+  --f-mono: 'JB Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --t-mega: clamp(3.4rem, 1rem + 8.6vw, 9.8rem);
+  --t-xl: clamp(2.5rem, 1.3rem + 4.4vw, 5.4rem);
+  --t-l: clamp(1.6rem, 1.1rem + 2vw, 3rem);
+  --t-m: clamp(1.2rem, 1.05rem + 0.6vw, 1.6rem);
+  --t-body: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+  --t-s: 0.875rem;
+  --t-xs: 0.75rem;
+
+  /* Space */
+  --u: clamp(0.5rem, 0.35rem + 0.6vw, 1rem);
+  --gutter: clamp(1rem, 0.6rem + 1.6vw, 2.5rem);
+  --cols: 12;
+  --bar: 0.7rem;
+
+  /* Shape */
+  --radius: 1.5rem; /* cards; pills are fully round */
+  --r-sm: 0.9rem;
+
+  /* Motion (CSS side of the engine eases) */
+  --e-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --e-soft: cubic-bezier(0.215, 0.61, 0.355, 1);
+
+  /* Layers */
+  --z-gl: 0;
+  --z-content: 1;
+  --z-header: 50;
+  --z-cursor: 80;
+  --z-curtain: 90;
+  --z-loader: 100;
+}
