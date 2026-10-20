@@ -3,10 +3,12 @@
 import { boot, cleanup, enter, leave, syncFlags } from './index'
 
 let navigating = false
+let traverse = false
 
 export function start(setup?: () => void) {
   document.addEventListener('astro:before-preparation', (e) => {
     navigating = true
+    traverse = e.navigationType === 'traverse'
     const load = e.loader
     e.loader = async () => {
       await Promise.all([leave(), load()])
@@ -21,7 +23,8 @@ export function start(setup?: () => void) {
   document.addEventListener('astro:page-load', () => {
     if (!navigating) return void boot(setup) // first load (boot is idempotent)
     navigating = false
-    enter()
+    // Back/forward: Astro restores the scroll position; show the page finished, not replayed
+    enter(traverse ? { scrollTop: false, instant: true } : {})
   })
   // Module scripts run after parsing: boot now instead of waiting for the first astro:page-load.
   boot(setup)

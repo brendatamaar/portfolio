@@ -152,7 +152,7 @@ export function setupMotion() {
     if (!links.length) return
     document.querySelectorAll<HTMLElement>('[data-section]').forEach((sec) => {
       const link = links.find((l) => l.dataset.spy === sec.id)
-      if (!link) return
+      if (!link || link.getAttribute('aria-current') === 'page') return
       ScrollTrigger.create({
         trigger: sec,
         start: 'top 45%',
@@ -163,6 +163,11 @@ export function setupMotion() {
             : link.removeAttribute('aria-current'),
       })
     })
-    return () => links.forEach((l) => l.removeAttribute('aria-current'))
+    return () =>
+      links.forEach(
+        (l) =>
+          l.getAttribute('aria-current') === 'location' &&
+          l.removeAttribute('aria-current'),
+      )
   })
 }

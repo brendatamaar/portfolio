@@ -14,7 +14,7 @@ import {
   startScroll,
   stopScroll,
 } from './scroll'
-import { initReveals } from './reveal'
+import { finishIntro, initReveals } from './reveal'
 import { runLoader } from './loader'
 import { playEnter, playLeave } from './transition'
 import { prefersReducedMotion } from './env'
@@ -105,7 +105,11 @@ export function cleanup() {
 }
 
 /** Init the new page. `transition: false` for back/forward, where no leave ran. */
-export async function enter({ transition = true, scrollTop = true } = {}) {
+export async function enter({
+  transition = true,
+  scrollTop = true,
+  instant = false,
+} = {}) {
   if (!booted) return
   cleanup() // no-op if the adapter already cleaned up
   const hashTarget = location.hash
@@ -114,7 +118,11 @@ export async function enter({ transition = true, scrollTop = true } = {}) {
   if (scrollTop) resetScroll()
   initPage()
   if (hashTarget) jumpTo(hashTarget)
+  if (instant) {
+    intro?.progress(1)
+    finishIntro()
+  }
   if (transition) await playEnter()
   startScroll()
-  intro?.play()
+  if (!instant) intro?.play()
 }

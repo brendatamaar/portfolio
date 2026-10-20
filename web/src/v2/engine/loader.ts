@@ -19,7 +19,7 @@ export const setLoaderExit = (
 
 // Both measured from navigation start, so a slow boot on a weak phone eats into the budget
 const MIN = 1.0 // seconds: long enough to read as a designed moment
-const MAX = 1.9 // seconds: a longer loader is a usability problem
+const MAX = 1.7 // seconds: a longer loader is a usability problem
 
 function criticalAssets(): Promise<unknown>[] {
   const imgs = [
@@ -43,6 +43,11 @@ export async function runLoader(): Promise<void> {
     return finish(root)
   }
   const count = root.querySelector<HTMLElement>('[data-loader-count]')
+  // Booted after the budget already ran out (slow phone): show the end reading, no count
+  if (performance.now() / 1000 > MAX) {
+    if (count) count.textContent = format(100)
+    return finish(root)
+  }
   const tasks = criticalAssets()
   let done = 0
   const shown = { v: 0 }

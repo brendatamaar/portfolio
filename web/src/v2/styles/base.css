@@ -86,10 +86,14 @@ p {
 }
 .skip-link {
   position: fixed;
-  left: var(--gutter);
-  top: var(--gutter);
+  left: 0;
+  top: 0;
   z-index: calc(var(--z-loader) + 1);
-  padding: 0.9em 1.4em;
+  display: flex;
+  align-items: center;
+  min-height: var(--header-h);
+  min-width: min(18rem, 100%);
+  padding-inline: var(--gutter);
   background: var(--c-fg);
   font-weight: 700;
   color: var(--c-bg);

@@ -13,11 +13,13 @@ interface Props {
   image?: string
   /** the reading on the bus column: "Energized 03 / 11" (home) or "Node 04 / 11" (case) */
   meter?: { label: string; value: number; total: number }
+  /** nav section this page belongs to */
+  section?: string
   /** extra structured data for this page (case studies) */
   jsonLd?: Record<string, unknown>
 }
 
-const { title, description = site.description, image = '/v2/og.png', meter, jsonLd } = Astro.props
+const { title, description = site.description, image = '/v2/og.png', meter, section, jsonLd } = Astro.props
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${site.role}, Jakarta`
 // Astro.url reflects the internal host behind the reverse proxy: build from `site` instead
 const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href
@@ -78,7 +80,7 @@ const person = {
       <div class="curtain__wire"></div>
       <p class="curtain__label mono"></p>
     </div>
-    <Frame />
+    <Frame current={section} />
     {
       meter && meter.total > 0 && (
         <p class="meter mono" aria-hidden="true">
