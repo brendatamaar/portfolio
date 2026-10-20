@@ -89,8 +89,9 @@ p {
   left: var(--gutter);
   top: var(--gutter);
   z-index: calc(var(--z-loader) + 1);
-  padding: 0.7em 1.1em;
+  padding: 0.9em 1.4em;
   background: var(--c-fg);
+  font-weight: 700;
   color: var(--c-bg);
   font-size: var(--t-s);
   translate: 0 -300%;

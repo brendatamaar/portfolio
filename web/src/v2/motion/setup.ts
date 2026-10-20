@@ -108,9 +108,17 @@ export function setupMotion() {
   // The frame steps aside while reading down and comes back on the way up
   let last = 0
   onScroll(({ y }) => {
+    document.documentElement.classList.toggle('scrolled', y > 40)
     if (Math.abs(y - last) < 4) return
     document.documentElement.classList.toggle('frame-away', y > 160 && y > last)
     last = y
+  })
+
+  // A page can open mid-way (back/forward, #hash links): set the frame band from where it lands
+  onPage(() => {
+    requestAnimationFrame(() =>
+      document.documentElement.classList.toggle('scrolled', scrollY > 40),
+    )
   })
 
   startGrid()

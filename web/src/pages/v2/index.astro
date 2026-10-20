@@ -122,7 +122,7 @@ const stack = (p: { techStack: string[] }) => p.techStack.slice(0, 3).join(', ')
               {off.map((p) => (
                 <li class="cover node" data-node="project" style={`--len: ${p.title.length}`}>
                   <a class="cover__link" href={`/v2/work/${p.slug}`} data-title={p.title}>
-                    <div class="cover__media" data-flip-src>
+                    <div class:list={['cover__media', p.cover && 'has-shot']}>
                       {p.cover ? (
                         <img src={p.cover} srcset={srcset(p.cover)} sizes="(min-width: 768px) 50vw, 100vw" alt={`Screenshot of ${p.title}`} width="1600" height="1000" loading="lazy" decoding="async" />
                       ) : (
