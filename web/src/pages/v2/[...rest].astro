@@ -1,10 +1,10 @@
 ---
 import V2 from '../../v2/layouts/V2.astro'
-import OpenCircuit from '../../v2/components/OpenCircuit.astro'
+import EmptyCell from '../../v2/components/EmptyCell.astro'
 
 Astro.response.status = 404
 ---
 
-<V2 title="Open circuit" description="This address is not on the line. Head back to the source to see Brendatama’s work.">
-  <OpenCircuit />
+<V2 title="Page not found" description="This page isn’t part of Brendatama’s portfolio. Head back home for projects, work history and writing." banner="cool">
+  <EmptyCell />
 </V2>

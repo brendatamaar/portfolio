@@ -1,25 +1,29 @@
 ---
 import { ClientRouter } from 'astro:transitions'
-import Frame from '../components/Frame.astro'
+import poppins400 from '@fontsource/poppins/files/poppins-latin-400-normal.woff2?url'
+import poppins500 from '@fontsource/poppins/files/poppins-latin-500-normal.woff2?url'
+import poppins600 from '@fontsource/poppins/files/poppins-latin-600-normal.woff2?url'
+import poppins700 from '@fontsource/poppins/files/poppins-latin-700-normal.woff2?url'
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
 import { site } from '../data/content'
-import '../styles/tokens.css'
-import '../styles/base.css'
-import '../styles/site.css'
+import '../../globals.css'
+import '../v2.css'
 
 interface Props {
   title?: string
   description?: string
   /** root-relative OG image (1200x630) */
   image?: string
-  /** the reading on the bus column: "Energized 03 / 11" (home) or "Node 04 / 11" (case) */
-  meter?: { label: string; value: number; total: number }
-  /** nav section this page belongs to */
+  /** nav section this page belongs to (case pages) */
   section?: string
+  /** warm gradient (home) or cool gradient behind the top of the page */
+  banner?: 'warm' | 'cool'
   /** extra structured data for this page (case studies) */
   jsonLd?: Record<string, unknown>
 }
 
-const { title, description = site.description, image = '/v2/og.png', meter, section, jsonLd } = Astro.props
+const { title, description = site.description, image = '/v2/og.png', section, banner = 'warm', jsonLd } = Astro.props
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${site.role}, Jakarta`
 // Astro.url reflects the internal host behind the reverse proxy: build from `site` instead
 const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href
@@ -34,6 +38,21 @@ const person = {
   url: site.url,
   sameAs: ['https://github.com/brendatamaar', 'https://www.linkedin.com/in/brendatamaar/'],
 }
+
+// Latin subset only, as in components/BaseHead.astro
+const LATIN =
+  'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD'
+const fontCss = [
+  ['400', poppins400],
+  ['500', poppins500],
+  ['600', poppins600],
+  ['700', poppins700],
+]
+  .map(
+    ([w, url]) =>
+      `@font-face{font-family:'Poppins';font-style:normal;font-display:swap;font-weight:${w};src:url(${url}) format('woff2');unicode-range:${LATIN}}`,
+  )
+  .join('')
 ---
 
 <!doctype html>
@@ -46,8 +65,8 @@ const person = {
     <link rel="canonical" href={canonical} />
     {/* Preview beside the live site: keep it out of search until it replaces the homepage */}
     <meta name="robots" content="noindex, follow" />
-    <meta name="theme-color" content="#e2e4df" />
-    <link rel="icon" href="/v2/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#013240" />
+    <link rel="icon" type="image/svg+xml" href="/images/favicon/favicon.svg" />
     <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
@@ -64,33 +83,60 @@ const person = {
     <meta name="twitter:image" content={ogImage} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(person)} />
     {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
-    <link rel="preload" href="/v2/fonts/archivo-v2-100_900-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/v2/fonts/martian-v2-100_800-normal.woff2" as="font" type="font/woff2" crossorigin />
-    {/* Before first paint: flag JS + motion so hidden-until-revealed states never flash */}
+
+    <link rel="preload" href={poppins400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={poppins700} as="font" type="font/woff2" crossorigin />
+    <style is:inline set:html={fontCss}></style>
+
+    {/* Before first paint: theme (same rule as the classic site), plus engine flags */}
     <script is:inline>
-      document.documentElement.classList.add('js')
-      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion')
+      ;(function () {
+        function apply(doc) {
+          var s = null
+          try {
+            s = localStorage.getItem('theme')
+          } catch (e) {}
+          var d = window.matchMedia('(prefers-color-scheme: dark)').matches
+          doc.documentElement.classList.toggle('dark', s === 'dark' || (s === null && d))
+        }
+        apply(document)
+        document.addEventListener('astro:before-swap', function (e) {
+          apply(e.newDocument)
+        })
+        document.documentElement.classList.add('js')
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion')
+      })()
     </script>
     <ClientRouter fallback="swap" />
   </head>
-  <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+  <body class="relative flex min-h-screen flex-col">
+    <div
+      class:list={['pointer-events-none absolute inset-x-0 top-0 h-[640px]', banner === 'warm' ? 'bg-hero' : 'bg-hero-alt']}
+      aria-hidden="true"
+    >
+    </div>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-0 focus:left-0 focus:z-[9999] focus:flex focus:h-[68px] focus:items-center focus:bg-teal focus:px-6 focus:type-button focus:text-white"
+    >
+      Skip to main content
+    </a>
     <div id="curtain" transition:persist="curtain" aria-hidden="true">
       <div class="curtain__panel"></div>
-      <div class="curtain__wire"></div>
-      <p class="curtain__label mono"></p>
+      <div class="curtain__label">
+        <span class="hex inline-block aspect-[1.15] w-6 bg-teal"></span>
+        <p class="type-h3" data-curtain-title></p>
+      </div>
     </div>
-    <Frame current={section} />
-    {
-      meter && meter.total > 0 && (
-        <p class="meter mono" aria-hidden="true">
-          {meter.label} <span data-meter={meter.label === 'Energized' ? 'live' : 'static'}>{String(meter.value).padStart(2, '0')}</span> / {String(meter.total).padStart(2, '0')}
-        </p>
-      )
-    }
-    <main id="main" tabindex="-1">
+
+    <Header current={section} />
+
+    <main id="main" tabindex="-1" class="relative flex-1">
       <slot />
     </main>
+
+    <Footer />
+
     <script>
       import { start } from '../engine/astro'
       import { setupMotion } from '../motion/setup'
@@ -98,26 +144,3 @@ const person = {
     </script>
   </body>
 </html>
-
-<style is:global>
-  .curtain__panel {
-    position: absolute;
-    inset: 0;
-    background: var(--c-curtain);
-  }
-  .curtain__wire {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 2px;
-    margin-top: -1px;
-    background: var(--c-accent);
-  }
-  .curtain__label {
-    position: absolute;
-    left: calc(var(--bus-x) + 1.25rem);
-    top: calc(50% + 0.9rem);
-    color: var(--c-bg);
-  }
-</style>

@@ -1,0 +1,26 @@
+---
+// Sewagi section label: eyebrow with a hex bullet, peach number, title; optional action slot.
+interface Props {
+  id: string
+  num: string
+  title: string
+  eyebrow: string
+  lead?: string
+}
+const { id, num, title, eyebrow, lead } = Astro.props
+---
+
+<div class="mb-10 flex flex-wrap items-end justify-between gap-x-10 gap-y-5 md:mb-14">
+  <div class="max-w-2xl">
+    <p class="mb-3 flex items-center gap-2 type-subtitle text-[11px] text-muted">
+      <span class="hex inline-block aspect-[1.15] w-2.5 bg-teal" aria-hidden="true"></span>
+      {eyebrow}
+    </p>
+    <h2 id={id} class="type-section text-heading" data-split="lines">
+      <span class="ink-peach">{num}.</span>
+      {title}
+    </h2>
+    {lead && <p class="mt-4 type-lead text-body">{lead}</p>}
+  </div>
+  <slot />
+</div>

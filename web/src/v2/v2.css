@@ -1,0 +1,379 @@
+/*
+  v2 on top of the Sewagi system (src/globals.css). Nothing here redefines a Sewagi token or
+  component; it adds the pieces a portfolio needs that the product guide does not have:
+  a display tier, the honeycomb, hover motion and the page transition.
+*/
+
+/* ── Contrast: Sewagi's palette, held to WCAG AA ──────────────────────────────────────────
+   The guide pairs white with light teal (2:1) and uses #8A8989 and peach for small or display
+   text on white. v2 keeps every hue and only shifts the text that sits on them. */
+
+:root:not(.dark) {
+  --muted: #6b6a6a; /* 5.3:1 on white, 4.7:1 on the warm banner */
+}
+.btn-primary {
+  color: var(--color-navy);
+}
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: var(--color-navy);
+    color: #fff;
+  }
+  .dark .btn-primary:hover {
+    background: #fff;
+    color: var(--color-navy);
+  }
+}
+.btn-primary:focus-visible {
+  background: var(--color-navy);
+  color: #fff;
+}
+/* Tags: navy on the peach fill (8.6:1); the outline variant in a deeper peach (5.4:1) */
+.tag {
+  color: var(--color-navy);
+}
+:root:not(.dark) .tag-outline {
+  color: #9a5229;
+  background: transparent;
+}
+.dark .tag-outline {
+  color: var(--color-peach);
+}
+
+/* Peach as text: a deeper cut on light grounds (4.2:1), Sewagi peach on navy and in dark mode */
+.ink-peach {
+  color: #b05f33;
+}
+.dark .ink-peach,
+.bg-navy .ink-peach {
+  color: var(--color-peach);
+}
+
+/* ── Type: one tier above Sewagi's h1 for hero and case titles ─────────────────────────── */
+
+.type-display {
+  font-size: clamp(2.5rem, 1.25rem + 4vw, 4.25rem);
+  line-height: 1.06;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.type-section {
+  font-size: clamp(1.75rem, 1.3rem + 1.9vw, 3rem);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.type-lead {
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.1875rem);
+  line-height: 1.7;
+}
+
+/* Wider than Sewagi's 1140 page so the hero and grids have room to breathe */
+.container-wide {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1280px;
+  padding-inline: 16px;
+  @media (min-width: 640px) {
+    padding-inline: 24px;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 40px;
+  }
+}
+
+/* ── Honeycomb: flat-top hexagons tessellated (step 0.75w across, h down) ─────────────── */
+
+.hive {
+  aspect-ratio: var(--hive-ratio);
+}
+.cell {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  aspect-ratio: 1.15;
+}
+/* The float wrapper is the only element JS moves; the cell itself keeps its grid position */
+.cell__float {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.cell__face {
+  position: absolute;
+  inset: 3%;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  overflow: hidden;
+}
+.cell__face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  scale: 1.2;
+}
+/* A light teal wash ties third-party screenshots to the palette */
+.cell--shot .cell__face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-teal);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+}
+.cell--outline .cell__face {
+  background: var(--line);
+}
+.cell--outline .cell__face::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  clip-path: inherit;
+  background: var(--page);
+}
+.dark .cell--shot .cell__face img {
+  opacity: 0.9;
+}
+
+/* ── Hover motion, one treatment per role ──────────────────────────────────────────────── */
+
+/* Buttons and pills: the label rolls up to an identical copy, the arrow travels */
+.roll {
+  display: inline-grid;
+  overflow: clip;
+  line-height: 1.25;
+}
+.roll > span {
+  grid-area: 1 / 1;
+  transition: translate 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.roll > span + span {
+  translate: 0 110%;
+}
+.nudge {
+  transition: translate 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+@media (hover: hover) {
+  :is(.btn, .chip, .btn-pill):hover .roll > span {
+    translate: 0 -110%;
+  }
+  :is(.btn, .chip, .btn-pill):hover .roll > span + span {
+    translate: 0 0;
+  }
+  :is(.btn, .chip, .btn-pill, .link-arrow, .lift):hover .nudge {
+    translate: 3px 0;
+  }
+  :is(.btn, .chip, .btn-pill):hover .nudge-up {
+    translate: 2px -2px;
+  }
+}
+:is(.btn, .chip, .btn-pill):focus-visible .roll > span {
+  translate: 0 -110%;
+}
+:is(.btn, .chip, .btn-pill):focus-visible .roll > span + span {
+  translate: 0 0;
+}
+.btn:active {
+  scale: 0.98;
+}
+
+/* Cards: lift, the media eases in, the corner hexagon slides */
+.lift {
+  transition:
+    translate 0.5s cubic-bezier(0.165, 0.84, 0.44, 1),
+    box-shadow 0.5s cubic-bezier(0.165, 0.84, 0.44, 1),
+    border-color 0.3s;
+}
+.lift .lift__media img,
+.lift .lift__media .lift__cover {
+  transition: scale 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lift .lift__hex {
+  transition: translate 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.lift .lift__title {
+  transition: color 0.3s;
+}
+@media (hover: hover) {
+  .lift:hover {
+    translate: 0 -6px;
+    box-shadow: var(--shadow-raised);
+  }
+  .lift:hover .lift__media img,
+  .lift:hover .lift__media .lift__cover {
+    scale: 1.04;
+  }
+  .lift:hover .lift__hex {
+    translate: -6px 6px;
+  }
+  .lift:hover .lift__title {
+    color: var(--link);
+  }
+}
+.lift:focus-visible {
+  translate: 0 -6px;
+  box-shadow: var(--shadow-raised);
+}
+.lift:focus-visible .lift__title {
+  color: var(--link);
+}
+
+/* Nav: Sewagi's 3px teal underline, drawn in on hover; the current item keeps it */
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--heading);
+  transition: color 0.2s;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--color-teal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+@media (hover: hover) {
+  .nav-link:hover {
+    color: var(--link);
+  }
+  .nav-link:hover::after {
+    transform: scaleX(1);
+  }
+}
+.nav-link:focus-visible::after,
+.nav-link[aria-current]::after {
+  transform: scaleX(1);
+}
+.nav-link[aria-current] {
+  color: var(--link);
+  font-weight: 600;
+}
+
+/* The shared dark-mode switch: a 24px target, a teal halo and a knob that leans on hover */
+#theme-toggle {
+  height: 24px;
+  width: 42px;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.3s;
+}
+#theme-toggle > span {
+  transition:
+    transform 0.2s,
+    scale 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+@media (hover: hover) {
+  #theme-toggle:hover {
+    box-shadow: 0 0 0 4px rgb(109 199 190 / 0.3);
+  }
+  #theme-toggle:hover > span {
+    scale: 1.12;
+  }
+}
+
+/* Inline links in prose keep an underline at rest */
+.prose-link {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-thickness 0.2s;
+}
+.prose-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ── Page transition: a teal hexagon opens from the click point ────────────────────────── */
+
+#curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  visibility: hidden;
+}
+.curtain__panel {
+  position: absolute;
+  inset: 0;
+  background: var(--color-navy);
+}
+.curtain__label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  color: #fff;
+}
+
+/* Hero headline: visible from the first paint (it is the LCP), it settles into place */
+.motion [data-settle] > * {
+  display: inline-block;
+  translate: 0 0.3em;
+  opacity: 0.25;
+  transition:
+    translate 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.motion [data-settle] > * + * {
+  transition-delay: 0.12s;
+}
+.motion.is-entered [data-settle] > * {
+  translate: 0 0;
+  opacity: 1;
+}
+
+/* ── Engine hooks ───────────────────────────────────────────────────────────────────────── */
+
+#main {
+  overflow-x: clip;
+}
+#main:focus {
+  outline: none;
+}
+.motion [data-split],
+.motion [data-reveal],
+.motion [data-pop] {
+  visibility: hidden;
+}
+.split-line {
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+/* Lenis handles anchor smoothing; native smooth scroll would fight it */
+html.lenis {
+  scroll-behavior: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roll > span {
+    transition: none;
+    translate: none !important;
+  }
+  .roll > span + span {
+    visibility: hidden;
+  }
+  .lift,
+  .lift * {
+    transition: none !important;
+  }
+}

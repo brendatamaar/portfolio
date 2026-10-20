@@ -7,82 +7,88 @@ import {
   onScroll,
   prefersReducedMotion,
   scrollToTarget,
-  setLoaderFormat,
   setTransition,
 } from '../engine'
-import { setPower, startGrid } from './grid'
+import { startHive } from './hive'
 import { closeMenu, startMenu } from './menu'
 
-const INK = '#111312'
+/** Flat-top hexagon of radius r around (x, y), as a clip-path */
+function hexagon(x: number, y: number, r: number) {
+  const pts = [0, 60, 120, 180, 240, 300].map((a) => {
+    const t = (a * Math.PI) / 180
+    return `${(x + r * Math.cos(t)).toFixed(1)}px ${(y + r * Math.sin(t)).toFixed(1)}px`
+  })
+  return `polygon(${pts.join(',')})`
+}
 
 export function setupMotion() {
-  // Loader: the source label counts up to mains voltage while the line fills
-  setLoaderFormat((p) => {
-    setPower(p / 100)
-    return String(Math.round(p * 2.2)).padStart(3, '0')
-  })
-
-  // Transition: throw the switch. A live wire draws across the middle, the cable panel opens
-  // from it, and on the new page closes back onto the wire before the wire retracts.
+  // Transition: a navy hexagon opens from where you clicked and closes into the middle of the
+  // next page, the Sewagi hive shape at full screen. The destination name rides on it.
+  let point = { x: innerWidth / 2, y: innerHeight / 2 }
   let title = ''
   document.addEventListener(
     'click',
     (e) => {
+      point = {
+        x: e.clientX || innerWidth / 2,
+        y: e.clientY || innerHeight / 2,
+      }
       title =
         (e.target as Element).closest<HTMLElement>('a[data-title]')?.dataset
           .title ?? ''
     },
     true,
   )
+  const cover = () => Math.hypot(innerWidth, innerHeight) * 1.2
   setTransition({
     leave: (c) => {
       closeMenu()
+      const panel = c.querySelector<HTMLElement>('.curtain__panel')!
       const label = c.querySelector<HTMLElement>('.curtain__label')!
-      label.textContent = title
+      const name = c.querySelector<HTMLElement>('[data-curtain-title]')!
+      name.textContent = title
       title = ''
+      const iris = { r: 0 }
+      const { x, y } = point
       return gsap
         .timeline()
         .set(c, { autoAlpha: 1 })
-        .set(c.querySelector('.curtain__panel'), {
-          scaleY: 0,
-          transformOrigin: '50% 50%',
+        .set(label, { autoAlpha: 0, y: 12 })
+        .to(iris, {
+          r: cover(),
+          duration: 0.85,
+          ease: ease.inOut,
+          onUpdate: () => void (panel.style.clipPath = hexagon(x, y, iris.r)),
         })
-        .set(label, { autoAlpha: 0 })
-        .fromTo(
-          c.querySelector('.curtain__wire'),
-          { scaleX: 0, transformOrigin: '0% 50%' },
-          { scaleX: 1, duration: 0.45, ease: ease.inOut },
-        )
-        .to(
-          c.querySelector('.curtain__panel'),
-          { scaleY: 1, duration: 0.6, ease: ease.inOut },
-          0.25,
-        )
-        .to(label, { autoAlpha: 1, duration: 0.25 }, 0.5)
+        .to(label, { autoAlpha: 1, y: 0, duration: 0.35, ease: ease.soft }, 0.5)
     },
-    enter: (c) =>
-      gsap
+    enter: (c) => {
+      const panel = c.querySelector<HTMLElement>('.curtain__panel')!
+      const iris = { r: cover() }
+      return gsap
         .timeline()
         .to(c.querySelector('.curtain__label'), {
           autoAlpha: 0,
-          duration: 0.15,
-        })
-        .to(c.querySelector('.curtain__panel'), {
-          scaleY: 0,
-          duration: 0.65,
-          ease: ease.inOut,
+          y: -12,
+          duration: 0.25,
         })
         .to(
-          c.querySelector('.curtain__wire'),
+          iris,
           {
-            scaleX: 0,
-            transformOrigin: '100% 50%',
-            duration: 0.4,
+            r: 0,
+            duration: 0.75,
             ease: ease.inOut,
+            onUpdate: () =>
+              void (panel.style.clipPath = hexagon(
+                innerWidth / 2,
+                innerHeight / 2,
+                iris.r,
+              )),
           },
-          '-=0.3',
+          0.1,
         )
-        .set(c, { autoAlpha: 0 }),
+        .set(c, { autoAlpha: 0 })
+    },
   })
 
   // Same-page anchors scroll smoothly through Lenis instead of jumping
@@ -105,46 +111,52 @@ export function setupMotion() {
     true,
   )
 
-  // The frame steps aside while reading down and comes back on the way up
-  let last = 0
-  onScroll(({ y }) => {
-    document.documentElement.classList.toggle('scrolled', y > 40)
-    if (Math.abs(y - last) < 4) return
-    document.documentElement.classList.toggle('frame-away', y > 160 && y > last)
-    last = y
-  })
-
-  // A page can open mid-way (back/forward, #hash links): set the frame band from where it lands
-  onPage(() => {
-    requestAnimationFrame(() =>
-      document.documentElement.classList.toggle('scrolled', scrollY > 40),
-    )
-  })
-
-  startGrid()
+  startHive()
   startMenu()
 
-  // Energize: display lines stretch from condensed to expanded as the page powers up
+  // CSS-driven entrances ([data-settle]) start when the page intro plays
   onPage(({ intro }) => {
-    const els = document.querySelectorAll<HTMLElement>('[data-energize]')
-    if (!els.length || prefersReducedMotion()) return
-    const wmax =
-      parseFloat(
-        getComputedStyle(document.documentElement).getPropertyValue('--wmax'),
-      ) || 125
-    intro.add(
-      gsap.to(els, {
-        '--wdth': wmax,
-        color: INK,
-        duration: 1.25,
-        stagger: 0.12,
-        ease: ease.out,
-      }),
-      0,
-    )
+    intro.add(() => document.documentElement.classList.add('is-entered'), 0)
+    return () => document.documentElement.classList.remove('is-entered')
   })
 
-  // Nav marks the section in view
+  // Tech stack marquee: drifts on its own, speeds up and reverses with the scroll
+  onPage(() => {
+    const track = document.querySelector<HTMLElement>(
+      '[data-marquee] [data-track]',
+    )
+    if (!track || prefersReducedMotion()) return
+    const loop = gsap.to(track, {
+      xPercent: -50,
+      ease: 'none',
+      duration: 32,
+      repeat: -1,
+    })
+    const hover = track.closest<HTMLElement>('[data-marquee]')!
+    let paused = false
+    const pause = () => {
+      paused = true
+      gsap.to(loop, { timeScale: 0, duration: 0.5, overwrite: true })
+    }
+    const resume = () => {
+      paused = false
+      gsap.to(loop, { timeScale: 1, duration: 0.5, overwrite: true })
+    }
+    hover.addEventListener('pointerenter', pause)
+    hover.addEventListener('pointerleave', resume)
+    const off = onScroll(({ velocity }) => {
+      if (paused) return
+      const dir = velocity < 0 ? -1 : 1
+      gsap.to(loop, {
+        timeScale: dir * (1 + Math.min(Math.abs(velocity) / 10, 4)),
+        duration: 0.4,
+        overwrite: true,
+      })
+    })
+    return () => off()
+  })
+
+  // Nav marks the section in view (home); case pages keep their static mark
   onPage(() => {
     const links = [
       ...document.querySelectorAll<HTMLAnchorElement>('[data-spy]'),
