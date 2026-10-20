@@ -1,0 +1,180 @@
+---
+import V2 from '../../../v2/layouts/V2.astro'
+import Ground from '../../../v2/components/Ground.astro'
+import OpenCircuit from '../../../v2/components/OpenCircuit.astro'
+import Schematic from '../../../v2/components/Schematic.astro'
+import { lineOrder, loadResume, site, socials, srcset } from '../../../v2/data/content'
+
+const resume = await loadResume()
+const { all } = lineOrder(resume)
+const i = all.findIndex((p) => p.slug === Astro.params.slug)
+const p = i > -1 ? all[i] : null
+if (!p) Astro.response.status = 404
+
+const next = all.length ? all[(i + 1) % all.length] : null
+const onGrid = p?.type === 'work'
+const where = onGrid ? (p?.company === 'Icon Plus' ? 'PLN Icon Plus' : (p?.company ?? 'Work')) : 'Side project'
+const back = onGrid ? { href: '/v2#grid', label: 'On the grid' } : { href: '/v2#off-grid', label: 'Off grid' }
+// Fit the display title to its column once fully energized (Archivo caps at width 125 ≈ 0.86em each, plus margin)
+const fit = (s: string) => `--fit: ${(100 / (s.length * 0.9)).toFixed(2)}cqi`
+const host = (href: string) => {
+  try {
+    return new URL(href).host.replace(/^www\./, '')
+  } catch {
+    return href
+  }
+}
+const description = p
+  ? `${p.title}: ${p.description} ${onGrid ? 'Built at PLN Icon Plus' : 'A side project'} by ${site.name}.`.slice(0, 160)
+  : ''
+const jsonLd = p
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'CreativeWork',
+      name: p.title,
+      description: p.description,
+      creator: { '@type': 'Person', name: site.name },
+      keywords: p.techStack.join(', '),
+      ...(p.link?.href ? { url: p.link.href } : {}),
+    }
+  : undefined
+---
+
+{
+  p ? (
+    <V2 title={p.title} description={description} meter={{ label: 'Node', value: i + 1, total: all.length }} jsonLd={jsonLd}>
+      <div class="line">
+        <div class="bus bus--crumb" data-bus aria-hidden="true">
+          <div class="bus__live" />
+          <div class="bus__pulse" />
+        </div>
+        <div class="bus__spark" aria-hidden="true" />
+
+        <article aria-labelledby="case-title">
+          <header class="case-head">
+            <div class="row crumb node" data-node="section">
+              <span class="node__dot" aria-hidden="true" />
+              <p class="mono">
+                <a href={back.href}>
+                  <span aria-hidden="true">←</span> {back.label}
+                </a>
+              </p>
+            </div>
+            <div class="row">
+              <div class="case-title">
+                <h1 id="case-title" class="display" data-energize style={fit(p.title)}>
+                  {p.title}
+                </h1>
+              </div>
+            </div>
+            <div class="row">
+              <p class="case-sum" data-split="lines" data-intro data-delay="0.3">
+                {p.description}
+              </p>
+            </div>
+            <div class="row">
+              <dl class="facts" data-reveal="fade" data-intro data-delay="0.5">
+                <div>
+                  <dt class="mono">Built at</dt>
+                  <dd>{where}</dd>
+                </div>
+                <div>
+                  <dt class="mono">Stack</dt>
+                  <dd>{p.techStack.length ? p.techStack.join(', ') : 'Not listed yet'}</dd>
+                </div>
+                <div>
+                  <dt class="mono">Live at</dt>
+                  <dd>
+                    {p.link?.href ? (
+                      <a class="link" href={p.link.href} target="_blank" rel="noopener noreferrer">
+                        {host(p.link.href)}
+                      </a>
+                    ) : (
+                      'Internal system'
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </header>
+
+          <div class="row case-media node" data-node="project">
+            <span class="node__dot" aria-hidden="true" />
+            <figure>
+              <div class="frame-img">
+                {p.cover ? (
+                  <img src={p.cover} srcset={srcset(p.cover)} sizes="(min-width: 768px) 85vw, 100vw" alt={`Screenshot of ${p.title}`} width="1600" height="900" fetchpriority="high" decoding="async" />
+                ) : (
+                  <Schematic seed={p.seed} label={p.title.toUpperCase()} />
+                )}
+              </div>
+              <figcaption class="mono">
+                {p.note?.caption ?? (p.cover ? `${p.title}, as shipped.` : 'Generated line diagram. A screenshot is still to come.')}
+              </figcaption>
+            </figure>
+          </div>
+
+          <div class="row case-body">
+            <div class="case-body__grid">
+              <section class="case-block" aria-labelledby="what">
+                <h2 id="what" class="display" data-split="lines">
+                  What it does
+                </h2>
+                <p>{p.note?.inside ?? p.description}</p>
+              </section>
+              <section class="case-block" aria-labelledby="built">
+                <h2 id="built" class="display" data-split="lines">
+                  Built with
+                </h2>
+                {p.techStack.length > 0 && (
+                  <ul class="stack mono">
+                    {p.techStack.map((t) => (
+                      <li>{t}</li>
+                    ))}
+                  </ul>
+                )}
+                {p.link?.href && (
+                  <a class="btn case-visit" href={p.link.href} target="_blank" rel="noopener noreferrer">
+                    {p.link.href.includes('github.com') ? 'Source on GitHub' : 'Visit the site'}
+                    <span class="arrow" aria-hidden="true">↗</span>
+                  </a>
+                )}
+              </section>
+              {p.note?.points && (
+                <section class="case-block" aria-labelledby="stages">
+                  <h2 id="stages" class="display" data-split="lines">
+                    The stages
+                  </h2>
+                  <ol>
+                    {p.note.points.map((pt) => (
+                      <li>{pt}</li>
+                    ))}
+                  </ol>
+                </section>
+              )}
+            </div>
+          </div>
+        </article>
+
+        {next && next.slug !== p.slug && (
+          <nav class="row next node" data-node="project" aria-label="Next project">
+            <span class="node__dot" aria-hidden="true" />
+            <span class="node__wire" aria-hidden="true" />
+            <a class="next__link" href={`/v2/work/${next.slug}`} data-title={next.title}>
+              <span class="mono">Next node</span>
+              <span class="next__title display" style={fit(next.title + '  ')}>
+                {next.title}
+                <span class="arrow" aria-hidden="true">→</span>
+              </span>
+            </a>
+          </nav>
+        )}
+      </div>
+      <Ground email={resume.profile?.email} links={socials(resume)} />
+    </V2>
+  ) : (
+    <V2 title="Open circuit" description="This project is not on the line. Head back to the source to see Brendatama’s work.">
+      <OpenCircuit />
+    </V2>
+  )
+}

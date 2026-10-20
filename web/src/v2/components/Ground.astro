@@ -1,0 +1,50 @@
+---
+// Where every line ends: contact, links and colophon on the cable band, with the earth symbol.
+import { copy, site } from '../data/content'
+
+interface Props {
+  email?: string
+  links: { label: string; href: string }[]
+}
+const { email = 'brendatamaa@gmail.com', links } = Astro.props
+---
+
+<section class="ground line" id="ground" data-section="ground" aria-labelledby="ground-title">
+  <div class="bus" aria-hidden="true"><div class="bus__live"></div></div>
+  <div>
+    <div class="row ground__label node" data-node="section">
+      <span class="node__dot" aria-hidden="true"></span>
+      <h2 id="ground-title" class="mono">{copy.groundTitle}</h2>
+    </div>
+    <div class="row">
+      <div>
+        <p class="ground__lead" data-split="lines">{copy.groundLead}</p>
+        <a class="ground__mail display" href={`mailto:${email}`}>
+          Email me<span class="arrow" aria-hidden="true">↗</span>
+        </a>
+        <span class="ground__addr mono">{email}</span>
+        <ul class="ground__links">
+          {
+            links.map((l) => (
+              <li>
+                <a href={l.href} target="_blank" rel="noopener noreferrer">
+                  {l.label}
+                </a>
+              </li>
+            ))
+          }
+          <li><a href={site.resume} download data-astro-reload>Resume (PDF)</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="row colophon">
+    <svg class="earth" viewBox="0 0 28 22" aria-hidden="true">
+      <path d="M14 0 V7 M2 7 H26 M7 13 H21 M11 19 H17" stroke="currentColor" stroke-width="2.5" fill="none"></path>
+    </svg>
+    <div class="colophon__text mono">
+      <p>© {new Date().getFullYear()} {site.name}. Set in Archivo and Martian Mono. Built with Astro, GSAP and Lenis.</p>
+      <p><a href="/" data-astro-reload>Classic site</a></p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,10 @@
+---
+import V2 from '../../v2/layouts/V2.astro'
+import OpenCircuit from '../../v2/components/OpenCircuit.astro'
+
+Astro.response.status = 404
+---
+
+<V2 title="Open circuit" description="This address is not on the line. Head back to the source to see Brendatama’s work.">
+  <OpenCircuit />
+</V2>

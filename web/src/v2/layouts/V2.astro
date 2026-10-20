@@ -1,0 +1,121 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import Frame from '../components/Frame.astro'
+import { site } from '../data/content'
+import '../styles/tokens.css'
+import '../styles/base.css'
+import '../styles/site.css'
+
+interface Props {
+  title?: string
+  description?: string
+  /** root-relative OG image (1200x630) */
+  image?: string
+  /** the reading on the bus column: "Energized 03 / 11" (home) or "Node 04 / 11" (case) */
+  meter?: { label: string; value: number; total: number }
+  /** extra structured data for this page (case studies) */
+  jsonLd?: Record<string, unknown>
+}
+
+const { title, description = site.description, image = '/v2/og.png', meter, jsonLd } = Astro.props
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | ${site.role}, Jakarta`
+// Astro.url reflects the internal host behind the reverse proxy: build from `site` instead
+const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url).href
+const ogImage = new URL(image, Astro.site ?? site.url).href
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.name,
+  jobTitle: site.role,
+  worksFor: { '@type': 'Organization', name: 'PLN Icon Plus' },
+  address: { '@type': 'PostalAddress', addressLocality: 'Jakarta', addressCountry: 'ID' },
+  url: site.url,
+  sameAs: ['https://github.com/brendatamaar', 'https://www.linkedin.com/in/brendatamaar/'],
+}
+---
+
+<!doctype html>
+<html lang="en" transition:animate="none">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {/* Preview beside the live site: keep it out of search until it replaces the homepage */}
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" content="#e2e4df" />
+    <link rel="icon" href="/v2/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(person)} />
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <link rel="preload" href="/v2/fonts/archivo-v2-100_900-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/v2/fonts/martian-v2-100_800-normal.woff2" as="font" type="font/woff2" crossorigin />
+    {/* Before first paint: flag JS + motion so hidden-until-revealed states never flash */}
+    <script is:inline>
+      document.documentElement.classList.add('js')
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion')
+    </script>
+    <ClientRouter fallback="swap" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div id="curtain" transition:persist="curtain" aria-hidden="true">
+      <div class="curtain__panel"></div>
+      <div class="curtain__wire"></div>
+      <p class="curtain__label mono"></p>
+    </div>
+    <Frame />
+    {
+      meter && meter.total > 0 && (
+        <p class="meter mono" aria-hidden="true">
+          {meter.label} <span data-meter={meter.label === 'Energized' ? 'live' : 'static'}>{String(meter.value).padStart(2, '0')}</span> / {String(meter.total).padStart(2, '0')}
+        </p>
+      )
+    }
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <script>
+      import { start } from '../engine/astro'
+      import { setupMotion } from '../motion/setup'
+      start(setupMotion)
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .curtain__panel {
+    position: absolute;
+    inset: 0;
+    background: var(--c-curtain);
+  }
+  .curtain__wire {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    background: var(--c-accent);
+  }
+  .curtain__label {
+    position: absolute;
+    left: calc(var(--bus-x) + 1.25rem);
+    top: calc(50% + 0.9rem);
+    color: var(--c-bg);
+  }
+</style>

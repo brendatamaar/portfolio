@@ -1,0 +1,65 @@
+---
+// Generated cover for projects without a screenshot: a small single-line diagram seeded by the
+// project slug, so each project always draws the same one. Wires (.hot) go live with the node.
+interface Props {
+  seed: number
+  label: string
+}
+const { seed, label } = Astro.props
+
+function rng(a: number) {
+  let t = Math.floor(a * 2 ** 31) || 1
+  return () => {
+    t = (t + 0x6d2b79f5) | 0
+    let r = Math.imul(t ^ (t >>> 15), 1 | t)
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+  }
+}
+const rand = rng(seed)
+const W = 640
+const H = 400
+const busY = 96 + Math.round(rand() * 40)
+const count = 3 + Math.floor(rand() * 3)
+const left = 120
+const right = 600
+const kinds = ['load', 'xfmr', 'motor', 'earth'] as const
+const feeders = Array.from({ length: count }, (_, i) => {
+  const x = Math.round(left + 40 + ((right - left - 80) / (count - 1)) * i)
+  const end = busY + 150 + Math.round(rand() * 90)
+  return { x, end, kind: kinds[Math.floor(rand() * kinds.length)], breaker: busY + 44 + Math.round(rand() * 20) }
+})
+---
+
+<svg class="schem" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label={`Generated line diagram for ${label}`}>
+  {/* source */}
+  <circle class="w" cx="64" cy={busY} r="22"></circle>
+  <path class="w" d={`M50 ${busY} q7 -12 14 0 t14 0`}></path>
+  <path class="w hot" d={`M86 ${busY} H${right}`}></path>
+  <text x="44" y={busY - 36}>{label}</text>
+  {
+    feeders.map((f, i) => (
+      <g>
+        <path class="w hot" d={`M${f.x} ${busY} V${f.end - 24}`} />
+        <rect class="w" x={f.x - 8} y={f.breaker} width="16" height="16" fill="var(--c-cover)" />
+        <text x={f.x + 14} y={f.breaker + 12}>F{i + 1}</text>
+        {f.kind === 'load' && <path class="w" d={`M${f.x - 12} ${f.end - 24} L${f.x} ${f.end} L${f.x + 12} ${f.end - 24} Z`} />}
+        {f.kind === 'xfmr' && (
+          <g>
+            <circle class="w" cx={f.x} cy={f.end - 12} r="12" />
+            <circle class="w" cx={f.x} cy={f.end + 4} r="12" />
+          </g>
+        )}
+        {f.kind === 'motor' && (
+          <g>
+            <circle class="w" cx={f.x} cy={f.end - 6} r="16" />
+            <text x={f.x - 4} y={f.end - 2}>M</text>
+          </g>
+        )}
+        {f.kind === 'earth' && (
+          <path class="w" d={`M${f.x - 14} ${f.end - 24} H${f.x + 14} M${f.x - 9} ${f.end - 16} H${f.x + 9} M${f.x - 4} ${f.end - 8} H${f.x + 4}`} />
+        )}
+      </g>
+    ))
+  }
+</svg>
