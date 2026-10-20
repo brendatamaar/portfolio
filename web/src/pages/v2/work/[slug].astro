@@ -1,8 +1,9 @@
 ---
 import V2 from '../../../v2/layouts/V2.astro'
-import Ground from '../../../v2/components/Ground.astro'
-import OpenCircuit from '../../../v2/components/OpenCircuit.astro'
-import Schematic from '../../../v2/components/Schematic.astro'
+import Connect from '../../../v2/components/Connect.astro'
+import EmptyCell from '../../../v2/components/EmptyCell.astro'
+import Roll from '../../../v2/components/Roll.astro'
+import Icon from '../../../components/Icon.astro'
 import { lineOrder, loadResume, site, socials, srcset } from '../../../v2/data/content'
 
 const resume = await loadResume()
@@ -11,12 +12,10 @@ const i = all.findIndex((p) => p.slug === Astro.params.slug)
 const p = i > -1 ? all[i] : null
 if (!p) Astro.response.status = 404
 
-const next = all.length ? all[(i + 1) % all.length] : null
-const onGrid = p?.type === 'work'
-const where = onGrid ? (p?.company === 'Icon Plus' ? 'PLN Icon Plus' : (p?.company ?? 'Work')) : 'Side project'
-const back = onGrid ? { href: '/v2#grid', label: 'On the grid' } : { href: '/v2#off-grid', label: 'Off grid' }
-// Display titles fit their column once energized: CSS sizes them from the character count
-const fit = (s: string) => `--len: ${s.length}`
+const next = all.length > 1 ? all[(i + 1) % all.length] : null
+const atWork = p?.type === 'work'
+const where = atWork ? (p?.company === 'Icon Plus' ? 'PLN Icon Plus' : (p?.company ?? 'Work')) : 'Side project'
+const back = atWork ? { href: '/v2#work', label: 'Work' } : { href: '/v2#projects', label: 'Projects' }
 const host = (href: string) => {
   try {
     return new URL(href).host.replace(/^www\./, '')
@@ -25,7 +24,7 @@ const host = (href: string) => {
   }
 }
 const description = p
-  ? `${p.title}: ${p.description} ${onGrid ? 'Built at PLN Icon Plus' : 'A side project'} by ${site.name}.`.slice(0, 160)
+  ? `${p.title}: ${p.description} ${atWork ? 'Built at PLN Icon Plus' : 'A side project'} by ${site.name}.`.slice(0, 160)
   : ''
 const jsonLd = p
   ? {
@@ -42,139 +41,163 @@ const jsonLd = p
 
 {
   p ? (
-    <V2 title={p.title} description={description} section={onGrid ? 'grid' : 'off-grid'} meter={{ label: 'Node', value: i + 1, total: all.length }} jsonLd={jsonLd}>
-      <div class="line">
-        <div class="bus bus--crumb" data-bus aria-hidden="true">
-          <div class="bus__live" />
-          <div class="bus__pulse" />
-        </div>
-        <div class="bus__spark" aria-hidden="true" />
+    <V2 title={p.title} description={description} section={atWork ? 'work' : 'projects'} banner="cool" jsonLd={jsonLd}>
+      <article aria-labelledby="case-title">
+        <header class="container-wide pt-10 md:pt-14">
+          <a href={back.href} class="link-arrow group">
+            <Icon name="arrow-left" class="h-4 w-5 transition-transform group-hover:-translate-x-1" />
+            {back.label}
+          </a>
 
-        <article aria-labelledby="case-title">
-          <header class="case-head">
-            <div class="row crumb node" data-node="section">
-              <span class="node__dot" aria-hidden="true" />
-              <p class="mono">
-                <a href={back.href}>
-                  <span aria-hidden="true">←</span> {back.label}
-                </a>
-              </p>
-            </div>
-            <div class="row">
-              <div class="case-title">
-                <h1 id="case-title" class="display" data-energize style={fit(p.title)}>
-                  {p.title}
-                </h1>
-              </div>
-            </div>
-            <div class="row">
-              <p class="case-sum" data-split="lines" data-intro data-delay="0.3">
+          <div class="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-8">
+            <div class="lg:col-span-8">
+              <span class="banner-tag mb-6" data-reveal="fade" data-intro>
+                <Icon name={atWork ? 'briefcase' : 'code'} class="h-4 w-4 text-teal" />
+                {where}
+              </span>
+              <h1 id="case-title" class="type-display break-words text-heading" data-split="lines" data-intro>
+                {p.title}
+              </h1>
+              <p class="mt-6 max-w-2xl type-lead text-body" data-split="lines" data-intro data-delay="0.2">
                 {p.description}
               </p>
-            </div>
-            <div class="row">
-              <dl class="facts" data-reveal="fade" data-intro data-delay="0.5">
-                <div>
-                  <dt class="mono">Built at</dt>
-                  <dd>{where}</dd>
-                </div>
-                <div>
-                  <dt class="mono">Stack</dt>
-                  <dd>{p.techStack.length ? p.techStack.join(', ') : 'Not listed yet'}</dd>
-                </div>
-                <div>
-                  <dt class="mono">Live at</dt>
-                  <dd>
-                    {p.link?.href ? (
-                      <a class="link" href={p.link.href} target="_blank" rel="noopener noreferrer">
-                        {host(p.link.href)}
-                      </a>
-                    ) : (
-                      'Internal system'
-                    )}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </header>
-
-          <div class="row case-media node" data-node="project">
-            <span class="node__dot" aria-hidden="true" />
-            <figure>
-              <div class="frame-img">
-                {p.cover ? (
-                  <img src={p.cover} srcset={srcset(p.cover)} sizes="(min-width: 768px) 85vw, 100vw" alt={`Screenshot of ${p.title}`} width="1600" height="900" fetchpriority="high" decoding="async" />
-                ) : (
-                  <Schematic seed={p.seed} label={p.title.toUpperCase()} />
-                )}
-              </div>
-              <figcaption class="mono">
-                {p.note?.caption ?? (p.cover ? `${p.title}, as shipped.` : 'Generated line diagram. A screenshot is still to come.')}
-              </figcaption>
-            </figure>
-          </div>
-
-          <div class="row case-body">
-            <div class="case-body__grid">
-              <section class="case-block" aria-labelledby="what">
-                <h2 id="what" class="display" data-split="lines">
-                  What it does
-                </h2>
-                <p>{p.note?.inside ?? p.description}</p>
-              </section>
-              <section class="case-block" aria-labelledby="built">
-                <h2 id="built" class="display" data-split="lines">
-                  Built with
-                </h2>
-                {p.techStack.length > 0 && (
-                  <ul class="stack mono">
-                    {p.techStack.map((t) => (
-                      <li>{t}</li>
-                    ))}
-                  </ul>
-                )}
-                {p.link?.href && (
-                  <a class="btn case-visit" href={p.link.href} target="_blank" rel="noopener noreferrer">
-                    {p.link.href.includes('github.com') ? 'Source on GitHub' : 'Visit the site'}
-                    <span class="arrow" aria-hidden="true">↗</span>
+              {p.link?.href && (
+                <div class="mt-8 flex flex-wrap gap-3" data-reveal="up" data-intro data-delay="0.35">
+                  <a href={p.link.href} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    <Roll text={p.link.href.includes('github.com') ? 'Source on GitHub' : 'Visit the site'} />
+                    <Icon name="external" class="nudge-up nudge h-4 w-4" strokeWidth={2} />
                   </a>
-                )}
-              </section>
-              {p.note?.points && (
-                <section class="case-block" aria-labelledby="stages">
-                  <h2 id="stages" class="display" data-split="lines">
-                    The stages
-                  </h2>
-                  <ol>
-                    {p.note.points.map((pt) => (
-                      <li>{pt}</li>
-                    ))}
-                  </ol>
-                </section>
+                </div>
               )}
             </div>
-          </div>
-        </article>
 
-        {next && next.slug !== p.slug && (
-          <nav class="row next node" data-node="project" aria-label="Next project">
-            <span class="node__dot" aria-hidden="true" />
-            <span class="node__wire" aria-hidden="true" />
-            <a class="next__link" href={`/v2/work/${next.slug}`} data-title={next.title}>
-              <span class="mono">Next node</span>
-              <span class="next__title display" style={fit(next.title + '  ')}>
-                {next.title}
-                <span class="arrow" aria-hidden="true">→</span>
-              </span>
-            </a>
-          </nav>
-        )}
-      </div>
-      <Ground email={resume.profile?.email} links={socials(resume)} />
+            <dl class="panel grid content-start gap-5 self-end p-6 text-sm lg:col-span-4" data-reveal="up" data-intro data-delay="0.3">
+              <div>
+                <dt class="type-subtitle text-[11px] text-muted">Built at</dt>
+                <dd class="mt-1 font-semibold text-heading">{where}</dd>
+              </div>
+              <div>
+                <dt class="type-subtitle text-[11px] text-muted">Stack</dt>
+                <dd class="mt-2 flex flex-wrap gap-1.5">
+                  {p.techStack.length ? (
+                    p.techStack.map((t, j) => <span class:list={['tag', j > 0 && 'tag-outline']}>{t}</span>)
+                  ) : (
+                    <span class="text-body">Not listed yet</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt class="type-subtitle text-[11px] text-muted">Live at</dt>
+                <dd class="mt-1 font-semibold text-heading">
+                  {p.link?.href ? (
+                    <a class="prose-link inline-block py-0.5" href={p.link.href} target="_blank" rel="noopener noreferrer">
+                      {host(p.link.href)}
+                    </a>
+                  ) : (
+                    'Internal system'
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </header>
+
+        <figure class="container-wide relative mt-14 md:mt-20">
+          <div class="hex pointer-events-none absolute -bottom-10 -left-2 aspect-[1.15] w-40 bg-apricot/70 md:-left-10 md:w-56" aria-hidden="true" />
+          <div class="dots pointer-events-none absolute -top-8 right-6 h-24 w-40 text-teal/40" aria-hidden="true" />
+          <div class="card relative overflow-hidden p-2 md:p-3">
+            {p.cover ? (
+              <img
+                src={p.cover}
+                srcset={srcset(p.cover)}
+                sizes="(min-width: 1280px) 1200px, 100vw"
+                alt={`Screenshot of ${p.title}`}
+                width="1600"
+                height="900"
+                fetchpriority="high"
+                decoding="async"
+                class="aspect-[16/9] w-full rounded-[2px] object-cover object-top"
+              />
+            ) : (
+              <div class="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-[2px] bg-teal/15">
+                <span class="hex absolute -right-10 -bottom-16 aspect-[1.15] w-72 bg-teal/25" aria-hidden="true" />
+                <span class="hex absolute top-10 left-12 aspect-[1.15] w-16 bg-peach/70" aria-hidden="true" />
+                <span class="hex absolute right-1/4 bottom-10 aspect-[1.15] w-10 bg-lilac" aria-hidden="true" />
+                <span class="dots absolute top-10 right-12 h-20 w-32 text-teal/30" aria-hidden="true" />
+                <span class="relative px-6 text-center type-h2 text-heading">{p.title}</span>
+              </div>
+            )}
+          </div>
+          <figcaption class="relative mt-4 text-[13px] text-muted">
+            {p.note?.caption ?? (p.cover ? `${p.title}, as shipped.` : 'A screenshot of this project is still to come.')}
+          </figcaption>
+        </figure>
+
+        <div class="container-wide grid gap-14 py-20 md:py-28 lg:grid-cols-12 lg:gap-8">
+          <section class="lg:col-span-6" aria-labelledby="what">
+            <p class="mb-3 flex items-center gap-2 type-subtitle text-[11px] text-muted">
+              <span class="hex inline-block aspect-[1.15] w-2.5 bg-teal" aria-hidden="true" />
+              The product
+            </p>
+            <h2 id="what" class="type-h2 text-heading" data-split="lines">
+              What it does
+            </h2>
+            <p class="mt-5 type-lead text-body" data-reveal="up">
+              {p.note?.inside ?? p.description}
+            </p>
+          </section>
+          <section class="lg:col-span-5 lg:col-start-8" aria-labelledby="built">
+            <p class="mb-3 flex items-center gap-2 type-subtitle text-[11px] text-muted">
+              <span class="hex inline-block aspect-[1.15] w-2.5 bg-teal" aria-hidden="true" />
+              The craft
+            </p>
+            <h2 id="built" class="type-h2 text-heading" data-split="lines">
+              {p.note?.points ? 'How it works' : 'Built with'}
+            </h2>
+            {p.note?.points ? (
+              <ol class="mt-6 border-t border-line" data-reveal="up">
+                {p.note.points.map((pt, j) => (
+                  <li class="flex items-baseline gap-4 border-b border-line py-3.5">
+                    <span class="w-7 shrink-0 font-bold ink-peach tabular-nums">{String(j + 1).padStart(2, '0')}.</span>
+                    <span class="text-heading">{pt}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <ul class="mt-6 border-t border-line" data-reveal="up">
+                {p.techStack.map((t) => (
+                  <li class="flex items-center gap-3 border-b border-line py-3.5 text-heading">
+                    <span class="hex inline-block aspect-[1.15] w-2.5 bg-peach" aria-hidden="true" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </article>
+
+      {next && (
+        <nav class="container-wide pb-24 md:pb-32" aria-label="Next project">
+          <a href={`/v2/work/${next.slug}`} class="card lift group relative flex items-center justify-between gap-6 overflow-hidden p-6 md:p-10" data-title={next.title} data-reveal="up">
+            <div class="lift__hex hex pointer-events-none absolute -top-8 -right-8 aspect-[1.15] w-28 bg-teal/25" aria-hidden="true" />
+            <div class="relative min-w-0">
+              <p class="mb-2 type-subtitle text-[11px] text-muted">Next project</p>
+              <p class="lift__title type-section break-words text-heading">{next.title}</p>
+              <p class="mt-2 line-clamp-2 max-w-xl text-sm text-body">{next.description}</p>
+            </div>
+            <span class="relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-teal text-white md:h-16 md:w-16">
+              <Icon name="arrow-right" class="nudge h-6 w-6" strokeWidth={2} />
+            </span>
+          </a>
+        </nav>
+      )}
+
+      <Connect email={resume.profile?.email} links={socials(resume)} num="" />
     </V2>
   ) : (
-    <V2 title="Open circuit" description="This project is not on the line. Head back to the source to see Brendatama’s work.">
-      <OpenCircuit />
+    <V2 title="Page not found" description="This project isn’t part of Brendatama’s portfolio. Head back home for projects, work history and writing." banner="cool">
+      <EmptyCell />
     </V2>
   )
 }

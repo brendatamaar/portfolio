@@ -1,169 +1,85 @@
 # v2 design notes
 
 The v2 portfolio lives at `/v2` beside the current site. Nothing under `/`, `/blog` or `/id`
-changes. All v2 code is in `src/v2/` and `src/pages/v2/`; fonts in `public/v2/fonts/`.
+changes. v2 code is in `src/v2/` and `src/pages/v2/`; screenshot variants in `public/v2/img/`.
+
+## Direction
+
+Pure Sewagi. The design system in `src/globals.css` (Poppins, teal / peach / navy with butter,
+lilac and apricot, 2px corners, pills, chips, tags, cards, the hive hexagons, the dot field,
+warm and cool banner gradients, light and dark themes) is the base and is imported as is.
+v2 adds only what a portfolio needs that a product guide lacks, in `src/v2/v2.css`:
+
+- **A display tier** above Sewagi's 40px h1 (`type-display`, up to 68px) and a section tier
+  (`type-section`, up to 48px). Same family, weight and tracking logic.
+- **The honeycomb** (`Hive.astro`): Sewagi's hexagons tessellated instead of scattered. The
+  hero hive holds two real product screens (cheSKP, AIR Tax) among pastel cells; the connect
+  band and the 404 have their own.
+- **Hover motion**, one treatment per role (below).
+- **A page transition** in the Sewagi shape: a navy hexagon opens from the click point.
 
 ## Brief
 
 - **Subject:** Brendatama Akbar Ramadan, web software developer at PLN Icon Plus (the IT arm
   of PLN, Indonesia's state electricity company), Jakarta. Front-end since 2019.
-- **Audience:** hiring managers, tech leads, recruiters; Indonesian and international.
-- **Job:** show the depth of real enterprise work, start a conversation (email, resume).
-- **Assets:** resume data and posts from the existing API, four project screenshots plus a
-  skenatify screenshot already in `public/images`, the resume PDF.
-- **Constraints:** same Astro 5 SSR app, same API, no changes to the current pages.
+- **Audience:** hiring managers, tech leads, recruiters.
+- **Job:** show real enterprise work and side projects, start a conversation.
+- **Content:** resume, projects and posts from the API; copy and project notes in
+  `src/v2/data/content.ts`.
 
-## Concepts
+## System additions
 
-|                     | Idea                                                                                                                                 | Anchor                                                                         | Signature                                                                                                                                          | O / F / Fe / P |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| A. Material / place | The site is a single-line diagram: one live line runs from a 220 V source to ground, and every project is a node the current reaches | six of his eleven projects run the business of Indonesia's electricity company | scrolling pushes current down the line; each node it reaches energizes (its name stretches from condensed to expanded, its screenshot gains color) | 4 / 4 / 4 / 2  |
-| B. Process          | Everything is encoded: sections arrive as 8×8 DCT blocks and decode into sharp type and images                                       | he wrote a baseline JPEG encoder from scratch                                  | images quantize and resolve on scroll and hover (GL)                                                                                               | 3 / 3 / 3 / 3  |
-| C. Interests        | A save file: career as a quest log, stack as stats, projects as inventory                                                            | he lists RPG games among his interests                                         | an inventory grid that equips projects                                                                                                             | 2 / 3 / 4 / 4  |
+| Thing          | Rule                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------- |
+| Container      | `container-wide`, 1280px max (Sewagi's page is 1140) so grids breathe                                          |
+| Section rhythm | 96 to 128px blocks; Work sits on the `bg-sunken` band, Connect on navy                                         |
+| Section label  | Sewagi pattern kept: hex-bullet eyebrow, peach number, title, one lead line                                    |
+| Motion verb    | settle into the hive: things rise and settle with a soft overshoot (`back.out`) for hexes, `expo.out` for text |
+| Durations      | hover 0.3 to 0.5s, reveals 1 to 1.3s, transition 0.85s in and 0.75s out                                        |
 
-**Pick A.** It is built on the one fact nobody else on Awwwards shares (the work powers an
-electricity company), it gives a full rule system (line, nodes, source, ground, open circuit),
-and it needs no WebGL: SVG and variable-font axes carry it. Stolen from the runners-up: nothing
-structural. The loader borrows the prepaid kWh meter every Indonesian household knows: it counts
-to 220 V, the real mains voltage.
+### Contrast (WCAG AA)
 
-## Concept card
+The guide's own pairs fail AA in a few places: white on light teal (2:1), `#8A8989` small
+text on white (3.5:1), peach text and white-on-peach tags (1.8:1). v2 keeps every hue and only
+moves the text: navy on teal buttons, muted `#6B6A6A` in light mode, a deeper peach
+(`.ink-peach`, `#B05F33`) for peach text on light grounds, navy on peach tags, `#9A5229` for
+outline tags. Dark mode keeps Sewagi's values, which already pass.
 
-```
-Idea:        The portfolio is a live single-line diagram: current runs from a 220 V source to
-             ground, and each project is a node it energizes.
-Metaphor:    an electrical single-line diagram (source, bus, feeders, nodes, earth)
-Signature:   scroll drives the current front down the bus; every node it passes energizes
-             (title stretches from Archivo width 62 to 125, the branch wire draws, the
-             screenshot turns from monochrome to color). A pulse keeps travelling the live part
-             of the line at rest. Recipe: driver module (patterns.md 1) + kinetic type axis
-             (motion.md) + idle input (motion.md).
-Emotion:     a switch thrown: quiet, then precise, then on.
-Motion verb: energize. A wire draws first, then whatever it reaches lights up.
-Screenshot:  the hero: a red line falling from "220 V" past a giant expanded BRENDATAMA.
-```
+### Hover and focus, one treatment per role
 
-Section and copy vocabulary follows the metaphor without puns in every heading: "On the grid"
-(Icon Plus work), "Off grid" (side projects, their own small circuits), "Line history"
-(career), "Notes" (writing), "Ground" (contact, where the line terminates). 404 is an open
-circuit.
+- **Buttons, chips, pills:** the uppercase label rolls to an identical copy; arrows travel;
+  the primary button floods navy.
+- **Cards (projects, posts, next project):** lift 6px, raised shadow, media eases to 1.04,
+  the corner hexagon slides, the title turns link teal.
+- **Nav:** Sewagi's 3px teal underline draws in; the current section or page keeps it.
+- **Theme switch:** a teal halo and the knob swells.
+- **Inline links:** underline at rest, thicker on hover.
 
-## System
+Every hover state is also on `:focus-visible`. Under reduced motion nothing moves; colour and
+underline states remain.
 
-### Palette
+### Idle state
 
-| Role    | Name      | Hex                    | Use                                                                                                                            |
-| ------- | --------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| ground  | zinc      | `#E2E4DF`              | page ground: galvanized steel of substation gear                                                                               |
-| ink     | cable     | `#111312`              | all text, dead wires, curtain                                                                                                  |
-| muted   | insulator | `#545A55`              | secondary text (5.5:1 on zinc)                                                                                                 |
-| line    | conduit   | `rgb(17 19 18 / 0.16)` | hairlines, grid rules                                                                                                          |
-| accent  | live      | `#E8410C`              | current only: the live line, energized nodes, CTA fill. 3.2:1 on zinc, so only on large text and strokes; ink on live is 4.6:1 |
-| curtain | cable     | `#111312`              | transitions, the ground (footer) band                                                                                          |
+The honeycombs are the only things that move at rest: each cell drifts on a slow sine and
+leans toward the pointer by its depth (scroll velocity on touch). They stop off screen and
+never move under reduced motion. The tech-stack marquee drifts too and reacts to scroll.
 
-The accent never decorates; if something is red, current is in it.
+### No loader
 
-### Type
+A product-flavoured portfolio does not earn one. The hero headline is visible at first paint
+(it is the LCP) and settles into place; the honeycomb pops in cell by cell.
 
-- **Archivo** variable (wght 100 to 900, wdth 62 to 125), display and text. Display is
-  uppercase, wght 800. Unpowered state is wdth 62 (condensed); energized is wdth 125.
-  Tracking -0.02em at display size (the expanded cut already opens counters), leading 0.86.
-- **Martian Mono** variable, only for data a diagram would print: voltages, years, stacks, node
-  counts. 12 to 13 px, uppercase off, tracking 0.
-- Scale: `--t-mega` fits the name to the column with container units; `--t-xl`, `--t-l`,
-  `--t-m`, body 16 to 18 px with 1.55 leading.
+## Pages
 
-### Grid and rhythm
-
-- 12 columns, gutter = outer margin. Column 1 belongs to the bus: the line hangs on its center
-  on every page. All content starts at column 2. On phones the bus sits 20 px from the edge and
-  content is indented 48 px.
-- Section rhythm: hero full viewport; grid list tight; off grid airy; line history tight;
-  notes normal; ground full viewport.
-
-### Shape
-
-Radius 0 for everything except node dots and the source symbol (circles, as in a diagram).
-
-### Motion language
-
-- Eases: `expo.out` entrances, `expo.inOut` transitions, `power3.out` hovers. One custom name:
-  none needed.
-- Durations: hover 0.35 to 0.5 s; wire draw 0.5 s; title energize 0.9 s; transition 0.9 s each
-  way.
-- Treatments, one per role:
-  - Project rows and covers (primary): their branch wire draws from the bus, the title
-    stretches to full width axis and turns live, the arrow travels 6 px.
-  - Nav: an underline wire draws left to right; current page keeps it.
-  - CTA buttons: live fill floods from the left like a wire charging, label stays ink.
-  - Utility links (social, colophon): underline at rest, color change only.
-- Page transition: a live wire draws across the screen's middle, the cable panel opens from
-  it to cover, then closes back onto the wire on the new page and the wire retracts.
-- Loader: no curtain. The hero itself powers up: the counter at the source counts 000 to 220 V
-  while the bus fills, then the name energizes. First load only.
-- Idle: a short pulse travels down the live part of the bus forever (paused under reduced
-  motion). Node dots on live nodes keep a faint glow.
-- Reduced motion: no smooth scroll, every node energized, wire fully live, no pulse.
-
-### Composition (desktop)
-
-```
-HERO (poster)
-| o 220 V / 50 Hz  Jakarta                         Work  Off grid  Notes  Contact
-|
-| B R E N D A T A M A                     (mega, fills cols 2 to 12)
-|                   A K B A R             (mega, starts col 6)
-| statement (cols 2 to 5)      [Email me] [Resume]
-* Energized 0 / 11
-
-ON THE GRID (index list, rows branch off the bus)
-|-- AP2T                 one line           Vue 3, TypeScript ...    ->
-|-- AIR TAX              ...
-|-- ...
-
-OFF GRID (gallery wall, staggered covers on cols 2 to 12, two sizes)
-|   [cover 7 cols]          [cover 4 cols, lower]
-|        [cover 5 cols]   [cover 5 cols]
-
-LINE HISTORY (data facts, horizontal rail of years)
-| 2017 ---- 2019 ---- 2020 ---- 2022 ---- now
-|  CCIT UI   Tebuireng   Cipta Kreasi  Icon Plus
-
-NOTES (statement list: date in mono, title large, one per row, no previews)
-
-GROUND (full viewport cable band, ends the bus in an earth symbol)
-| Email me (mega link)
-| GitHub  LinkedIn  Resume      colophon
-⏚
-```
-
-Case page: breadcrumb node, mega title, summary at t-l, meta (company, stack, link), hero
-screenshot (or the project's generated diagram), "What it is" / "What's inside" asymmetric
-pair, stack list, next node as a mega link.
-
-### Genericness test
-
-A generic model asked for a developer portfolio lands on: dark ground, mono everywhere, green
-terminal accent, a bento grid of project cards. Changed: light zinc ground, mono only for data,
-one red that means current, an index list hung off a wire instead of cards, type that changes
-width with state instead of fading in.
-
-### Images
-
-Real screenshots exist for AIR Tax, cheSKP, ESDS, jpeg-encoder and skenatify. They are shown
-monochrome until their node is energized. Projects without a screenshot get a generated
-single-line diagram seeded by their title (honest generative art, not a fake screenshot).
-
-### Still or moving
-
-Home and case pages are never still: a pulse with a spark at its head runs down the visible
-live part of the bus. The 404 is still on purpose: it is an open circuit, so no current flows.
+- `/v2`: hero, 01 Projects (side projects, the first one wide), 02 Work (every job; the
+  current one shows its products as cards), tech stack marquee, 03 Writing, 04 Connect.
+- `/v2/work/<slug>`: case page for every project, work and side: banner tag, display title,
+  facts panel, screenshot or pastel cover, what it does, how it is built, next project.
+- 404 (any unknown `/v2/...`): "This cell is empty", a hive with one outline cell.
 
 ## QA notes
 
-- Loader budget is measured from navigation start (1.0 s floor, 1.9 s cap), so a slow boot on a
-  throttled phone still lands under 2.6 s.
-- Row and cover hovers key off the link itself, not the list item, so the gutter never counts
-  as hovering.
-- `font-variation-settings` inherits as a computed value: `.display *` re-resolves `--wdth` on
-  every child, otherwise per-line energize states are ignored.
+- Back/forward lands the page finished at its restored scroll position (no replayed intro).
+- `font-variation-settings` is not used; Poppins is static.
+- Links leaving v2 (blog, classic site, resume) carry `data-astro-reload` so the v2 motion
+  engine never runs on a classic page.

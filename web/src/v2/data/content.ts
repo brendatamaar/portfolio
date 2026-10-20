@@ -19,26 +19,34 @@ export const site = {
   role: 'Web software developer',
   url: 'https://www.brendatama.dev',
   description:
-    'Brendatama Akbar Ramadan builds the web side of an electricity business at PLN Icon Plus in Jakarta: revenue, tax, CRM and field platforms.',
+    'Brendatama Akbar Ramadan is a web software developer in Jakarta building revenue, tax, CRM and field platforms at PLN Icon Plus.',
   resume: '/pdf/Resume Brendatama Akbar (2026) - English.pdf',
-  // Indonesian mains: what the source label on the diagram reads
-  volts: 220,
-  hertz: 50,
 }
 
+/** Section copy, in the Sewagi pattern: eyebrow, numbered title, one supporting line */
 export const copy = {
   heroLead:
-    'Web software developer at PLN Icon Plus, the IT arm of Indonesia’s state electricity company. Since 2022 I’ve built the screens its business runs on: revenue, tax, CRM and field work.',
-  gridTitle: 'On the grid',
-  gridLead: 'Products for PLN and Icon Plus, 2022 to now.',
-  offTitle: 'Off grid',
-  offLead: 'Built after hours, each on its own small circuit.',
-  historyTitle: 'Line history',
-  notesTitle: 'Notes',
-  notesLead: 'Writing on what I build and what I read along the way.',
-  groundTitle: 'Ground',
-  groundLead:
-    'Every line ends here. Hiring, a project, or a good story: write to me.',
+    'I work at PLN Icon Plus, the IT arm of Indonesia’s state electricity company. Since 2022 I’ve built the web products its business runs on: revenue, tax, CRM and field work. Outside work I like RPGs and a good story.',
+  projects: {
+    eyebrow: 'What I’ve built',
+    title: 'Projects',
+    lead: 'Side projects, built after hours to learn something properly.',
+  },
+  work: {
+    eyebrow: 'Where I’ve worked',
+    title: 'Work',
+    lead: 'Front-end since 2019, full product teams since 2022.',
+  },
+  writing: {
+    eyebrow: 'What I’ve been thinking',
+    title: 'Writing',
+  },
+  connect: {
+    eyebrow: 'Let’s talk',
+    title: 'Connect',
+    hook: 'Have an idea?',
+    line: 'I’m always open to interesting conversations, collaborations and opportunities.',
+  },
 }
 
 export type Note = { inside: string; points?: string[]; caption?: string }

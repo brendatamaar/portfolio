@@ -1,0 +1,9 @@
+---
+// Label that rolls to an identical copy on hover (buttons, chips). The copy is aria-hidden.
+interface Props {
+  text: string
+}
+const { text } = Astro.props
+---
+
+<span class="roll"><span>{text}</span><span aria-hidden="true">{text}</span></span>
