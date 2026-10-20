@@ -2,6 +2,12 @@
 // Fixed four-corner frame: name top-left, nav top-right; a menu overlay on phones.
 import { site } from '../data/content'
 
+interface Props {
+  /** section id whose link marks the current page (case pages) */
+  current?: string
+}
+const { current } = Astro.props
+
 const links = [
   { label: 'Work', href: '/v2#grid', id: 'grid' },
   { label: 'Off grid', href: '/v2#off-grid', id: 'off-grid' },
@@ -15,7 +21,13 @@ const links = [
     <b>{site.short}</b>
   </a>
   <nav class="frame__nav" aria-label="Main">
-    {links.map((l) => <a class="wire-link" href={l.href} data-spy={l.id}>{l.label}</a>)}
+    {
+      links.map((l) => (
+        <a class="wire-link" href={l.href} data-spy={l.id} aria-current={l.id === current ? 'page' : undefined}>
+          {l.label}
+        </a>
+      ))
+    }
   </nav>
   <button class="frame__menu wire-link" type="button" aria-expanded="false" aria-controls="menu" data-menu-open>
     Menu

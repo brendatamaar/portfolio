@@ -259,7 +259,8 @@ html.frame-away .frame {
 /* Fixed meter on the bus column: narrates how many nodes are live */
 .meter {
   position: fixed;
-  left: calc(var(--bus-x) + 0.85rem);
+  /* left of the rail: branch wires only ever leave to the right */
+  left: calc(var(--bus-x) - 1.75rem);
   bottom: calc(var(--gutter) + 0.5rem);
   z-index: var(--z-header);
   writing-mode: vertical-rl;
@@ -582,9 +583,6 @@ html.frame-away .frame {
     grid-column: 10 / -1;
     justify-self: end;
   }
-  .feeder__title {
-    font-size: min(4.25rem, calc(54cqi / (var(--len, 12) * 0.88)));
-  }
 }
 /* --len (longest title in the list) keeps every row one line, energized or not */
 .feeder__title {
@@ -595,6 +593,11 @@ html.frame-away .frame {
     --wdth 0.9s var(--ease-out),
     color 0.4s var(--ease-soft);
   --wdth: 62;
+}
+@media (min-width: 768px) {
+  .feeder__title {
+    font-size: min(4.25rem, calc(54cqi / (var(--len, 12) * 0.88)));
+  }
 }
 .feeder__desc {
   color: var(--c-muted);
@@ -767,10 +770,7 @@ html:not(.motion) .feeder__title {
 .cover__meta .arrow {
   transition: translate 0.4s var(--ease-soft);
 }
-.is-live .cover__media img,
-html:not(.motion) .cover__media img {
-  filter: none;
-}
+/* Screenshots of other people's UI stay monochrome on the wall; colour is the hover answer */
 .is-live .cover__title,
 html:not(.motion) .cover__title {
   --wdth: var(--wmax);
@@ -918,8 +918,13 @@ html:not(.motion) .schem .hot {
 }
 .note {
   display: grid;
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
   padding-block: calc(var(--u) * 2);
+}
+.note .mono {
+  grid-column: 1 / -1;
 }
 @media (min-width: 768px) {
   .note {
@@ -1156,9 +1161,6 @@ html:not(.motion) .schem .hot {
   .case-title h1 {
     font-size: min(calc(100cqi / (var(--len, 8) * 0.9)), 16rem);
   }
-  .next__title {
-    font-size: min(calc(100cqi / (var(--len, 8) * 0.9)), 13rem);
-  }
 }
 .case-sum {
   margin-top: calc(var(--u) * 3);
@@ -1301,6 +1303,11 @@ html:not(.motion) .schem .hot {
   transition:
     --wdth 0.9s var(--ease-out),
     color 0.4s var(--ease-soft);
+}
+@media (min-width: 768px) {
+  .next__title {
+    font-size: min(calc(100cqi / (var(--len, 8) * 0.9)), 13rem);
+  }
 }
 .next__title .arrow {
   font-size: 0.35em;

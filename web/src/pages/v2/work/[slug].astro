@@ -42,7 +42,7 @@ const jsonLd = p
 
 {
   p ? (
-    <V2 title={p.title} description={description} meter={{ label: 'Node', value: i + 1, total: all.length }} jsonLd={jsonLd}>
+    <V2 title={p.title} description={description} section={onGrid ? 'grid' : 'off-grid'} meter={{ label: 'Node', value: i + 1, total: all.length }} jsonLd={jsonLd}>
       <div class="line">
         <div class="bus bus--crumb" data-bus aria-hidden="true">
           <div class="bus__live" />
