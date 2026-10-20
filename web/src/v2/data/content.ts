@@ -1,10 +1,10 @@
-// v2 content. Profile, work, projects and posts come from the API (edited in the admin);
-// this file only holds the v2 copy and per-project notes the API has no field for.
+// v2 content. Profile, work, education, skills, projects and posts come from the API (edited in
+// the admin); this file only holds v2 copy, fallbacks for when the API is down, and per-project
+// detail the API has no field for.
 //
-// Assumptions to check (also listed in the hand-off):
-// - Project notes below are translated from the Indonesian project descriptions in the resume
-//   data, which carry more detail than the English ones.
-// - jpeg-encoder stage names are read from the app's own report screen.
+// Notes to check:
+// - `details` are English translations of the longer Indonesian project descriptions in the
+//   resume data (server/scripts/seed-resume.ts).
 // - The skenatify screenshot in public/images is used as its cover although the API has no image.
 import { api } from '../../lib/api'
 import type {
@@ -13,104 +13,80 @@ import type {
   ResumeProjectItem,
 } from '../../lib/types'
 
+export type Tone = 'orange' | 'lavender' | 'coral' | 'green' | 'lime' | 'navy'
+
+// Card colors double as the waterfall legend: the network panel colors requests by type.
+export const tones: Tone[] = [
+  'orange',
+  'lavender',
+  'coral',
+  'green',
+  'lime',
+  'navy',
+]
+
+/** Used when the API is unreachable, and for values the API does not hold. */
 export const site = {
-  name: 'Brendatama Akbar Ramadan',
-  short: 'Brendatama',
-  role: 'Web software developer',
+  name: 'Brendatama Akbar',
+  fullName: 'Brendatama Akbar Ramadan',
+  role: 'Web Software Developer',
+  location: 'Jakarta, Indonesia',
   url: 'https://www.brendatama.dev',
+  email: 'brendatamaa@gmail.com',
   description:
-    'Brendatama Akbar Ramadan is a web software developer in Jakarta building revenue, tax, CRM and field platforms at PLN Icon Plus.',
-  resume: '/pdf/Resume Brendatama Akbar (2026) - English.pdf',
+    'I am a web software developer specializing in designing and building applications with a focus on simplicity and usability.',
+  resume: encodeURI('/pdf/Resume Brendatama Akbar (2026) - English.pdf'),
+  socials: [
+    { label: 'GitHub', href: 'https://github.com/brendatamaar' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/brendatamaar/' },
+  ],
 }
 
-/** Section copy, in the Sewagi pattern: eyebrow, numbered title, one supporting line */
+/** Section copy, following the live homepage's labels. */
 export const copy = {
-  heroLead:
-    'I work at PLN Icon Plus, the IT arm of Indonesia’s state electricity company. Since 2022 I’ve built the web products its business runs on: revenue, tax, CRM and field work. Outside work I like RPGs and a good story.',
   projects: {
     eyebrow: 'What I’ve built',
     title: 'Projects',
-    lead: 'Side projects, built after hours to learn something properly.',
+    note: 'Side projects and experiments. Each card opens with the stack and a link to the code or the live demo.',
   },
-  work: {
-    eyebrow: 'Where I’ve worked',
-    title: 'Work',
-    lead: 'Front-end since 2019, full product teams since 2022.',
+  live: {
+    eyebrow: 'Live, from your browser',
+    title: 'Every request this page made',
+    note: 'Network tools color requests by type. So does this site: the colors on every card are the legend below. The numbers are yours, read from your browser just now.',
   },
-  writing: {
-    eyebrow: 'What I’ve been thinking',
-    title: 'Writing',
-  },
+  work: { eyebrow: 'Where I’ve worked', title: 'Work' },
+  banner: 'Simplicity and usability, first.',
+  selected: { title: 'Selected work' },
+  writing: { eyebrow: 'What I’ve been thinking', title: 'Writing' },
   connect: {
     eyebrow: 'Let’s talk',
-    title: 'Connect',
     hook: 'Have an idea?',
-    line: 'I’m always open to interesting conversations, collaborations and opportunities.',
+    line: 'I’m always open to interesting conversations, collaborations, and opportunities.',
   },
 }
 
-export type Note = { inside: string; points?: string[]; caption?: string }
-
-/** Detail the API has no field for, keyed by project slug. */
-export const notes: Record<string, Note> = {
-  'air-tax': {
-    caption: 'The AIR Tax sign-in screen.',
-    inside:
-      'A multi-module enterprise tax platform connected to DJP, Indonesia’s tax directorate. It covers tax invoices, reporting of non-tax state revenue, and taxpayer status confirmation.',
-  },
-  ap2t: {
-    inside:
-      'One platform for the whole business: revenue management, ERP, reporting and CRM. It is built on more than 40 operational workflows, split into micro-frontends with Vite Module Federation.',
-  },
-  'dashboard-revenue': {
-    inside:
-      'A real-time analytics dashboard for one-time and recurring revenue. Queries run concurrently so every aggregation is computed in parallel.',
-  },
-  'emi-crm': {
-    inside:
-      'A CRM for sales, procurement, stock and accounting. Event-driven integration posts accounting entries in real time across 8 transaction types.',
-  },
-  cheskp: {
-    caption: 'The cheSKP sign-in screen.',
-    inside:
-      'A customer satisfaction survey platform with single sign-on, multi-level role-based access and survey analytics.',
-  },
-  esds: {
-    caption: 'The ESDS sign-in screen.',
-    inside:
-      'The platform behind the electric stove conversion programme: field surveys, installation, activation and bill verification, with real-time updates and a geospatial map.',
-  },
-  skenatify: {
-    caption: 'Pick up to five artists, then ask for recommendations.',
-    inside:
-      'Pick up to five artists you love and it recommends tracks, filtered by Spotify’s audio features.',
-  },
-  'poker-hand-calculator': {
-    inside:
-      'It estimates a poker hand’s chance of winning by Monte Carlo simulation: deal the unknown cards at random, many times over, and count the wins.',
-  },
-  'jpeg-encoder': {
-    caption:
-      'Upload an image and the compression report fills in, stage by stage.',
-    inside:
-      'A complete baseline JPEG encoder written by hand. It shows what each stage does to the file: entropy, bitrate and compression ratio, stage by stage.',
-    points: [
-      'Colour conversion to YCbCr',
-      'Chroma subsampling',
-      '8×8 discrete cosine transform',
-      'Quantization',
-      'Zigzag and run-length coding',
-      'Huffman entropy coding',
-    ],
-  },
-  'md-editor': {
-    inside:
-      'An offline markdown editor with a split-view live preview, LaTeX maths through KaTeX, Mermaid diagrams and synced scrolling.',
-  },
-  'admin-barcode': {
-    inside:
-      'Inventory asset management that generates and tracks barcodes and QR codes, with bulk Excel import, streamed PDF output and role-based access.',
-  },
+/** Longer project detail, keyed by slug: translated from the Indonesian descriptions. */
+export const details: Record<string, string> = {
+  skenatify:
+    'A music discovery app that recommends songs based on your favorite artists, using Spotify’s audio feature filters.',
+  'poker-hand-calculator':
+    'A calculator for the probability that a poker hand wins, using Monte Carlo simulation.',
+  'jpeg-encoder':
+    'A complete baseline JPEG encoding pipeline that implements all 6 standard stages, and visualises the compression metrics of each stage, including entropy, bitrate and compression ratio.',
+  'md-editor':
+    'An offline markdown editor with a split-view live preview, LaTeX math rendering, Mermaid diagram support and synchronised scrolling.',
+  'admin-barcode':
+    'An inventory asset management system for creating and tracking barcodes and QR codes, with bulk Excel import and streamed PDF output. Access is controlled through RBAC.',
+  'air-tax':
+    'A multi-module enterprise tax SaaS integrated with the DJP (Directorate General of Taxes) systems. It covers tax invoices, non-tax state revenue reporting and taxpayer status confirmation.',
+  ap2t: 'An enterprise platform that handles every business process in one place: revenue management, ERP, reporting and CRM, built on more than 40 operational workflows through a micro-frontend architecture.',
+  'dashboard-revenue':
+    'A real-time analytics dashboard that tracks one-time (OTC) and recurring revenue streams, running queries concurrently to aggregate in parallel.',
+  'emi-crm':
+    'A CRM that manages sales, procurement, stock and automated accounting, with an event-driven integration that triggers real-time accounting postings across 8 transaction types.',
+  cheskp:
+    'A customer satisfaction survey platform with SSO authentication, multi-level role-based access and survey analytics.',
+  esds: 'An electric stove conversion platform that manages field surveys, installation, activation and bill verification, with real-time updates and geospatial map views.',
 }
 
 /** Screenshots the API does not reference yet. */
@@ -118,7 +94,7 @@ const coverFallback: Record<string, string> = {
   skenatify: '/images/skenatify.webp',
 }
 
-/** 960px variants for phones, generated into public/v2/img for the screenshots shipped in public/images */
+/** 960px variants for phones, in public/v2/img, for the screenshots shipped in public/images */
 const SMALL = new Set(['airtax', 'cheskp', 'esds', 'jpeg-encoder', 'skenatify'])
 export function srcset(src: string) {
   const m = src.match(/^\/images\/([\w-]+)\.webp$/)
@@ -136,15 +112,7 @@ export const slugify = (s: string) =>
 export type Project = ResumeProjectItem & {
   slug: string
   cover: string
-  note?: Note
-  /** stable 0..1 seed for the generated diagram cover */
-  seed: number
-}
-
-function seedOf(s: string) {
-  let h = 2166136261
-  for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
-  return ((h >>> 0) % 10000) / 10000
+  detail: string
 }
 
 export function toProject(p: ResumeProjectItem): Project {
@@ -158,8 +126,7 @@ export function toProject(p: ResumeProjectItem): Project {
     techStack,
     slug,
     cover: p.img || coverFallback[slug] || '',
-    note: notes[slug],
-    seed: seedOf(slug),
+    detail: details[slug] ?? p.description,
   }
 }
 
@@ -187,18 +154,18 @@ export async function loadPosts(limit = 4): Promise<PostSummary[]> {
   }
 }
 
-/** Work projects first (in API order), then side projects featured-first: the order of the bus. */
-export function lineOrder(resume: ResumeData) {
+/** Work projects in API order, side projects featured first. */
+export function projectsOf(resume: ResumeData) {
   const all = resume.projects.map(toProject)
-  const grid = all.filter((p) => p.type === 'work')
-  const off = all
+  const work = all.filter((p) => p.type === 'work')
+  const side = all
     .filter((p) => p.type === 'side_project')
     .sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured))
-  return { grid, off, all: [...grid, ...off] }
+  return { work, side, all: [...side, ...work] }
 }
 
 export function socials(resume: ResumeData) {
-  return (resume.profile?.social ?? [])
+  const fromApi = (resume.profile?.social ?? [])
     .filter((s) => !s.url.startsWith('mailto:'))
     .map((s) => ({
       label:
@@ -209,6 +176,7 @@ export function socials(resume: ResumeData) {
             : s.name,
       href: s.url,
     }))
+  return fromApi.length ? fromApi : site.socials
 }
 
 export const formatDate = (iso: string | null) =>
@@ -219,3 +187,5 @@ export const formatDate = (iso: string | null) =>
         year: 'numeric',
       })
     : ''
+
+export const isoDate = (iso: string | null) => (iso ? iso.slice(0, 10) : '')

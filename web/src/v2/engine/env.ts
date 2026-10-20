@@ -9,4 +9,5 @@ export const ease = {
   out: 'expo.out', // default entrance
   inOut: 'expo.inOut', // curtains, page transitions
   soft: 'power3.out', // small UI
+  spring: 'back.out(1.6)', // playful pops, use rarely
 } as const

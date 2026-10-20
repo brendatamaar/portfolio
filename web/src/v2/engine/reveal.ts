@@ -12,11 +12,6 @@ import { ease, prefersReducedMotion } from './env'
 
 gsap.registerPlugin(ScrollTrigger, SplitText)
 
-// Intro reveals of the current page, so back/forward can land them in their end state at once
-let finishers: (() => void)[] = []
-/** Complete every intro reveal of the current page without animating it. */
-export const finishIntro = () => finishers.forEach((f) => f())
-
 const durations = { lines: 1.2, words: 1.1, chars: 0.9 } as const
 const staggers = { lines: 0.08, words: 0.035, chars: 0.018 } as const
 
@@ -62,12 +57,6 @@ function splitTween(el: HTMLElement, isIntro: boolean) {
       return s.tween
     },
   })
-  if (isIntro)
-    finishers.push(() => {
-      s.requested = true
-      s.done = true
-      s.tween?.progress(1)
-    })
   return () => {
     s.requested = true
     s.tween?.play()
@@ -107,7 +96,6 @@ function blockTween(el: HTMLElement, paused: boolean) {
 /** Wire every reveal inside `root`. Returns the intro timeline (paused) for the page entrance. */
 export function initReveals(root: ParentNode = document) {
   const intro = gsap.timeline({ paused: true })
-  finishers = []
   if (prefersReducedMotion()) return intro
 
   root.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
@@ -118,10 +106,7 @@ export function initReveals(root: ParentNode = document) {
   root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
     const isIntro = el.hasAttribute('data-intro')
     const t = blockTween(el, isIntro)
-    if (isIntro) {
-      intro.add(() => t.play(), 0)
-      finishers.push(() => t.progress(1))
-    }
+    if (isIntro) intro.add(() => t.play(), 0)
   })
   root.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
     const amount = parseFloat(el.dataset.parallax || '0.15')

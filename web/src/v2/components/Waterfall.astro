@@ -1,0 +1,34 @@
+---
+// A network waterfall of the page you are on. Rows come from the browser's own Resource Timing
+// entries (src/motion/waterfall.ts); nothing here is invented. Without JavaScript it explains itself.
+---
+<figure class="wf" data-waterfall="hero">
+  <table class="wf__table">
+    <caption class="sr-only">Requests your browser made to load this page</caption>
+    <thead>
+      <tr>
+        <th scope="col" class="wf__c-name">Name</th>
+        <th scope="col" class="wf__c-type">Type</th>
+        <th scope="col" class="wf__c-size">Size</th>
+        <th scope="col" class="wf__c-time">Time</th>
+        <th scope="col" class="wf__c-bar">
+          <span class="sr-only">Waterfall</span>
+          <span class="wf__axis" aria-hidden="true" data-wf-axis></span>
+        </th>
+      </tr>
+    </thead>
+    <tbody data-wf-rows>
+      <tr class="wf__empty">
+        <td colspan="5">Your browser records every request this page makes. With JavaScript on, they are listed here.</td>
+      </tr>
+    </tbody>
+  </table>
+  <figcaption class="wf__legend" aria-hidden="true">
+    <span class="chip chip--orange">document</span>
+    <span class="chip chip--lavender">stylesheet</span>
+    <span class="chip chip--lime">script</span>
+    <span class="chip chip--coral">font</span>
+    <span class="chip chip--green">image</span>
+    <span class="chip chip--stripe">you</span>
+  </figcaption>
+</figure>

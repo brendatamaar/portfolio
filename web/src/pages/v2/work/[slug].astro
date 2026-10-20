@@ -1,196 +1,98 @@
 ---
 import V2 from '../../../v2/layouts/V2.astro'
-import Connect from '../../../v2/components/Connect.astro'
-import EmptyCell from '../../../v2/components/EmptyCell.astro'
-import Roll from '../../../v2/components/Roll.astro'
-import Icon from '../../../components/Icon.astro'
-import { lineOrder, loadResume, site, socials, srcset } from '../../../v2/data/content'
+import NotFound from '../../../v2/components/NotFound.astro'
+import { loadResume, projectsOf, site, srcset, tones } from '../../../v2/data/content'
 
 const resume = await loadResume()
-const { all } = lineOrder(resume)
+const { all } = projectsOf(resume)
 const i = all.findIndex((p) => p.slug === Astro.params.slug)
 const p = i > -1 ? all[i] : null
 if (!p) Astro.response.status = 404
 
 const next = all.length > 1 ? all[(i + 1) % all.length] : null
-const atWork = p?.type === 'work'
-const where = atWork ? (p?.company === 'Icon Plus' ? 'PLN Icon Plus' : (p?.company ?? 'Work')) : 'Side project'
-const back = atWork ? { href: '/v2#work', label: 'Work' } : { href: '/v2#projects', label: 'Projects' }
-const host = (href: string) => {
-  try {
-    return new URL(href).host.replace(/^www\./, '')
-  } catch {
-    return href
-  }
-}
+const company = p?.company === 'Icon Plus' ? 'PLN Icon Plus' : p?.company
+const kind = p ? (p.type === 'work' ? `Work at ${company ?? 'work'}` : 'Side project') : ''
+const realLink = p?.link?.href && p.link.href !== '#' ? p.link : undefined
+const linkLabel = (href: string) =>
+  href.includes('github.com') ? 'View on GitHub' : `Visit ${p?.title ?? 'the site'}`
 const description = p
-  ? `${p.title}: ${p.description} ${atWork ? 'Built at PLN Icon Plus' : 'A side project'} by ${site.name}.`.slice(0, 160)
+  ? (p.description.length >= 60 ? p.description : p.detail).slice(0, 160)
   : ''
-const jsonLd = p
+const schema = p
   ? {
       '@context': 'https://schema.org',
-      '@type': 'CreativeWork',
+      '@type': p.type === 'work' ? 'CreativeWork' : 'SoftwareSourceCode',
       name: p.title,
-      description: p.description,
-      creator: { '@type': 'Person', name: site.name },
+      abstract: p.description,
       keywords: p.techStack.join(', '),
-      ...(p.link?.href ? { url: p.link.href } : {}),
+      creator: { '@type': 'Person', name: site.fullName },
+      ...(realLink ? { url: realLink.href } : {}),
     }
   : undefined
 ---
 
 {
   p ? (
-    <V2 title={p.title} description={description} section={atWork ? 'work' : 'projects'} banner="cool" jsonLd={jsonLd}>
-      <article aria-labelledby="case-title">
-        <header class="container-wide pt-10 md:pt-14">
-          <a href={back.href} class="link-arrow group">
-            <Icon name="arrow-left" class="h-4 w-5 transition-transform group-hover:-translate-x-1" />
-            {back.label}
-          </a>
-
-          <div class="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-8">
-            <div class="lg:col-span-8">
-              <span class="banner-tag mb-6" data-reveal="fade" data-intro>
-                <Icon name={atWork ? 'briefcase' : 'code'} class="h-4 w-4 text-teal" />
-                {where}
-              </span>
-              <div data-settle>
-                <h1 id="case-title" class="type-display break-words text-heading">
-                  {p.title}
-                </h1>
-                <p class="mt-6 max-w-2xl type-lead text-body">{p.description}</p>
-              </div>
-              {p.link?.href && (
-                <div class="mt-8 flex flex-wrap gap-3" data-reveal="up" data-intro data-delay="0.35">
-                  <a href={p.link.href} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                    <Roll text={p.link.href.includes('github.com') ? 'Source on GitHub' : 'Visit the site'} />
-                    <Icon name="external" class="nudge-up nudge h-4 w-4" strokeWidth={2} />
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <dl class="panel grid content-start gap-5 self-end p-6 text-sm lg:col-span-4" data-reveal="up" data-intro data-delay="0.3">
-              <div>
-                <dt class="type-subtitle text-[11px] text-muted">Built at</dt>
-                <dd class="mt-1 font-semibold text-heading">{where}</dd>
-              </div>
-              <div>
-                <dt class="type-subtitle text-[11px] text-muted">Stack</dt>
-                <dd class="mt-2 flex flex-wrap gap-1.5">
-                  {p.techStack.length ? (
-                    p.techStack.map((t, j) => <span class:list={['tag', j > 0 && 'tag-outline']}>{t}</span>)
-                  ) : (
-                    <span class="text-body">Not listed yet</span>
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt class="type-subtitle text-[11px] text-muted">{p.link?.href?.includes('github.com') ? 'Source' : 'Live at'}</dt>
-                <dd class="mt-1 font-semibold text-heading">
-                  {p.link?.href ? (
-                    <a class="prose-link inline-block py-0.5" href={p.link.href} target="_blank" rel="noopener noreferrer">
-                      {p.link.href.includes('github.com') ? p.link.href.replace(/^https?:\/\/(www\.)?/, '') : host(p.link.href)}
-                    </a>
-                  ) : (
-                    'Internal system'
-                  )}
-                </dd>
-              </div>
-            </dl>
-          </div>
+    <V2 title={`${p.title}, ${kind.toLowerCase()}`} description={description} current="work" schema={schema}>
+      <article class="case">
+        <header class="case__hero">
+          <p class="case__kind mono">{kind}</p>
+          <h1 class="case__title display" data-split="words" data-intro>{p.title}</h1>
+          <p class="case__summary" data-split="lines" data-intro data-delay="0.3">{p.description}</p>
+          <dl class="case__meta" data-reveal="fade" data-intro data-delay="0.5">
+            <div><dt>Type</dt><dd>{p.type === 'work' ? 'Work' : 'Side project'}</dd></div>
+            <div><dt>{p.type === 'work' ? 'Company' : 'Author'}</dt><dd>{company ?? site.name}</dd></div>
+            {p.techStack.length > 0 && (
+              <div class="case__meta-wide"><dt>Stack</dt><dd>{p.techStack.join(', ')}</dd></div>
+            )}
+          </dl>
+          {realLink && (
+            <p class="case__cta" data-reveal="fade" data-intro data-delay="0.6">
+              <a class="pill pill--light" href={realLink.href} rel="noopener">
+                <span>{linkLabel(realLink.href)}</span>
+                <span class="pill__arrow" aria-hidden="true">↗</span>
+              </a>
+            </p>
+          )}
         </header>
 
         {p.cover && (
-        <figure class="container-wide relative mt-14 md:mt-20">
-          <div class="hex pointer-events-none absolute -bottom-10 -left-2 aspect-[1.15] w-40 bg-apricot/70 md:-left-10 md:w-56" aria-hidden="true" />
-          <div class="dots pointer-events-none absolute -top-8 right-6 h-24 w-40 text-teal/40" aria-hidden="true" />
-          <div class="card relative overflow-hidden p-2 md:p-3">
-            <img
-                src={p.cover}
-                srcset={srcset(p.cover)}
-                sizes="(min-width: 1280px) 1200px, 100vw"
-                alt={`Screenshot of ${p.title}`}
-                width="1600"
-                height="900"
-                fetchpriority="high"
-                decoding="async"
-                class="aspect-[16/9] w-full rounded-[2px] object-cover object-top"
-              />
-
-          </div>
-          <figcaption class="relative mt-4 text-[13px] text-muted">
-            {p.note?.caption ?? `${p.title}, as shipped.`}
-          </figcaption>
-        </figure>
+          <figure class="case__shot" data-reveal="up">
+            <img src={p.cover} srcset={srcset(p.cover)} sizes="100vw" width="1920" height="1000" alt={`Screenshot of ${p.title}`} decoding="async" fetchpriority="high" />
+          </figure>
         )}
 
-        <div class="container-wide grid gap-14 py-20 md:py-28 lg:grid-cols-12 lg:gap-8">
-          <section class="lg:col-span-6" aria-labelledby="what">
-            <p class="mb-3 flex items-center gap-2 type-subtitle text-[11px] text-muted">
-              <span class="hex inline-block aspect-[1.15] w-2.5 bg-teal" aria-hidden="true" />
-              The product
-            </p>
-            <h2 id="what" class="type-h2 text-heading" data-split="lines">
-              What it does
-            </h2>
-            <p class="mt-5 type-lead text-body" data-reveal="up">
-              {p.note?.inside ?? p.description}
-            </p>
+        <section class="case__section case__section--idea" aria-labelledby="about">
+          <h2 id="about" class="case__h">About the project</h2>
+          <p class="case__text case__text--big" data-split="lines">{p.detail}</p>
+        </section>
+
+        {p.techStack.length > 0 && (
+          <section class="case__section" aria-labelledby="stack">
+            <h2 id="stack" class="case__h">Built with</h2>
+            <ul class="chips chips--lg case__chips">
+              {p.techStack.map((s, j) => (
+                <li class={`chip chip--${tones[(j + i) % 5]}`}>{s}</li>
+              ))}
+            </ul>
           </section>
-          <section class="lg:col-span-5 lg:col-start-8" aria-labelledby="built">
-            <p class="mb-3 flex items-center gap-2 type-subtitle text-[11px] text-muted">
-              <span class="hex inline-block aspect-[1.15] w-2.5 bg-teal" aria-hidden="true" />
-              The craft
-            </p>
-            <h2 id="built" class="type-h2 text-heading" data-split="lines">
-              {p.note?.points ? 'How it works' : 'Built with'}
-            </h2>
-            {p.note?.points ? (
-              <ol class="mt-6 border-t border-line" data-reveal="up">
-                {p.note.points.map((pt, j) => (
-                  <li class="flex items-baseline gap-4 border-b border-line py-3.5">
-                    <span class="w-7 shrink-0 font-bold ink-peach tabular-nums">{String(j + 1).padStart(2, '0')}.</span>
-                    <span class="text-heading">{pt}</span>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <ul class="mt-6 border-t border-line" data-reveal="up">
-                {p.techStack.map((t) => (
-                  <li class="flex items-center gap-3 border-b border-line py-3.5 text-heading">
-                    <span class="hex inline-block aspect-[1.15] w-2.5 bg-peach" aria-hidden="true" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
+        )}
+
+        {next && (
+          <nav class="next" aria-label="Next project">
+            <a class="next__link" href={`/v2/work/${next.slug}`}>
+              <span class="next__label mono">Next project</span>
+              <span class="next__title">{next.title}</span>
+              <span class="next__kind">{next.description}</span>
+              <span class="next__track" aria-hidden="true"><span /></span>
+            </a>
+          </nav>
+        )}
       </article>
-
-      {next && (
-        <nav class="container-wide pb-24 md:pb-32" aria-label="Next project">
-          <a href={`/v2/work/${next.slug}`} class="card lift flood group relative flex items-center justify-between gap-6 overflow-hidden p-6 md:p-10" data-title={next.title} data-reveal="up">
-            <div class="flood__hex hex pointer-events-none absolute -top-8 -right-8 aspect-[1.15] w-28" aria-hidden="true" />
-            <div class="relative min-w-0">
-              <p class="flood__muted mb-2 type-subtitle text-[11px] text-muted">Next project</p>
-              <p class="flood__title type-section break-words text-heading">{next.title}</p>
-              <p class="flood__muted mt-2 line-clamp-2 max-w-xl text-sm text-body">{next.description}</p>
-            </div>
-            <span class="flood__go relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-teal text-navy md:h-16 md:w-16">
-              <Icon name="arrow-right" class="nudge h-6 w-6" strokeWidth={2} />
-            </span>
-          </a>
-        </nav>
-      )}
-
-      <Connect email={resume.profile?.email} links={socials(resume)} num="" />
     </V2>
   ) : (
-    <V2 title="Page not found" description="This project isn’t part of Brendatama’s portfolio. Head back home for projects, work history and writing." banner="cool">
-      <EmptyCell />
+    <V2 title="Not found" description="This project isn’t part of Brendatama’s portfolio. The home page lists every project and the work history.">
+      <NotFound />
     </V2>
   )
 }

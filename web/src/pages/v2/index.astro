@@ -1,252 +1,383 @@
 ---
 import V2 from '../../v2/layouts/V2.astro'
-import Hive from '../../v2/components/Hive.astro'
-import ProjectCard from '../../v2/components/ProjectCard.astro'
-import SectionHead from '../../v2/components/SectionHead.astro'
-import Connect from '../../v2/components/Connect.astro'
-import Roll from '../../v2/components/Roll.astro'
-import Icon from '../../components/Icon.astro'
-import { copy, formatDate, lineOrder, loadPosts, loadResume, site, socials } from '../../v2/data/content'
+import Waterfall from '../../v2/components/Waterfall.astro'
+import Sticker from '../../v2/components/Sticker.astro'
+import Logo from '../../v2/components/Logo.astro'
+import {
+  copy,
+  formatDate,
+  loadPosts,
+  loadResume,
+  projectsOf,
+  site,
+  socials,
+  srcset,
+  tones,
+} from '../../v2/data/content'
 
-const [resume, posts] = await Promise.all([loadResume(), loadPosts(3)])
-const { grid: workProjects, off: sideProjects } = lineOrder(resume)
+const [resume, posts] = await Promise.all([loadResume(), loadPosts(4)])
+const { work: workProjects, side: sideProjects, all } = projectsOf(resume)
 const profile = resume.profile
-const email = profile?.email
+const name = profile?.name ?? site.fullName
+const firstName = name.split(' ')[0]
+const location = profile?.location ?? site.location
+const city = location.split(',')[0]
+const role = profile?.currentJob ?? site.role
+const email = profile?.email ?? site.email
 const links = socials(resume)
-const company = (name: string) => (name === 'Icon Plus' ? 'PLN Icon Plus' : name)
-const projectsAt = (name: string) => workProjects.filter((p) => p.company === name)
+const github = links.find((s) => s.label === 'GitHub')
+const since = resume.work.length
+  ? Math.min(...resume.work.map((w) => Number(w.start)).filter(Boolean))
+  : null
+const firstCompany = workProjects[0]?.company
+const companyName = (c?: string) => (c === 'Icon Plus' ? 'PLN Icon Plus' : c)
 const realLink = (href?: string) => (href && href !== '#' ? href : undefined)
-
-// Tech stack marquee: repeat short lists so each half is wider than the column
-const MARQUEE_MIN = 14
-const marquee = resume.skills.length
-  ? Array.from({ length: Math.ceil(MARQUEE_MIN / resume.skills.length) }, () => resume.skills).flat()
-  : []
-const pill =
-  'inline-flex h-[34px] shrink-0 items-center rounded-3xl border border-line-soft bg-surface px-4 text-[13px] font-semibold whitespace-nowrap text-heading'
+const coverTones = ['orange', 'lavender', 'green', 'coral'] as const
+const chipTones = ['lime', 'lavender', 'orange', 'green', 'coral'] as const
+const [lead, ...rest] = posts
 ---
 
-<V2>
-  <!-- Hero: who, what, where to go; the honeycomb holds real screens of the work -->
-  <section class="relative" aria-labelledby="hero-title">
-    <div class="container-wide grid items-center gap-8 pt-8 pb-20 md:pt-20 lg:grid-cols-12 lg:gap-8 lg:pt-24 lg:pb-28">
-      <div class="lg:col-span-7">
-        <span class="banner-tag mb-7" data-reveal="fade" data-intro>
-          <Icon name="pin" class="h-4 w-4 text-teal" />
-          {profile?.location ?? 'Jakarta, Indonesia'}
-        </span>
-        <h1 id="hero-title" class="type-display text-heading" data-settle>
-          <span class="ink-peach">Hi, I’m Brendatama.</span>
-          <span>Web software developer based in Jakarta.</span>
-        </h1>
-        <p class="mt-6 max-w-xl type-lead text-body" data-split="lines" data-intro data-delay="0.25">{copy.heroLead}</p>
-        <div class="mt-9 flex flex-wrap items-center gap-3" data-reveal="up" data-intro data-delay="0.4">
-          <a href={site.resume} download class="btn btn-primary" data-astro-reload>
-            <Icon name="download" class="h-4 w-4" strokeWidth={2} />
-            <Roll text="Download resume" />
-          </a>
-          {
-            email && (
-              <a href={`mailto:${email}`} class="btn btn-outline">
-                <Icon name="mail" class="h-4 w-4" strokeWidth={2} />
-                <Roll text="Email me" />
-              </a>
-            )
-          }
-        </div>
-        {
-          links.length > 0 && (
-            <div data-reveal="fade" data-intro data-delay="0.55">
-              <p class="mt-9 mb-3 type-subtitle text-[11px] text-muted">Find me on</p>
-              <div class="flex flex-wrap gap-2.5">
-                {links.map((s) => (
-                  <a href={s.href} target="_blank" rel="noopener noreferrer" class="chip h-8">
-                    <Roll text={s.label} />
-                    <Icon name="external" class="nudge-up nudge h-3 w-3" strokeWidth={2} />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )
-        }
-      </div>
+<V2 current="home">
+  <!-- Hero -->
+  <section class="hero band band--navy" aria-labelledby="hero-title">
+    <p class="hero__eyebrow hero__rise" style="--i:0">
+      <span class="hero__heart" aria-hidden="true">●</span>
+      {location}
+    </p>
+    <h1 id="hero-title" class="hero__title display">
+      <span class="hero__line" style="--i:0">Hi, I’m <span class="ink-orange">{firstName}.</span></span>
+      <span class="hero__line ink-lavender" style="--i:1">{role}</span>
+      <span class="hero__line" style="--i:2">based in {city}.</span>
+    </h1>
+    {profile?.summary && <p class="hero__sub hero__rise" style="--i:3">{profile.summary}</p>}
+    <div class="hero__ctas hero__rise" style="--i:4">
+      <a class="pill pill--light" href={site.resume} download data-astro-reload>
+        <span>Download Resume</span><span class="pill__arrow" aria-hidden="true">↓</span>
+      </a>
+      <a class="pill pill--ghost" href={`mailto:${email}`}>
+        <span>Send an email</span><span class="pill__arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+    <p class="hero__find hero__rise" style="--i:5">
+      <span>Find me on</span>
+      {links.map((s) => <a class="chip chip--dark" href={s.href} rel="me noopener">{s.label} ↗</a>)}
+    </p>
 
-      <div class="relative order-first lg:order-none lg:col-span-5">
-        <div class="dots pointer-events-none absolute -top-6 -left-4 h-28 w-40 text-teal/40" aria-hidden="true"></div>
-        <Hive
-          intro
-          class="mx-auto w-[64%] max-w-[520px] sm:w-[70%] lg:w-full"
-          cells={[
-            { col: 0, row: 0, kind: 'butter', depth: 0.8 },
-            { col: 0, row: 1, kind: 'teal', depth: 0.35 },
-            { col: 0, row: 2, kind: 'lilac', depth: 0.6 },
-            { col: 1, row: 0, kind: 'shot', img: '/v2/img/cheskp-960.webp', depth: 0.45 },
-            { col: 1, row: 1, kind: 'apricot', depth: 0.9 },
-            { col: 2, row: 0, kind: 'butter', depth: 0.7 },
-            { col: 2, row: 1, kind: 'shot', img: '/v2/img/airtax-960.webp', depth: 0.3 },
-            { col: 2, row: 2, kind: 'teal', depth: 0.55 },
-            { col: 3, row: 0, kind: 'outline', depth: 0.4 },
-            { col: 3, row: 1, kind: 'peach', depth: 0.75 },
-          ]}
-        />
+    <Sticker kind="squiggle" color="#ff8a1e" class="hero__s1" />
+    <Sticker kind="badge" class="hero__s2" />
+    <Sticker kind="sparkle" color="#e9ecf5" class="hero__s3" />
+    <Sticker kind="star" color="#d7ec4a" class="hero__s4" />
+    <Sticker kind="sparkle" color="#9c8cff" class="hero__s5" />
+
+    <div class="hero__foot">
+      <div class="hero__claim">
+        <div class="tags" aria-hidden="true">
+          <span class="tag tag--orange" data-pop style="--r:-8deg">200 OK</span>
+          <span class="tag tag--coral" data-pop style="--r:4deg">cache hit</span>
+          <span class="tag tag--lime" data-pop style="--r:-3deg">loaded in <span data-live-ms>live</span></span>
+        </div>
+        <p class="hero__claim-text">This page measured itself. <span>Every request it took to reach you is listed below, live.</span></p>
       </div>
+      {
+        since && (
+          <a class="stat stat--green bite" href="#work" style="--bite: var(--c-navy)">
+            <span class="stat__num">Since {since}</span>
+            <span class="stat__label">building for the web, from front-end to full stack</span>
+            <span class="bite__btn" aria-hidden="true">↗</span>
+          </a>
+        )
+      }
+      {
+        all.length > 0 && (
+          <a class="stat stat--lime bite" href="#projects" style="--bite: var(--c-navy)">
+            <span class="stat__num">{all.length} projects</span>
+            <span class="stat__label">side projects and work, listed on this page</span>
+            <span class="bite__btn" aria-hidden="true">↗</span>
+          </a>
+        )
+      }
     </div>
   </section>
 
-  <!-- 01. Projects -->
-  {
-    sideProjects.length > 0 && (
-      <section id="projects" data-section="projects" class="relative pb-24 md:pb-32" aria-labelledby="projects-title">
-        <div class="container-wide">
-          <SectionHead id="projects-title" num="01" title={copy.projects.title} eyebrow={copy.projects.eyebrow} lead={copy.projects.lead} />
-          <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
-            {sideProjects.map((p, i) => (
-              <li class:list={[i === 0 && 'md:col-span-2']}>
-                <ProjectCard project={p} wide={i === 0} index={i} />
-              </li>
+  <!-- 01 Projects -->
+  <section class="section" id="projects" aria-labelledby="projects-title">
+    <div class="section__head">
+      <div>
+        <p class="eyebrow">{copy.projects.eyebrow}</p>
+        <h2 id="projects-title" class="display section__title" data-split="lines">{copy.projects.title}</h2>
+      </div>
+      <p class="section__note">{copy.projects.note}</p>
+    </div>
+    <ul class="cards">
+      {
+        sideProjects.map((p, i) => (
+          <li data-reveal="up" data-delay={String((i % 3) * 0.06)}>
+            <a class={`card card--${tones[i % tones.length]} bite`} href={`/v2/work/${p.slug}`}>
+              <h3 class="card__title display">{p.title}</h3>
+              <p class="card__text">{p.description}</p>
+              <ul class="chips card__chips">
+                {p.techStack.map((s) => (
+                  <li class="chip chip--card">{s}</li>
+                ))}
+              </ul>
+              <span class="bite__btn" aria-hidden="true">↗</span>
+            </a>
+          </li>
+        ))
+      }
+      {
+        github && (
+          <li data-reveal="up" data-delay="0.12">
+            <a class="card card--navy bite" href={github.href} rel="me noopener">
+              <h3 class="card__title display">More on GitHub</h3>
+              <p class="card__text">Experiments, tools and the code behind everything on this page.</p>
+              <span class="card__cta">{github.href.replace(/^https?:\/\//, '')}</span>
+              <span class="bite__btn" aria-hidden="true">↗</span>
+            </a>
+          </li>
+        )
+      }
+    </ul>
+  </section>
+
+  <!-- Live waterfall -->
+  <section class="section live" id="live" aria-labelledby="live-title">
+    <div class="section__head">
+      <div>
+        <p class="eyebrow">{copy.live.eyebrow}</p>
+        <h2 id="live-title" class="display section__title" data-split="lines">{copy.live.title}</h2>
+      </div>
+      <p class="section__note">{copy.live.note}</p>
+    </div>
+    <div class="live__stage">
+      <div class="live__card bite" style="--bite: var(--c-bg)" data-reveal="up">
+        <Waterfall />
+        <span class="bite__btn bite__btn--static" aria-hidden="true"><span class="live__pulse"></span></span>
+      </div>
+      <p class="live__float live__float--a" data-pop><span class="stat__num" data-stat="ms">live</span><span>to load, end to end</span></p>
+      <p class="live__float live__float--b" data-pop><span class="stat__num" data-visit>open</span><span>you, still connected</span></p>
+    </div>
+  </section>
+
+  <!-- 02 Work -->
+  <section class="section" id="work" aria-labelledby="work-title">
+    <div class="section__head section__head--single">
+      <p class="eyebrow">{copy.work.eyebrow}</p>
+      <h2 id="work-title" class="display section__title" data-split="lines">{copy.work.title}</h2>
+    </div>
+    <ol class="steps">
+      {
+        resume.work.map((w, i) => {
+          const atCompany = workProjects.filter((p) => p.company === w.company)
+          return (
+            <li class="step">
+              <details class:list={['step__details', { 'step__details--first': i === 0 }]} open={i === 0}>
+                <summary class="step__summary">
+                  <span class="step__n mono">
+                    {w.start}
+                    <br />
+                    {w.end}
+                  </span>
+                  <span class="step__title display">
+                    {w.company}
+                    <span class="step__role">{w.title}</span>
+                  </span>
+                  <span class="step__text">{w.description}</span>
+                  <span class="step__toggle" aria-hidden="true" />
+                </summary>
+                {atCompany.length > 0 && (
+                  <div class="step__cols">
+                    {atCompany.map((p) => (
+                      <a class="step__col" href={`/v2/work/${p.slug}`}>
+                        <p class="step__col-title">{p.title}</p>
+                        <p class="step__col-sub">{p.techStack.length} technologies</p>
+                        <ul class="chips">
+                          {p.techStack.slice(0, 3).map((s, j) => (
+                            <li class={`chip chip--${(['lime', 'lavender', 'green'] as const)[j]}`}>{s}</li>
+                          ))}
+                        </ul>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </details>
+            </li>
+          )
+        })
+      }
+      {
+        resume.education.map((e) => (
+          <li class="step">
+            <details class="step__details">
+              <summary class="step__summary">
+                <span class="step__n mono">
+                  {e.start}
+                  <br />
+                  {e.end}
+                </span>
+                <span class="step__title display">
+                  {e.school}
+                  <span class="step__role">{e.degree}</span>
+                </span>
+                <span class="step__text">{e.desc}</span>
+                <span class="step__toggle" aria-hidden="true" />
+              </summary>
+            </details>
+          </li>
+        ))
+      }
+    </ol>
+    {
+      resume.skills.length > 0 && (
+        <div class="stack">
+          <p class="eyebrow" id="stack-label">Tech stack</p>
+          <ul class="chips chips--lg" aria-labelledby="stack-label">
+            {resume.skills.map((t, i) => (
+              <li class={`chip chip--${chipTones[i % chipTones.length]}`}>{t}</li>
             ))}
           </ul>
         </div>
+      )
+    }
+  </section>
+
+  <!-- Statement band -->
+  <section class="section" aria-label="How I build">
+    <div class="banner bite" style="--bite: var(--c-bg)" data-reveal="up">
+      {since && <span class="tag tag--orange banner__t1" data-pop style="--r:-6deg" aria-hidden="true">since {since}</span>}
+      <span class="tag tag--green banner__t2" data-pop style="--r:5deg" aria-hidden="true">{city}</span>
+      <span class="tag tag--coral banner__t3" data-pop style="--r:-4deg" aria-hidden="true">RPG games and good stories</span>
+      <p class="banner__text display">{copy.banner}</p>
+      {profile?.about && <p class="banner__note">{profile.about}</p>}
+      <Logo class="banner__logo" />
+      <Sticker kind="sparkle" color="#0e1a2b" class="banner__s1" />
+      <Sticker kind="star" color="#ff8a1e" class="banner__s2" />
+    </div>
+  </section>
+
+  <!-- Selected work -->
+  {
+    workProjects.length > 0 && (
+      <section class="section" id="selected" aria-labelledby="selected-title">
+        <div class="section__head">
+          <div>
+            {firstCompany && <p class="eyebrow">Built at {companyName(firstCompany)}</p>}
+            <h2 id="selected-title" class="display section__title" data-split="lines">
+              {copy.selected.title}
+            </h2>
+          </div>
+          <div class="rail__ctrl">
+            <button class="round" type="button" data-rail-prev aria-label="Previous projects">←</button>
+            <button class="round" type="button" data-rail-next aria-label="Next projects">→</button>
+          </div>
+        </div>
+        <ul class="rail" data-rail>
+          {workProjects.map((p, i) => (
+            <li class="proj" data-reveal="up" data-delay={String(i * 0.06)}>
+              <a class="proj__link" href={`/v2/work/${p.slug}`}>
+                <span class={`proj__cover cover--${coverTones[i % coverTones.length]} bite`} style="--bite: var(--c-bg)">
+                  {p.cover ? (
+                    <img
+                      class="proj__img"
+                      src={p.cover}
+                      srcset={srcset(p.cover)}
+                      sizes="(max-width: 639px) 82vw, 30vw"
+                      width="1920"
+                      height="1000"
+                      alt={`Screenshot of ${p.title}`}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <span class="proj__bars" aria-hidden="true">
+                      {p.techStack.slice(0, 4).map((s, j) => (
+                        <span class="proj__bar" style={`--j:${j}`}>
+                          <span>{s}</span>
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                  <span class="bite__btn" aria-hidden="true">↗</span>
+                </span>
+                <span class="proj__title display">{p.title}</span>
+                <span class="proj__kind">{p.description}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
       </section>
     )
   }
 
-  <!-- 02. Work: every job, and the products behind the current one -->
-  <section id="work" data-section="work" class="relative overflow-hidden bg-sunken py-24 md:py-32" aria-labelledby="work-title">
-    <div class="hex pointer-events-none absolute -top-16 -right-16 hidden aspect-[1.15] w-56 bg-apricot/50 lg:block dark:bg-teal/10" aria-hidden="true"></div>
-    <div class="container-wide relative">
-      <SectionHead id="work-title" num="02" title={copy.work.title} eyebrow={copy.work.eyebrow} lead={copy.work.lead} />
-
-      <ol class="border-t border-line">
-        {
-          resume.work.map((w) => {
-            const projects = projectsAt(w.company)
-            const link = realLink(w.link)
-            return (
-              <li class="border-b border-line">
-                <div class="grid gap-6 py-10 lg:grid-cols-[320px_1fr] lg:gap-14 lg:py-12">
-                  <div class="lg:sticky lg:top-24 lg:self-start" data-reveal="up">
-                    <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                      <h3 class="text-xl leading-snug font-bold text-heading md:text-2xl">
-                        {link ? (
-                          <a href={link} target="_blank" rel="noopener noreferrer" class="group/l inline-flex items-center gap-1.5 hover:text-link">
-                            {company(w.company)}
-                            <Icon name="external" class="h-4 w-4 text-teal transition-transform group-hover/l:translate-x-0.5 group-hover/l:-translate-y-0.5" />
-                          </a>
-                        ) : (
-                          company(w.company)
-                        )}
-                      </h3>
-                      {w.end.toLowerCase() === 'now' && <span class="tag">Now</span>}
-                    </div>
-                    <p class="mt-1 text-muted">{w.title}</p>
-                    <span class="mt-4 inline-flex h-7 items-center gap-1.5 rounded-3xl border border-line-soft bg-surface px-3 text-[12px] font-semibold text-heading tabular-nums">
-                      <Icon name="calendar" class="h-3.5 w-3.5 text-teal" />
-                      {w.start} to {w.end}
-                    </span>
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-base leading-relaxed text-body" data-reveal="up">
-                      {w.description}
-                    </p>
-                    {projects.length > 0 && (
-                      <ul class="mt-7 grid gap-5 sm:grid-cols-2">
-                        {projects.map((p, i) => (
-                          <li>
-                            <ProjectCard project={p} compact index={i} />
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              </li>
-            )
-          })
-        }
-      </ol>
-
-      {
-        resume.skills.length > 0 && (
-          <div class="mt-12 grid gap-4 lg:grid-cols-[320px_1fr] lg:items-center lg:gap-14">
-            <p id="stack-label" class="type-subtitle text-[11px] text-muted">
-              Tech stack
-            </p>
-            <ul aria-labelledby="stack-label" class="sr-only motion-reduce:not-sr-only motion-reduce:flex motion-reduce:flex-wrap motion-reduce:gap-2.5">
-              {resume.skills.map((s) => (
-                <li class={pill}>{s}</li>
-              ))}
-            </ul>
-            <div class="marquee min-w-0 overflow-hidden motion-reduce:hidden" data-marquee aria-hidden="true">
-              <div class="flex w-max" data-track>
-                {[0, 1].map(() => (
-                  <div class="flex shrink-0 gap-2.5 pr-2.5">
-                    {marquee.map((s) => (
-                      <span class={pill}>{s}</span>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )
-      }
+  <!-- 03 Writing -->
+  <section class="section" aria-labelledby="blog-title">
+    <div class="section__head">
+      <div>
+        <p class="eyebrow">{copy.writing.eyebrow}</p>
+        <h2 id="blog-title" class="display section__title" data-split="lines">{copy.writing.title}</h2>
+      </div>
+      <a class="pill pill--dark" href="/blog" data-astro-reload>
+        <span>See all posts</span><span class="pill__arrow" aria-hidden="true">→</span>
+      </a>
     </div>
-  </section>
-
-  <!-- 03. Writing -->
-  <section id="writing" data-section="writing" class="py-24 md:py-32" aria-labelledby="writing-title">
-    <div class="container-wide">
-      <SectionHead id="writing-title" num="03" title={copy.writing.title} eyebrow={copy.writing.eyebrow}>
-        <a href="/blog" class="link-arrow py-1.5" data-astro-reload>
-          See all posts <Icon name="arrow-right" class="nudge h-4 w-5" />
-        </a>
-      </SectionHead>
-      {
-        posts.length > 0 ? (
-          <ul class="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
-            {posts.map((post, i) => {
-              const date = new Date(post.publishedAt ?? post.createdAt)
-              return (
-                <li>
-                  <a
-                    href={`/blog/${post.slug}`}
-                    class="card lift group relative flex h-full flex-col overflow-hidden p-6"
-                    data-astro-reload
-                    data-reveal="up"
-                    data-delay={String(i * 0.08)}
-                  >
-                    <div class="lift__hex hex pointer-events-none absolute -top-6 -right-6 aspect-[1.15] w-20 bg-apricot/60" aria-hidden="true" />
-                    <p class="relative mb-4 flex items-center gap-1.5 type-subtitle text-[11px] text-muted">
-                      <Icon name="calendar" class="h-3.5 w-3.5 text-teal" />
-                      <time datetime={date.toISOString()}>{formatDate(post.publishedAt ?? post.createdAt)}</time>
-                    </p>
-                    <h3 class="lift__title relative type-h4 text-heading">{post.title}</h3>
-                    {post.description && <p class="mt-2 line-clamp-3 text-sm text-body">{post.description}</p>}
-                    <div class="mt-auto pt-5">
-                      {post.tags.length > 0 && (
-                        <div class="mb-4 flex flex-wrap gap-1.5">
-                          {post.tags.map((tag, j) => (
-                            <span class:list={['tag', j > 0 && 'tag-outline']}>{tag.name}</span>
-                          ))}
-                        </div>
-                      )}
-                      <hr class="hairline mb-3" />
-                      <span class="link-arrow text-[13px]">
-                        Read article <Icon name="arrow-right" class="nudge h-4 w-5" />
-                      </span>
-                    </div>
+    {
+      lead ? (
+        <div class="blogs">
+          <div data-reveal="up">
+            <a class="feature bite" href={`/blog/${lead.slug}`} style="--bite: var(--c-bg)" data-astro-reload>
+              <span class="tag tag--lime feature__tag" style="--r:-4deg">Latest</span>
+              <span class="feature__meta mono">{formatDate(lead.publishedAt ?? lead.createdAt)}</span>
+              <span class="feature__title display">{lead.title}</span>
+              {lead.description && <span class="feature__desc">{lead.description}</span>}
+              <span class="bite__btn" aria-hidden="true">↗</span>
+            </a>
+          </div>
+          {rest.length > 0 && (
+            <ul class="minis">
+              {rest.map((p) => (
+                <li data-reveal="up">
+                  <a class="mini" href={`/blog/${p.slug}`} data-astro-reload>
+                    <span class="mini__meta mono">
+                      {formatDate(p.publishedAt ?? p.createdAt)}
+                      {p.tags.length > 0 && `, ${p.tags.map((t) => t.name).join(', ')}`}
+                    </span>
+                    <span class="mini__title">{p.title}</span>
+                    <span class="mini__arrow" aria-hidden="true">→</span>
                   </a>
                 </li>
-              )
-            })}
-          </ul>
-        ) : (
-          <p class="text-body">The first post is still in draft.</p>
-        )
-      }
-    </div>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : (
+        <p class="section__note">New writing is on its way. Until then, the blog has everything published so far.</p>
+      )
+    }
   </section>
 
-  <Connect email={email} links={links} />
+  <!-- 04 Connect -->
+  <section class="section" id="connect" aria-labelledby="cta-title">
+    <div class="cta bite" style="--bite: var(--c-bg)">
+      <span class="tag tag--lime cta__t1" data-pop style="--r:-5deg" aria-hidden="true">{copy.connect.eyebrow.toLowerCase()}</span>
+      <span class="tag tag--coral cta__t2" data-pop style="--r:6deg" aria-hidden="true">{location}</span>
+      <Sticker kind="squiggle" color="#ff8a1e" class="cta__s1" />
+      <Sticker kind="sparkle" color="#d7ec4a" class="cta__s2" />
+      <Sticker kind="star" color="#9c8cff" class="cta__s3" />
+      <h2 id="cta-title" class="display cta__title" data-split="lines">Have an <span class="ink-orange">idea</span>?</h2>
+      <p class="cta__note">{copy.connect.line}</p>
+      <div class="cta__buttons">
+        <a class="pill pill--light" href={`mailto:${email}`}>
+          <span>Send an email</span><span class="pill__arrow" aria-hidden="true">→</span>
+        </a>
+        {
+          links.map((s) => (
+            <a class="pill pill--ghost" href={realLink(s.href)} rel="me noopener">
+              <span>{s.label}</span>
+              <span class="pill__arrow" aria-hidden="true">↗</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
 </V2>
