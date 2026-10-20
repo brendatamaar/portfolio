@@ -1,0 +1,22 @@
+---
+// 404: the line breaks here. No current, so the heading stays condensed and unlit.
+const path = Astro.url.pathname
+---
+
+<section class="open line" aria-labelledby="open-title">
+  <div class="bus" aria-hidden="true"></div>
+  <div class="row node">
+    <svg class="open__break" viewBox="0 0 36 44" aria-hidden="true">
+      <circle cx="18" cy="4" r="3" fill="currentColor"></circle>
+      <path d="M18 4 L32 30" stroke="currentColor" stroke-width="2.5"></path>
+      <circle cx="18" cy="40" r="3" fill="none" stroke="currentColor" stroke-width="2"></circle>
+    </svg>
+    <h1 id="open-title" class="display">Open circuit</h1>
+  </div>
+  <div class="row">
+    <p>No current reaches <code>{path}</code>. The line breaks here, so there is nothing on this address.</p>
+  </div>
+  <div class="row">
+    <a class="btn btn--solid" href="/v2">Back to the source <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+</section>

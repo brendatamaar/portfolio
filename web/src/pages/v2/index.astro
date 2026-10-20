@@ -1,0 +1,225 @@
+---
+import V2 from '../../v2/layouts/V2.astro'
+import Ground from '../../v2/components/Ground.astro'
+import Schematic from '../../v2/components/Schematic.astro'
+import { copy, formatDate, lineOrder, loadPosts, loadResume, site, socials, srcset } from '../../v2/data/content'
+
+const [resume, posts] = await Promise.all([loadResume(), loadPosts(4)])
+const { grid, off, all } = lineOrder(resume)
+const email = resume.profile?.email
+const links = socials(resume)
+
+// Line history runs oldest to newest: school, then every job
+const edu = resume.education[0]
+const stops = [
+  ...(edu ? [{ year: edu.start, title: edu.school, sub: edu.degree.split(',')[0], text: '' }] : []),
+  ...[...resume.work].reverse().map((w) => ({
+    year: w.start,
+    title: w.company === 'Icon Plus' ? 'PLN Icon Plus' : w.company,
+    sub: w.title,
+    text: w.description,
+  })),
+]
+const stack = (p: { techStack: string[] }) => p.techStack.slice(0, 3).join(', ')
+---
+
+<V2 meter={{ label: 'Energized', value: 0, total: all.length }}>
+  <div class="line">
+    <div class="bus bus--source" data-bus aria-hidden="true">
+      <div class="bus__live"></div>
+      <div class="bus__pulse"></div>
+    </div>
+    <div class="bus__spark" aria-hidden="true"></div>
+
+    <section class="hero" aria-labelledby="hero-name">
+      <div class="row source">
+        <span class="source__sym" aria-hidden="true">
+          <svg viewBox="0 0 24 12"><path d="M1 6 q5.5 -10 11 0 t11 0" stroke="currentColor" stroke-width="2.4" fill="none"></path></svg>
+        </span>
+        <p class="mono">
+          <span class="source__volt">
+            <span id="loader" role="status" aria-label="Loading"><span data-loader-count>000</span></span>
+            <span class="source__static">{site.volts}</span>
+          </span>
+          V / {site.hertz} Hz <span class="source__label">Jakarta</span>
+        </p>
+      </div>
+
+      <div class="row">
+        <div class="hero__name">
+          <h1 id="hero-name" class="display">
+            <span class="ln" data-energize>Brendatama</span>
+            <span class="ln" data-energize>Akbar</span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="hero__foot">
+          <p class="hero__lead" data-split="lines" data-intro data-delay="0.35">{copy.heroLead}</p>
+          <div class="hero__cta" data-reveal="up" data-intro data-delay="0.55">
+            {
+              email && (
+                <a class="btn btn--solid" href={`mailto:${email}`}>
+                  Email me <span class="arrow" aria-hidden="true">↗</span>
+                </a>
+              )
+            }
+            <a class="btn" href={site.resume} download data-astro-reload>Resume (PDF)</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {
+      grid.length > 0 && (
+        <section id="grid" class="section" data-section="grid" aria-labelledby="grid-title">
+          <div class="row head node" data-node="section">
+            <span class="node__dot" aria-hidden="true" />
+            <div class="head__text">
+              <h2 id="grid-title" class="display" data-split="lines">
+                {copy.gridTitle}
+              </h2>
+              <p>{copy.gridLead}</p>
+            </div>
+          </div>
+          <ul class="feeders" style={`--len: ${Math.max(...grid.map((p) => p.title.length))}`}>
+            {grid.map((p) => (
+              <li class="row feeder node" data-node="project">
+                <span class="node__dot" aria-hidden="true" />
+                <span class="node__wire" aria-hidden="true" />
+                <a class="feeder__link" href={`/v2/work/${p.slug}`} data-title={p.title}>
+                  <span class="feeder__title display">{p.title}</span>
+                  <span class="feeder__desc">
+                    {p.description}
+                    <span class="mono">{stack(p)}</span>
+                  </span>
+                  <span class="feeder__go">
+                    Case <span class="arrow" aria-hidden="true">→</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      off.length > 0 && (
+        <section id="off-grid" class="section" data-section="off-grid" aria-labelledby="off-title">
+          <div class="row head node" data-node="section">
+            <span class="node__dot" aria-hidden="true" />
+            <div class="head__text">
+              <h2 id="off-title" class="display" data-split="lines">
+                {copy.offTitle}
+              </h2>
+              <p>{copy.offLead}</p>
+            </div>
+          </div>
+          <div class="row wall">
+            <ul class="wall__grid">
+              {off.map((p) => (
+                <li class="cover node" data-node="project" style={`--len: ${p.title.length}`}>
+                  <a class="cover__link" href={`/v2/work/${p.slug}`} data-title={p.title}>
+                    <div class="cover__media" data-flip-src>
+                      {p.cover ? (
+                        <img src={p.cover} srcset={srcset(p.cover)} sizes="(min-width: 768px) 50vw, 100vw" alt={`Screenshot of ${p.title}`} width="1600" height="1000" loading="lazy" decoding="async" />
+                      ) : (
+                        <Schematic seed={p.seed} label={p.title.toUpperCase()} />
+                      )}
+                    </div>
+                    <div class="cover__meta">
+                      <h3 class="cover__title display">{p.title}</h3>
+                      <span class="arrow" aria-hidden="true">→</span>
+                      <p class="cover__desc">{p.description}</p>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )
+    }
+
+    {
+      stops.length > 0 && (
+        <section id="history" class="section history" data-section="history" aria-labelledby="history-title">
+          <div class="row head node" data-node="section">
+            <span class="node__dot" aria-hidden="true" />
+            <div class="head__text">
+              <h2 id="history-title" class="display" data-split="lines">
+                {copy.historyTitle}
+              </h2>
+              <p>Front-end since {stops[1]?.year ?? stops[0].year}. Every stop on the way here.</p>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <ol class="history__rail">
+                {stops.map((s, i) => (
+                  <li class="stop" data-node="stop">
+                    <p class="stop__year">
+                      <span>{s.year}</span>
+                    </p>
+                    <h3>
+                      {s.title}
+                      <span class="sr-only">, </span>
+                      <br />
+                      <span class="mono">{s.sub}</span>
+                    </h3>
+                    {s.text && <p>{s.text}</p>}
+                    {i === stops.length - 1 && <p class="mono">Now</p>}
+                  </li>
+                ))}
+              </ol>
+              {resume.skills.length > 0 && (
+                <div class="bench">
+                  <p class="mono">On the bench</p>
+                  <p>{resume.skills.join(', ')}.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <section id="notes" class="section notes" data-section="notes" aria-labelledby="notes-title">
+      <div class="row head node" data-node="section">
+        <span class="node__dot" aria-hidden="true"></span>
+        <div class="head__text">
+          <h2 id="notes-title" class="display" data-split="lines">{copy.notesTitle}</h2>
+          <p>{copy.notesLead}</p>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          {
+            posts.length > 0 ? (
+              <ul class="notes__list">
+                {posts.map((post) => (
+                  <li>
+                    <a class="note" href={`/blog/${post.slug}`} data-astro-reload>
+                      <span class="mono">{formatDate(post.publishedAt ?? post.createdAt)}</span>
+                      <span class="note__title">{post.title}</span>
+                      <span class="arrow" aria-hidden="true">→</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>The first note is still in draft.</p>
+            )
+          }
+          <a class="btn notes__all" href="/blog" data-astro-reload>
+            All notes <span class="arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <Ground email={email} links={links} />
+</V2>
