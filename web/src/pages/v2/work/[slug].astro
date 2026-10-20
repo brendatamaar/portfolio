@@ -15,8 +15,8 @@ const next = all.length ? all[(i + 1) % all.length] : null
 const onGrid = p?.type === 'work'
 const where = onGrid ? (p?.company === 'Icon Plus' ? 'PLN Icon Plus' : (p?.company ?? 'Work')) : 'Side project'
 const back = onGrid ? { href: '/v2#grid', label: 'On the grid' } : { href: '/v2#off-grid', label: 'Off grid' }
-// Fit the display title to its column once fully energized (Archivo caps at width 125 ≈ 0.86em each, plus margin)
-const fit = (s: string) => `--fit: ${(100 / (s.length * 0.9)).toFixed(2)}cqi`
+// Display titles fit their column once energized: CSS sizes them from the character count
+const fit = (s: string) => `--len: ${s.length}`
 const host = (href: string) => {
   try {
     return new URL(href).host.replace(/^www\./, '')

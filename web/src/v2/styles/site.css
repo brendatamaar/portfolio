@@ -184,10 +184,17 @@ html:not(.motion) .node__wire::after {
   gap: var(--gutter);
   height: var(--header-h);
   padding-inline: var(--gutter);
-  color: var(--c-bg);
-  mix-blend-mode: difference;
+  color: var(--c-fg);
   pointer-events: none;
-  transition: translate 0.6s var(--ease-out);
+  transition:
+    translate 0.6s var(--ease-out),
+    background-color 0.4s var(--ease-soft);
+}
+/* Off the top of the page the frame carries its own zinc band, so it never prints over content */
+html.scrolled .frame {
+  background: var(--c-bg);
+  box-shadow: 0 1px 0 var(--c-line);
+  pointer-events: auto;
 }
 .frame > * {
   pointer-events: auto;
@@ -391,9 +398,8 @@ html.frame-away .frame {
 
 .hero {
   position: relative;
-  min-height: 100svh;
   display: grid;
-  align-content: space-between;
+  align-content: start;
   padding-top: calc(var(--header-h) + var(--u) * 2);
   padding-bottom: calc(var(--u) * 4);
 }
@@ -440,6 +446,12 @@ html.frame-away .frame {
   color: var(--c-muted);
 }
 
+@media (min-width: 768px) {
+  .hero {
+    min-height: 100svh;
+    align-content: space-between;
+  }
+}
 .hero__name {
   container-type: inline-size;
   margin-block: calc(var(--u) * 5) calc(var(--u) * 4);
@@ -547,6 +559,8 @@ html.frame-away .frame {
   border-top: 1px solid var(--c-line);
 }
 .feeder__link {
+  position: relative;
+  isolation: isolate;
   container-type: inline-size;
   display: grid;
   gap: 0.6rem 1rem;
@@ -602,6 +616,24 @@ html.frame-away .frame {
 .feeder__go .arrow {
   transition: translate 0.4s var(--ease-soft);
 }
+.feeder__link::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(-1 * var(--gutter)) 0 calc(-0.6rem);
+  z-index: -1;
+  background: rgb(232 65 12 / 0.1);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.6s var(--ease-out);
+}
+@media (hover: hover) {
+  .feeder__link:hover::before {
+    transform: scaleX(1);
+  }
+}
+.feeder__link:focus-visible::before {
+  transform: scaleX(1);
+}
 
 /* live: current reached this node */
 .is-live .feeder__title,
@@ -652,22 +684,18 @@ html:not(.motion) .feeder__title {
   .wall__grid {
     grid-template-columns: repeat(11, minmax(0, 1fr));
   }
-  .cover:nth-child(5n + 1) {
+  .cover:nth-child(odd) {
     grid-column: 1 / span 6;
   }
-  .cover:nth-child(5n + 2) {
-    grid-column: 8 / span 4;
-    margin-top: 30%;
+  .cover:nth-child(even) {
+    grid-column: 7 / -1;
+    margin-top: 22%;
   }
-  .cover:nth-child(5n + 3) {
-    grid-column: 2 / span 4;
+  .cover:nth-child(odd):last-child {
+    grid-column: 3 / -1;
   }
-  .cover:nth-child(5n + 4) {
-    grid-column: 7 / span 5;
-    margin-top: -12%;
-  }
-  .cover:nth-child(5n + 5) {
-    grid-column: 1 / span 5;
+  .cover:nth-child(odd):last-child .cover__media {
+    aspect-ratio: 21 / 9;
   }
 }
 .cover {
@@ -696,6 +724,12 @@ html:not(.motion) .feeder__title {
 }
 .cover__media img {
   filter: grayscale(1) contrast(1.05);
+}
+.cover__media.has-shot {
+  padding: clamp(0.75rem, 2.4cqi, 1.75rem);
+}
+.cover__media.has-shot img {
+  box-shadow: 0 0 0 1px var(--c-line);
 }
 .cover__media .batt {
   position: absolute;
@@ -941,10 +975,14 @@ html:not(.motion) .schem .hot {
   background: var(--c-fg);
   color: var(--c-bg);
   padding-block: calc(var(--u) * 8) calc(var(--u) * 3);
-  min-height: 100svh;
   display: grid;
   align-content: space-between;
   gap: calc(var(--u) * 6);
+}
+@media (min-width: 768px) {
+  .ground {
+    min-height: 100svh;
+  }
 }
 .ground .node__dot {
   background: var(--c-fg);
@@ -1090,23 +1128,41 @@ html:not(.motion) .schem .hot {
   text-decoration: underline;
   text-underline-offset: 0.3em;
 }
+.crumb a {
+  text-decoration-color: var(--c-dead);
+  text-decoration-thickness: 1px;
+  transition:
+    color 0.3s var(--ease-soft),
+    text-decoration-color 0.3s var(--ease-soft);
+}
 @media (hover: hover) {
   .crumb a:hover {
     color: var(--c-fg);
+    text-decoration-color: var(--c-accent);
+    text-decoration-thickness: 2px;
   }
 }
 .case-title {
   container-type: inline-size;
   margin-top: calc(var(--u) * 3);
 }
+/* --len: characters in the title. 0.74em per cap at width 100 (phones), 0.9em at 125 */
 .case-title h1 {
-  font-size: min(var(--fit, 14cqi), 16rem);
+  font-size: min(calc(100cqi / (var(--len, 8) * 0.74)), 16rem);
   white-space: nowrap;
   margin-left: -0.05em;
 }
+@media (min-width: 768px) {
+  .case-title h1 {
+    font-size: min(calc(100cqi / (var(--len, 8) * 0.9)), 16rem);
+  }
+  .next__title {
+    font-size: min(calc(100cqi / (var(--len, 8) * 0.9)), 13rem);
+  }
+}
 .case-sum {
   margin-top: calc(var(--u) * 3);
-  font-size: var(--t-l);
+  font-size: clamp(1.35rem, 0.9rem + 2vw, 3.5rem);
   line-height: 1.15;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -1238,7 +1294,7 @@ html:not(.motion) .schem .hot {
   color: var(--c-muted);
 }
 .next__title {
-  font-size: min(var(--fit, 12cqi), 13rem);
+  font-size: min(calc(100cqi / (var(--len, 8) * 0.74)), 13rem);
   white-space: nowrap;
   color: var(--c-muted);
   --wdth: 62;
@@ -1281,6 +1337,7 @@ html:not(.motion) .next__title {
   padding-block: calc(var(--header-h) + var(--u) * 4) calc(var(--u) * 6);
 }
 .open .bus {
+  top: var(--header-h);
   bottom: auto;
   height: 46%;
 }
