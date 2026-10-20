@@ -282,16 +282,79 @@
   }
 }
 
-/* Inline links in prose keep an underline at rest */
+/* Inline links: underline at rest; a teal wash wipes in behind the text */
 .prose-link {
   color: var(--link);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
-  transition: text-decoration-thickness 0.2s;
+  background: linear-gradient(rgb(109 199 190 / 0.3) 0 0) left / 0% 100%
+    no-repeat;
+  transition: background-size 0.45s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
-.prose-link:hover {
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  .prose-link:hover {
+    background-size: 100% 100%;
+  }
+}
+.prose-link:focus-visible {
+  background-size: 100% 100%;
+}
+
+/* Next-project card: its corner hexagon grows until navy floods the card */
+.flood .flood__hex {
+  background: var(--color-navy);
+  opacity: 0.12;
+  transition:
+    scale 0.8s cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 0.3s;
+}
+.flood :is(.flood__title, .flood__muted) {
+  position: relative;
+  transition: color 0.35s;
+}
+.flood .flood__go {
+  transition:
+    translate 0.5s cubic-bezier(0.165, 0.84, 0.44, 1),
+    background-color 0.35s;
+}
+@media (hover: hover) {
+  .flood:hover .flood__hex {
+    scale: 16;
+    opacity: 1;
+  }
+  .flood:hover .flood__title {
+    color: #fff;
+  }
+  .flood:hover .flood__muted {
+    color: rgb(255 255 255 / 0.75);
+  }
+  .flood:hover .flood__go {
+    translate: 6px 0;
+  }
+}
+.flood:focus-visible .flood__hex {
+  scale: 16;
+  opacity: 1;
+}
+.flood:focus-visible :is(.flood__title, .flood__muted) {
+  color: #fff;
+}
+.dark .flood .flood__hex {
+  background: var(--color-navy-2);
+}
+
+/* Focus: the guide's light teal ring is 2:1 on white; link teal clears 3:1 for UI outlines */
+:root:not(.dark) :focus-visible {
+  outline-color: var(--link);
+}
+.nav-link:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Dark theme: tone down bright third-party screenshots */
+.dark :is(.lift__media, figure) img {
+  filter: brightness(0.82) contrast(1.05);
 }
 
 /* ── Page transition: a teal hexagon opens from the click point ────────────────────────── */
@@ -319,8 +382,10 @@
 }
 
 /* Hero headline: visible from the first paint (it is the LCP), it settles into place */
-.motion [data-settle] > * {
+.motion [data-settle] > span {
   display: inline-block;
+}
+.motion [data-settle] > * {
   translate: 0 0.3em;
   opacity: 0.25;
   transition:

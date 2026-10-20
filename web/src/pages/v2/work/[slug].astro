@@ -55,12 +55,12 @@ const jsonLd = p
                 <Icon name={atWork ? 'briefcase' : 'code'} class="h-4 w-4 text-teal" />
                 {where}
               </span>
-              <h1 id="case-title" class="type-display break-words text-heading" data-split="lines" data-intro>
-                {p.title}
-              </h1>
-              <p class="mt-6 max-w-2xl type-lead text-body" data-split="lines" data-intro data-delay="0.2">
-                {p.description}
-              </p>
+              <div data-settle>
+                <h1 id="case-title" class="type-display break-words text-heading">
+                  {p.title}
+                </h1>
+                <p class="mt-6 max-w-2xl type-lead text-body">{p.description}</p>
+              </div>
               {p.link?.href && (
                 <div class="mt-8 flex flex-wrap gap-3" data-reveal="up" data-intro data-delay="0.35">
                   <a href={p.link.href} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
@@ -87,11 +87,11 @@ const jsonLd = p
                 </dd>
               </div>
               <div>
-                <dt class="type-subtitle text-[11px] text-muted">Live at</dt>
+                <dt class="type-subtitle text-[11px] text-muted">{p.link?.href?.includes('github.com') ? 'Source' : 'Live at'}</dt>
                 <dd class="mt-1 font-semibold text-heading">
                   {p.link?.href ? (
                     <a class="prose-link inline-block py-0.5" href={p.link.href} target="_blank" rel="noopener noreferrer">
-                      {host(p.link.href)}
+                      {p.link.href.includes('github.com') ? p.link.href.replace(/^https?:\/\/(www\.)?/, '') : host(p.link.href)}
                     </a>
                   ) : (
                     'Internal system'
@@ -102,12 +102,12 @@ const jsonLd = p
           </div>
         </header>
 
+        {p.cover && (
         <figure class="container-wide relative mt-14 md:mt-20">
           <div class="hex pointer-events-none absolute -bottom-10 -left-2 aspect-[1.15] w-40 bg-apricot/70 md:-left-10 md:w-56" aria-hidden="true" />
           <div class="dots pointer-events-none absolute -top-8 right-6 h-24 w-40 text-teal/40" aria-hidden="true" />
           <div class="card relative overflow-hidden p-2 md:p-3">
-            {p.cover ? (
-              <img
+            <img
                 src={p.cover}
                 srcset={srcset(p.cover)}
                 sizes="(min-width: 1280px) 1200px, 100vw"
@@ -118,20 +118,13 @@ const jsonLd = p
                 decoding="async"
                 class="aspect-[16/9] w-full rounded-[2px] object-cover object-top"
               />
-            ) : (
-              <div class="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-[2px] bg-teal/15">
-                <span class="hex absolute -right-10 -bottom-16 aspect-[1.15] w-72 bg-teal/25" aria-hidden="true" />
-                <span class="hex absolute top-10 left-12 aspect-[1.15] w-16 bg-peach/70" aria-hidden="true" />
-                <span class="hex absolute right-1/4 bottom-10 aspect-[1.15] w-10 bg-lilac" aria-hidden="true" />
-                <span class="dots absolute top-10 right-12 h-20 w-32 text-teal/30" aria-hidden="true" />
-                <span class="relative px-6 text-center type-h2 text-heading">{p.title}</span>
-              </div>
-            )}
+
           </div>
           <figcaption class="relative mt-4 text-[13px] text-muted">
-            {p.note?.caption ?? (p.cover ? `${p.title}, as shipped.` : 'A screenshot of this project is still to come.')}
+            {p.note?.caption ?? `${p.title}, as shipped.`}
           </figcaption>
         </figure>
+        )}
 
         <div class="container-wide grid gap-14 py-20 md:py-28 lg:grid-cols-12 lg:gap-8">
           <section class="lg:col-span-6" aria-labelledby="what">
@@ -179,14 +172,14 @@ const jsonLd = p
 
       {next && (
         <nav class="container-wide pb-24 md:pb-32" aria-label="Next project">
-          <a href={`/v2/work/${next.slug}`} class="card lift group relative flex items-center justify-between gap-6 overflow-hidden p-6 md:p-10" data-title={next.title} data-reveal="up">
-            <div class="lift__hex hex pointer-events-none absolute -top-8 -right-8 aspect-[1.15] w-28 bg-teal/25" aria-hidden="true" />
+          <a href={`/v2/work/${next.slug}`} class="card lift flood group relative flex items-center justify-between gap-6 overflow-hidden p-6 md:p-10" data-title={next.title} data-reveal="up">
+            <div class="flood__hex hex pointer-events-none absolute -top-8 -right-8 aspect-[1.15] w-28" aria-hidden="true" />
             <div class="relative min-w-0">
-              <p class="mb-2 type-subtitle text-[11px] text-muted">Next project</p>
-              <p class="lift__title type-section break-words text-heading">{next.title}</p>
-              <p class="mt-2 line-clamp-2 max-w-xl text-sm text-body">{next.description}</p>
+              <p class="flood__muted mb-2 type-subtitle text-[11px] text-muted">Next project</p>
+              <p class="flood__title type-section break-words text-heading">{next.title}</p>
+              <p class="flood__muted mt-2 line-clamp-2 max-w-xl text-sm text-body">{next.description}</p>
             </div>
-            <span class="relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-teal text-white md:h-16 md:w-16">
+            <span class="flood__go relative grid h-14 w-14 shrink-0 place-items-center rounded-full bg-teal text-navy md:h-16 md:w-16">
               <Icon name="arrow-right" class="nudge h-6 w-6" strokeWidth={2} />
             </span>
           </a>

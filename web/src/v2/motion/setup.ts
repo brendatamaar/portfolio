@@ -161,7 +161,12 @@ export function setupMotion() {
     const links = [
       ...document.querySelectorAll<HTMLAnchorElement>('[data-spy]'),
     ]
-    if (!links.length) return
+    // Case pages mark their section statically; a second, scroll-based mark would compete
+    if (
+      !links.length ||
+      links.some((l) => l.getAttribute('aria-current') === 'page')
+    )
+      return
     document.querySelectorAll<HTMLElement>('[data-section]').forEach((sec) => {
       const link = links.find((l) => l.dataset.spy === sec.id)
       if (!link || link.getAttribute('aria-current') === 'page') return
