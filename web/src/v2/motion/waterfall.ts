@@ -248,6 +248,23 @@ function writeSummary(rows: Row[], soft: boolean) {
     colophon.textContent = soft
       ? `This page came over in ${fmtMs(end)}.`
       : `This page: ${total} requests, ${kb(bytes)}, ${fmtMs(end)}.`
+  weightBar(soft ? rows.slice(0, 1) : rows)
+}
+
+/** The footer's one-bar summary: this page's transferred bytes, split by request type. */
+function weightBar(rows: Row[]) {
+  const bar = document.querySelector<HTMLElement>('[data-weight]')
+  if (!bar) return
+  const byType = new Map<string, number>()
+  for (const r of rows)
+    byType.set(r.type, (byType.get(r.type) ?? 0) + Math.max(r.bytes, 1))
+  bar.innerHTML = [...byType]
+    .sort((a, b) => b[1] - a[1])
+    .map(
+      ([type, b]) =>
+        `<span data-type="${type}" style="--b:${b}" title="${type}, ${kb(b)}"></span>`,
+    )
+    .join('')
 }
 
 // ---------- lifecycle ----------

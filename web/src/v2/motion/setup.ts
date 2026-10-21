@@ -6,6 +6,7 @@ import {
   onPage,
   onScroll,
   prefersReducedMotion,
+  scrollToTarget,
   setTransition,
 } from '../engine'
 import { net } from './net'
@@ -22,6 +23,67 @@ export function setupMotion() {
   rail()
   requestPath()
   notFound()
+  footer()
+}
+
+// Footer: copy the address, go back to the top, and Jakarta's local time (it tells visitors
+// whether a reply could come today).
+function footer() {
+  const jakarta = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  })
+  onPage(() => {
+    const off: (() => void)[] = []
+    const time = document.querySelector<HTMLTimeElement>('[data-local-time]')
+    if (time) {
+      const tick = () => {
+        time.textContent = `${jakarta.format(new Date())} WIB`
+        time.dateTime = new Date().toISOString()
+      }
+      tick()
+      const id = setInterval(tick, 30_000) // text only; nothing animates on it
+      off.push(() => clearInterval(id))
+    }
+    const copy = document.querySelector<HTMLButtonElement>('[data-copy]')
+    const status = document.querySelector<HTMLElement>('[data-copy-status]')
+    if (copy) {
+      const label = copy.querySelector<HTMLElement>('[data-copy-label]')
+      let reset: ReturnType<typeof setTimeout> | undefined
+      const onCopy = async () => {
+        try {
+          await navigator.clipboard.writeText(copy.dataset.copy ?? '')
+          if (label) label.textContent = 'Copied'
+          if (status) status.textContent = 'Email address copied'
+        } catch {
+          if (label) label.textContent = 'Press Ctrl+C'
+        }
+        copy.classList.add('is-done')
+        clearTimeout(reset)
+        reset = setTimeout(() => {
+          if (label) label.textContent = 'Copy address'
+          if (status) status.textContent = ''
+          copy.classList.remove('is-done')
+        }, 2000)
+      }
+      copy.addEventListener('click', onCopy)
+      off.push(() => {
+        copy.removeEventListener('click', onCopy)
+        clearTimeout(reset)
+      })
+    }
+    const top = document.querySelector<HTMLButtonElement>('[data-top]')
+    if (top) {
+      const onTop = () => {
+        scrollToTarget(0)
+        document.getElementById('main')?.focus({ preventScroll: true })
+      }
+      top.addEventListener('click', onTop)
+      off.push(() => top.removeEventListener('click', onTop))
+    }
+    return () => off.forEach((f) => f())
+  })
 }
 
 // Navigation is four requests: colored bands stream in from the left one after another, like rows

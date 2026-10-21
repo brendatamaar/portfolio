@@ -1,57 +1,115 @@
 ---
-import { site } from '../data/content'
+// The finale: the ask, four ways to reach me, the name, and this page's weight in one bar.
+// It closes the page the way the navy hero opens it, and carries the Connect section on every page.
+import { copy, site } from '../data/content'
 import Logo from './Logo.astro'
+import Sticker from './Sticker.astro'
 
 const year = new Date().getFullYear()
+// Short handles: github.com/brendatamaar → @brendatamaar, linkedin.com/in/x → in/x
+const handle = (href: string) => {
+  const path = href.replace(/^https?:\/\/[^/]+\//, '').replace(/\/$/, '')
+  return path.startsWith('in/') ? path : `@${path}`
+}
+const github = site.socials.find((s) => s.label === 'GitHub')
+const linkedin = site.socials.find((s) => s.label === 'LinkedIn')
 const links = [
   { label: 'Projects', href: '/v2/#projects' },
   { label: 'Work', href: '/v2/#work' },
   { label: 'Writing', href: '/blog', reload: true },
-  { label: 'Resume', href: site.resume, reload: true },
-  { label: 'Send an email', href: `mailto:${site.email}` },
 ]
 ---
 
-<footer class="footer" id="contact">
-  <div class="footer__top">
-    <div class="footer__brand">
-      <p class="footer__word" aria-hidden="true">
-        <Logo class="footer__logo" /><span>Brendatama</span>
-      </p>
-      <p class="footer__about">
-        {site.role} based in {site.location}. Currently building web products at PLN Icon Plus.
-      </p>
-      <ul class="footer__social">
-        {
-          site.socials.map((s) => (
-            <li>
-              <a class="utility" href={s.href} rel="me noopener">
-                {s.label}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
+<footer class="foot" id="connect" aria-labelledby="connect-title">
+  <Sticker kind="squiggle" color="#ff8a1e" class="foot__s1" />
+  <Sticker kind="sparkle" color="#d7ec4a" class="foot__s2" />
+  <Sticker kind="star" color="#9c8cff" class="foot__s3" />
+
+  <div class="foot__ask">
+    <div>
+      <p class="eyebrow eyebrow--light">{copy.connect.eyebrow}</p>
+      <h2 id="connect-title" class="display foot__title" data-split="lines">
+        Have an <span class="ink-orange">idea</span>?
+      </h2>
+      <p class="foot__line">{copy.connect.line}</p>
     </div>
-    <nav class="footer__nav" aria-label="Footer">
+    <p class="foot__time tag tag--coral" style="--r:-4deg" data-pop>
+      <span aria-hidden="true">●</span>
+      Jakarta, <time data-local-time>local time</time>
+    </p>
+  </div>
+
+  <ul class="foot__cards">
+    <li data-reveal="up">
+      <div class="card card--lime bite foot__card" style="--bite: var(--c-navy)">
+        <p class="foot__label">Email</p>
+        <a class="foot__value foot__stretch" href={`mailto:${site.email}`}>{site.email}</a>
+        <button class="foot__copy" type="button" data-copy={site.email}>
+          <span data-copy-label>Copy address</span>
+        </button>
+        <span class="bite__btn" aria-hidden="true">↗</span>
+      </div>
+    </li>
+    {
+      github && (
+        <li data-reveal="up" data-delay="0.05">
+          <a class="card card--lavender bite foot__card" href={github.href} rel="me noopener" style="--bite: var(--c-navy)">
+            <span class="foot__label">GitHub</span>
+            <span class="foot__value">{handle(github.href)}</span>
+            <span class="foot__hint">Side projects and experiments</span>
+            <span class="bite__btn" aria-hidden="true">↗</span>
+          </a>
+        </li>
+      )
+    }
+    {
+      linkedin && (
+        <li data-reveal="up" data-delay="0.1">
+          <a class="card card--orange bite foot__card" href={linkedin.href} rel="me noopener" style="--bite: var(--c-navy)">
+            <span class="foot__label">LinkedIn</span>
+            <span class="foot__value">{handle(linkedin.href)}</span>
+            <span class="foot__hint">Work history, in more detail</span>
+            <span class="bite__btn" aria-hidden="true">↗</span>
+          </a>
+        </li>
+      )
+    }
+    <li data-reveal="up" data-delay="0.15">
+      <a class="card card--green bite foot__card" href={site.resume} download data-astro-reload style="--bite: var(--c-navy)">
+        <span class="foot__label">Resume</span>
+        <span class="foot__value">Download PDF</span>
+        <span class="foot__hint">English, 2026</span>
+        <span class="bite__btn" aria-hidden="true">↓</span>
+      </a>
+    </li>
+  </ul>
+
+  <p class="foot__mark" aria-hidden="true">
+    <Logo class="foot__logo" /><span>Brendatama</span>
+  </p>
+
+  <div class="foot__base">
+    <nav class="foot__nav" aria-label="Footer">
       <ul>
         {
           links.map((l) => (
             <li>
-              <a class="footer__link" href={l.href} data-astro-reload={l.reload || undefined}>
-                <span class="footer__bullet" aria-hidden="true">›</span>
-                <span>{l.label}</span>
+              <a class="nav-link" href={l.href} data-astro-reload={l.reload || undefined}>
+                {l.label}
               </a>
             </li>
           ))
         }
       </ul>
     </nav>
+    <div class="foot__weight">
+      <span class="foot__weight-bar" data-weight aria-hidden="true"></span>
+      <p class="foot__colophon"><span data-colophon>This page is built with Astro.</span> Set in Archivo and JetBrains Mono.</p>
+    </div>
+    <p class="foot__copy-line">© {year} {site.fullName}</p>
+    <button class="pill pill--light foot__top" type="button" data-top>
+      <span>Back to top</span><span class="pill__arrow" aria-hidden="true">↑</span>
+    </button>
   </div>
-  <div class="footer__base">
-    <p>© {year} {site.fullName}. {site.location}</p>
-    <p class="footer__colophon">
-      Set in Archivo and JetBrains Mono. Built with Astro.{' '}<span data-colophon></span>
-    </p>
-  </div>
+  <p class="sr-only" aria-live="polite" data-copy-status></p>
 </footer>

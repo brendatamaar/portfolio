@@ -27,6 +27,14 @@ the visitor stays.
   real status and fetch time. One clock (GSAP ticker drives Lenis and everything else); reduced
   motion gets native scroll and no reveals.
 
+## Footer
+
+The footer is the finale and carries the Connect section on every page: the ask ("Have an
+idea?") with Jakarta's local time, four doors as bitten cards (email with a copy button,
+GitHub, LinkedIn, resume), the name at full width, and a base row whose bar shows this page's
+transferred bytes split by request type, in the legend colors. Its rounded top and tab mirror
+the hero's bottom, so the page opens and closes on the same navy.
+
 ## Data
 
 Everything personal comes from the API (`loadResume`, `loadPosts` in `data/content.ts`), so admin
