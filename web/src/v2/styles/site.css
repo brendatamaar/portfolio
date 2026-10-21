@@ -1045,6 +1045,7 @@ html.frame-away .nav {
 .banner__text {
   font-size: clamp(2.6rem, 9cqi, 7.2rem);
   max-width: 16ch;
+  text-wrap: balance;
 }
 .banner__note {
   justify-self: start;
