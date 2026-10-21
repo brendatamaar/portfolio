@@ -31,7 +31,6 @@ const since = resume.work.length
   : null
 const firstCompany = workProjects[0]?.company
 const companyName = (c?: string) => (c === 'Icon Plus' ? 'PLN Icon Plus' : c)
-const realLink = (href?: string) => (href && href !== '#' ? href : undefined)
 const coverTones = ['orange', 'lavender', 'green', 'coral'] as const
 const chipTones = ['lime', 'lavender', 'orange', 'green', 'coral'] as const
 const [lead, ...rest] = posts
@@ -355,29 +354,4 @@ const [lead, ...rest] = posts
     }
   </section>
 
-  <!-- 04 Connect -->
-  <section class="section" id="connect" aria-labelledby="cta-title">
-    <div class="cta bite" style="--bite: var(--c-bg)">
-      <span class="tag tag--lime cta__t1" data-pop style="--r:-5deg" aria-hidden="true">{copy.connect.eyebrow.toLowerCase()}</span>
-      <span class="tag tag--coral cta__t2" data-pop style="--r:6deg" aria-hidden="true">{location}</span>
-      <Sticker kind="squiggle" color="#ff8a1e" class="cta__s1" />
-      <Sticker kind="sparkle" color="#d7ec4a" class="cta__s2" />
-      <Sticker kind="star" color="#9c8cff" class="cta__s3" />
-      <h2 id="cta-title" class="display cta__title" data-split="lines">Have an <span class="ink-orange">idea</span>?</h2>
-      <p class="cta__note">{copy.connect.line}</p>
-      <div class="cta__buttons">
-        <a class="pill pill--light" href={`mailto:${email}`}>
-          <span>Send an email</span><span class="pill__arrow" aria-hidden="true">→</span>
-        </a>
-        {
-          links.map((s) => (
-            <a class="pill pill--ghost" href={realLink(s.href)} rel="me noopener">
-              <span>{s.label}</span>
-              <span class="pill__arrow" aria-hidden="true">↗</span>
-            </a>
-          ))
-        }
-      </div>
-    </div>
-  </section>
 </V2>
