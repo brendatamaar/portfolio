@@ -243,11 +243,11 @@ const [lead, ...rest] = posts
   <!-- Statement band -->
   <section class="section" aria-label="How I build">
     <div class="banner bite" style="--bite: var(--c-bg)" data-reveal="up">
-      {since && <span class="tag tag--orange banner__t1" data-pop style="--r:-6deg" aria-hidden="true">since {since}</span>}
+      <span class="tag tag--orange banner__t1" data-pop style="--r:-6deg" aria-hidden="true">{copy.banner.tags[0]}</span>
       <span class="tag tag--green banner__t2" data-pop style="--r:5deg" aria-hidden="true">{city}</span>
-      <span class="tag tag--coral banner__t3" data-pop style="--r:-4deg" aria-hidden="true">RPG games and good stories</span>
-      <p class="banner__text display">{copy.banner}</p>
-      {profile?.about && <p class="banner__note">{profile.about}</p>}
+      <span class="tag tag--coral banner__t3" data-pop style="--r:-4deg" aria-hidden="true">{copy.banner.tags[1]}</span>
+      <p class="banner__text display">{copy.banner.title}</p>
+      <p class="banner__note">{copy.banner.note}</p>
       <Logo class="banner__logo" />
       <Sticker kind="sparkle" color="#0e1a2b" class="banner__s1" />
       <Sticker kind="star" color="#ff8a1e" class="banner__s2" />

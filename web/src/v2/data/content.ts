@@ -55,7 +55,11 @@ export const copy = {
     note: 'Network tools color requests by type. So does this site: the colors on every card are the legend below. The numbers are yours, read from your browser just now.',
   },
   work: { eyebrow: 'Where I’ve worked', title: 'Work' },
-  banner: 'Simplicity and usability, first.',
+  banner: {
+    title: 'Good software tells a good story.',
+    note: 'I like RPGs and good stories, and I build software the same way: a clear goal, no dead ends, and nothing in the way of the person using it.',
+    tags: ['RPG games', 'good stories'],
+  },
   selected: { title: 'Selected work' },
   writing: { eyebrow: 'What I’ve been thinking', title: 'Writing' },
   connect: {
