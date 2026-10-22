@@ -1233,3 +1233,164 @@ a.step__card:active {
     font-size: clamp(2.5rem, 12vw, 3.8rem);
   }
 }
+
+/* Selected work: a fan of tilted screenshots. The active card comes to the front and straightens. */
+.fan {
+  --w: clamp(17rem, 36vw, 30rem);
+  list-style: none;
+  position: relative;
+  height: calc(var(--w) * 0.5625 + 7rem);
+  margin: 0;
+  padding: 0;
+}
+
+.fan__item {
+  position: absolute;
+  top: 3rem;
+  width: var(--w);
+  left: calc((100% - var(--w)) * var(--i) / max(var(--n) - 1, 1));
+  z-index: calc(var(--i) + 1);
+  translate: 0 var(--y);
+  rotate: var(--r);
+  transition:
+    translate 0.6s var(--e-out),
+    rotate 0.6s var(--e-out),
+    scale 0.6s var(--e-out);
+}
+
+.fan__item[data-active] {
+  z-index: 50;
+  translate: 0 -0.6rem;
+  rotate: 0deg;
+  scale: 1.06;
+}
+
+.fan__card {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border: 2px solid var(--c-navy);
+  border-radius: var(--radius);
+  overflow: clip;
+  box-shadow: 0 1.2rem 2rem -1rem rgb(14 26 43 / 0.45);
+}
+
+.fan__card:not([href]) {
+  cursor: default;
+}
+
+.fan__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fan__card .proj__bars {
+  inset: 18% 8% 30% 8%;
+}
+
+.fan__cap {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  gap: 0.25rem;
+  padding: 2.5rem 4rem 1rem 1.1rem;
+  background: linear-gradient(transparent, rgb(14 26 43 / 0.92));
+  color: #fff;
+  opacity: 0;
+  translate: 0 0.6rem;
+  transition:
+    opacity 0.4s var(--e-out),
+    translate 0.5s var(--e-out);
+}
+
+.fan__item[data-active] .fan__cap {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.fan__title {
+  font-size: clamp(1.4rem, 1.1rem + 0.8vw, 1.9rem);
+}
+
+.fan__desc {
+  font-size: var(--t-s);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fan__item[data-active] .bite__btn {
+  rotate: 45deg;
+  background: var(--c-lime);
+}
+
+.fan__card:focus-visible {
+  outline: 3px solid var(--c-lime);
+  outline-offset: 3px;
+}
+
+/* Small screens: no overlap, a snap rail with the caption always shown */
+@media (max-width: 639px) {
+  .fan {
+    --w: 82%;
+    height: auto;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--w);
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 0.5rem 0 1.5rem;
+  }
+  .fan::-webkit-scrollbar {
+    display: none;
+  }
+  .fan__item,
+  .fan__item[data-active] {
+    position: static;
+    width: auto;
+    translate: none;
+    rotate: none;
+    scale: none;
+    scroll-snap-align: start;
+  }
+  .fan__cap {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fan__item,
+  .fan__cap {
+    transition: none;
+  }
+}
+
+.fan__card--github {
+  background: var(--c-navy);
+}
+
+.fan__card--github .fan__cap {
+  inset: 0;
+  align-content: end;
+  background: none;
+}
+
+.fan--side {
+  margin-top: 1rem;
+}
+
+.fan__more {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
