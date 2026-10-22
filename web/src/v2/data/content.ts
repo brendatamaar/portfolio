@@ -47,7 +47,7 @@ export const copy = {
   projects: {
     eyebrow: 'What I’ve built',
     title: 'Projects',
-    note: 'Side projects and experiments. Each card opens with the stack and a link to the code or the live demo.',
+    note: 'Side projects and experiments. Each card opens a link to the code or the live demo.',
   },
   live: {
     eyebrow: 'Live, from your browser',
@@ -57,8 +57,8 @@ export const copy = {
   work: { eyebrow: 'Where I’ve worked', title: 'Work' },
   banner: {
     title: 'Good software tells a good story.',
-    note: 'I like RPGs and good stories, and I build software the same way: a clear goal, no dead ends, and nothing in the way of the person using it.',
-    tags: ['RPG games', 'good stories'],
+    note: 'I design and build web applications with a focus on simplicity and usability, so people can use them on day one',
+    tags: ['simplicity', 'curiosity', 'usability'],
   },
   selected: { title: 'Selected work' },
   writing: { eyebrow: 'What I’ve been thinking', title: 'Writing' },
@@ -102,9 +102,11 @@ const coverFallback: Record<string, string> = {
 const SMALL = new Set(['airtax', 'cheskp', 'esds', 'jpeg-encoder', 'skenatify'])
 export function srcset(src: string) {
   const m = src.match(/^\/images\/([\w-]+)\.webp$/)
-  return m && SMALL.has(m[1])
-    ? `/v2/img/${m[1]}-960.webp 960w, ${src} 1920w`
-    : undefined
+  if (m && SMALL.has(m[1])) return `/v2/img/${m[1]}-960.webp 960w, ${src} 1920w`
+  // API uploads are resized by the /uploads proxy
+  if (src.startsWith('/uploads/') && !src.includes('?'))
+    return [480, 960, 1280].map((w) => `${src}?w=${w} ${w}w`).join(', ')
+  return undefined
 }
 
 export const slugify = (s: string) =>

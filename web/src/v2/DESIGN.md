@@ -21,7 +21,7 @@ the visitor stays.
 - **Type:** Archivo variable (width 62%, weight 850, uppercase) for display, Archivo for text,
   JetBrains Mono only for machine values. Self-hosted in `public/v2/fonts`.
 - **Shape:** 1.5rem cards with a bitten top-right corner (`.bite`) holding a round arrow; pills;
-  tilted tags with a 2px navy outline; stickers (squiggle, stars, a turning badge).
+  tilted tags with a 2px navy outline; stickers (squiggle, stars, a starburst seal).
 - **Motion:** stickers pop with a spring; cards lift and tilt on hover while the arrow turns;
   navigation inside `/v2` is four type-colored bands streaming in like waterfall rows, then the
   real status and fetch time. One clock (GSAP ticker drives Lenis and everything else); reduced
@@ -48,7 +48,7 @@ is down, and `details`: English translations of the longer Indonesian project de
 - `engine/`: GSAP + Lenis page lifecycle (reveals, transitions, scroll)
 - `motion/`: the waterfall driver, the visit clock, transitions and page effects
 - `styles/`: tokens, engine base, site styles (plain CSS, no Tailwind)
-- pages: `src/pages/v2/index.astro`, `v2/work/[slug].astro`, `v2/[...rest].astro` (404)
+- pages: `src/pages/v2/index.astro`, `v2/blog.astro`, `v2/blog/[slug].astro`, `v2/[...rest].astro` (404). Project cards link out to the project's own URL in a new tab; there is no project detail page.
 
 Links that leave `/v2` (the blog, the resume PDF) use `data-astro-reload` so the live site's
 router and this one never swap into each other.

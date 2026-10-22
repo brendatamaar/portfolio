@@ -10,20 +10,41 @@ import {
   setTransition,
 } from '../engine'
 import { net } from './net'
-import { startWaterfall } from './waterfall'
 import { startVisit } from './visit'
 
 export function setupMotion() {
   transition()
-  startWaterfall()
+  lazyWaterfall()
   startVisit()
   frame()
-  readingProgress()
   stickers()
+  writing()
+  blogFilter()
   rail()
   requestPath()
   notFound()
   footer()
+  lazyPost()
+}
+
+// The waterfall table only exists on the homepage: load its driver on demand.
+let waterfallStarted = false
+function lazyWaterfall() {
+  onPage(() => {
+    if (waterfallStarted || !document.querySelector('[data-waterfall]')) return
+    waterfallStarted = true
+    void import('./waterfall').then((m) => m.startWaterfall())
+  })
+}
+
+// Share/spy/notes/popups/progress only exist on post pages (pages with prose).
+let postStarted = false
+function lazyPost() {
+  onPage(() => {
+    if (postStarted || !document.querySelector('.prose')) return
+    postStarted = true
+    void import('./post').then((m) => m.registerPostFeatures())
+  })
 }
 
 // Footer: copy the address, go back to the top, and Jakarta's local time (it tells visitors
@@ -148,7 +169,7 @@ function transition() {
   })
 }
 
-// Stickers pop on like they were slapped onto the page; the badge keeps turning (the idle state).
+// Stickers pop on like they were slapped onto the page.
 function stickers() {
   onPage(({ intro }) => {
     if (prefersReducedMotion()) return
@@ -166,14 +187,83 @@ function stickers() {
           scrollTrigger: { trigger: el, start: 'top 92%', once: true },
         })
     })
-    document
-      .querySelectorAll('.sticker__ring')
-      .forEach((ring) =>
-        gsap.to(ring, { rotate: 360, duration: 24, ease: 'none', repeat: -1 }),
-      )
   })
 }
 
+// Writing scrapboard: "Read more" reveals the posts past the first four, in place.
+function writing() {
+  onPage(() => {
+    const button =
+      document.querySelector<HTMLButtonElement>('[data-scrap-more]')
+    if (!button) return
+    const extras = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-scrap-extra]'),
+    )
+    if (!extras.length) return
+    const onMore = () => {
+      button.setAttribute('aria-expanded', 'true')
+      extras.forEach((el, i) => {
+        el.hidden = false
+        if (!prefersReducedMotion())
+          gsap.fromTo(
+            el,
+            { scale: 0.96, opacity: 0 },
+            {
+              scale: 1,
+              opacity: 1,
+              duration: 0.5,
+              delay: i * 0.06,
+              ease: ease.out,
+            },
+          )
+      })
+      button.hidden = true
+    }
+    button.addEventListener('click', onMore)
+    return () => button.removeEventListener('click', onMore)
+  })
+}
+
+// Blog index: tag filter toggles post cards by their data-tags, in place.
+function blogFilter() {
+  onPage(() => {
+    const bar = document.querySelector<HTMLElement>('[data-blog-filter]')
+    if (!bar) return
+    const items = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-post-item]'),
+    )
+    const buttons = Array.from(
+      bar.querySelectorAll<HTMLButtonElement>('[data-tag]'),
+    )
+    let active = ''
+    const onClick = (e: Event) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+        '[data-tag]',
+      )
+      if (!btn) return
+      const tag = btn.dataset.tag ?? ''
+      active = tag === active ? '' : tag
+      items.forEach((item) => {
+        const show =
+          !active || (item.dataset.tags ?? '').split(',').includes(active)
+        item.hidden = !show
+      })
+      buttons.forEach((b) =>
+        b.setAttribute(
+          'aria-pressed',
+          String((b.dataset.tag ?? '') === active),
+        ),
+      )
+    }
+    bar.addEventListener('click', onClick)
+    return () => bar.removeEventListener('click', onClick)
+  })
+}
+
+// Post page: share menu (copy link + social windows), mirroring the live blog.
+// Post page: TOC scrollspy + smooth anchor scrolling.
+// Post page: sidenotes sit beside the paragraph that references them.
+// Post page: code copy buttons, image zoom, and glossary/bibliography jump-to-reference.
 // Projects rail: native horizontal scroll with snap; the buttons move it one card at a time.
 function rail() {
   onPage(() => {
@@ -242,25 +332,6 @@ function frame() {
 }
 
 // Posts: reading progress streams along the header like a download.
-function readingProgress() {
-  onPage(() => {
-    const bar = document.querySelector<HTMLElement>('[data-progress]')
-    const prose = document.querySelector<HTMLElement>('.prose')
-    if (!bar || !prose) return
-    const set = gsap.quickSetter(bar, 'scaleX')
-    const update = () => {
-      const r = prose.getBoundingClientRect()
-      const p = gsap.utils.clamp(0, 1, (innerHeight * 0.5 - r.top) / r.height)
-      set(p)
-    }
-    update()
-    const off = onScroll(update) // the engine publishes native scroll too under reduced motion
-    return () => {
-      off()
-    }
-  })
-}
-
 // Case pages: each stage of the request path streams its bar as it scrolls in, in order.
 function requestPath() {
   onPage(() => {
