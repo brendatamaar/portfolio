@@ -42,7 +42,7 @@ const scrapStickers = [
   { kind: 'squiggle', color: '#9c8cff' },
 ] as const
 const scrapTilts = ['-1.6deg', '1.3deg', '-0.9deg', '1.7deg', '-1.2deg', '0.8deg', '-1.9deg'] as const
-const stepTones = ['orange', 'lavender', 'lime', 'green', 'coral'] as const
+const stepTones = ['orange', 'lavender', 'green', 'coral', 'lime'] as const
 const stepStickers = [
   { kind: 'sparkle', color: '#ffffff' },
   { kind: 'star', color: '#d7ec4a' },
@@ -235,38 +235,25 @@ const [lead, ...rest] = posts
           )
         })
       }
-      {
-        resume.education.map((e, i) => {
-          const n = resume.work.length + i
-          const sticker = stepStickers[n % stepStickers.length]
-          return (
-            <li class="step">
-              <article class={`step__card step__card--${stepTones[n % stepTones.length]}`}>
-                <span class="step__title display">
-                  {e.school}
-                  <span class="step__role">{e.degree}</span>
-                  <span class="step__date">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
-                    {e.start} – {e.end}
-                  </span>
-                </span>
-                <span class="step__text">{e.desc}</span>
-                <Sticker kind={sticker.kind} color={sticker.color} class="step__sticker" />
-              </article>
-            </li>
-          )
-        })
-      }
     </ol>
     {
       resume.skills.length > 0 && (
         <div class="stack">
           <p class="eyebrow" id="stack-label">Tech stack</p>
-          <ul class="chips chips--lg" aria-labelledby="stack-label">
-            {resume.skills.map((t, i) => (
-              <li class={`chip chip--${chipTones[i % chipTones.length]}`}>{t}</li>
-            ))}
-          </ul>
+          <div class="marquee">
+            <div class="marquee__track">
+              <ul class="chips chips--lg marquee__group" aria-labelledby="stack-label">
+                {resume.skills.map((t, i) => (
+                  <li class={`chip chip--${chipTones[i % chipTones.length]}`}>{t}</li>
+                ))}
+              </ul>
+              <ul class="chips chips--lg marquee__group" aria-hidden="true">
+                {resume.skills.map((t, i) => (
+                  <li class={`chip chip--${chipTones[i % chipTones.length]}`}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       )
     }
