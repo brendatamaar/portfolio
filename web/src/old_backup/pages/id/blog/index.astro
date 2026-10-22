@@ -1,7 +1,7 @@
 ---
 import BlogIndex from '../../../components/BlogIndex.astro'
-import { api } from '../../../lib/api'
-import type { PostSummary } from '../../../lib/types'
+import { api } from '../../../../lib/api'
+import type { PostSummary } from '../../../../lib/types'
 
 const posts = await api
   .getPosts('id', 100)

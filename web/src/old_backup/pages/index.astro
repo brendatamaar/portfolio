@@ -1,0 +1,211 @@
+---
+import Base from '../layouts/Base.astro'
+import SectionLabel from '../components/SectionLabel.astro'
+import PostCard from '../components/PostCard.astro'
+import ProjectGallery from '../components/ProjectGallery.astro'
+import WorkList from '../components/WorkList.astro'
+import EmptyPosts from '../components/EmptyPosts.astro'
+import Icon from '../components/Icon.astro'
+import { api } from '../../lib/api'
+import type { PostSummary, ResumeData, ResumeProjectItem } from '../../lib/types'
+
+const BLOG_PREVIEW = 3
+const RESUME = '/pdf/Resume Brendatama Akbar (2026) - English.pdf'
+
+const [postsRes, resumeRes] = await Promise.allSettled([
+  api.getPosts('en', BLOG_PREVIEW).then((r) => r.data),
+  api.getResumeData('en'),
+])
+
+const posts: PostSummary[] = postsRes.status === 'fulfilled' ? postsRes.value : []
+const resume: ResumeData = resumeRes.status === 'fulfilled'
+  ? resumeRes.value
+  : { profile: null, work: [], education: [], skills: [], projects: [] }
+
+const sideProjects: ResumeProjectItem[] = resume.projects.filter((p) => p.type === 'side_project')
+const workProjectsByCompany: Record<string, ResumeProjectItem[]> = {}
+for (const p of resume.projects) {
+  if (p.type === 'work' && p.company) {
+    if (!workProjectsByCompany[p.company]) workProjectsByCompany[p.company] = []
+    workProjectsByCompany[p.company].push(p)
+  }
+}
+
+// Featured projects lead the gallery
+const galleryProjects = [...sideProjects].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured))
+
+const profile = resume.profile
+const firstName = profile?.name.split(' ')[0] ?? ''
+const city = profile?.location.split(',')[0] ?? ''
+const email = profile?.email
+const socials = profile?.social.filter((s) => !s.url.startsWith('mailto:')) ?? []
+const github = socials.find((s) => s.name.toLowerCase() === 'github')
+
+// Tech stack marquee: repeat short lists so each loop half is wider than the column
+const MARQUEE_MIN_ITEMS = 12
+const marqueeSkills = resume.skills.length
+  ? Array.from({ length: Math.ceil(MARQUEE_MIN_ITEMS / resume.skills.length) }, () => resume.skills).flat()
+  : []
+const skillPill =
+  'inline-flex h-[30px] shrink-0 items-center rounded-3xl border border-line-soft bg-surface px-4 text-[13px] font-semibold whitespace-nowrap text-heading'
+---
+
+<Base
+  title="Brendatama Akbar — Web Software Developer"
+  description="Web Software Developer based in Jakarta, Indonesia."
+>
+  <!-- Hero banner -->
+  {profile && (
+    <section class="relative">
+      <!-- Hive composition (decorative) -->
+      <div class="pointer-events-none absolute inset-y-0 right-0 hidden w-[44%] lg:block" aria-hidden="true">
+        <div class="dots absolute top-[16%] left-[6%] h-32 w-48 text-teal/40"></div>
+        <div class="hex absolute top-[10%] right-[14%] aspect-[1.15] w-64 bg-butter"></div>
+        <div class="hex absolute top-[46%] right-[42%] aspect-[1.15] w-28 bg-apricot"></div>
+        <div class="hex absolute top-[58%] right-[16%] aspect-[1.15] w-16 bg-teal"></div>
+        <div class="hex absolute top-[30%] right-[4%] aspect-[1.15] w-10 bg-lilac"></div>
+      </div>
+
+      <div class="container-page relative pt-14 pb-16 md:pt-24 md:pb-24">
+        <div class="max-w-xl">
+          <span class="banner-tag mb-6">
+            <Icon name="pin" class="h-4 w-4 text-teal" />
+            {profile.location}
+          </span>
+
+          <h1 class="type-h1 text-heading">
+            <span class="text-peach">Hi, I'm {firstName}.</span>
+            {profile.currentJob} based in {city}.
+          </h1>
+
+          <p class="mt-5 text-body">{profile.summary}</p>
+
+          <div class="mt-9 flex flex-wrap items-center gap-3">
+            <a href={RESUME} download class="btn btn-primary">
+              <Icon name="download" class="h-4 w-4" strokeWidth={2} />
+              Download Resume
+            </a>
+          </div>
+
+          {socials.length > 0 && (
+            <>
+              <p class="mt-8 mb-3 type-subtitle text-[11px] text-muted">Find me on</p>
+              <div class="flex flex-wrap gap-2.5">
+                {socials.map((s) => (
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" class="chip">
+                    {s.name}
+                    <Icon name="external" class="h-3 w-3" strokeWidth={2} />
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- 01 — Projects: scattered screenshot collage, each opens a detail modal -->
+  <section id="projects" data-section="projects" class="container-page py-16 md:py-24">
+    <SectionLabel num="01" label="Projects" eyebrow="What I've built">
+    </SectionLabel>
+
+    {galleryProjects.length > 0 && <ProjectGallery projects={galleryProjects} />}
+  </section>
+
+  <!-- 02 — Work: collapsible list -->
+  <section id="work" data-section="work" class="relative overflow-hidden bg-sunken">
+    <div class="hex pointer-events-none absolute -top-16 -right-16 hidden aspect-[1.15] w-56 bg-apricot/50 lg:block dark:bg-teal/10" aria-hidden="true"></div>
+    <div class="container-page relative py-16 md:py-24">
+      <SectionLabel num="02" label="Work" eyebrow="Where I've worked" />
+      <WorkList work={resume.work} projectsByCompany={workProjectsByCompany} />
+
+      {resume.skills.length > 0 && (
+        <div class="mt-10 grid gap-4 lg:grid-cols-[340px_1fr] lg:items-center lg:gap-14">
+          <p id="tech-stack-label" class="type-subtitle text-[11px] text-muted">Tech stack</p>
+
+          <!-- Accessible list: read by screen readers; shown as static pills when motion is reduced -->
+          <ul aria-labelledby="tech-stack-label" class="sr-only motion-reduce:not-sr-only motion-reduce:flex motion-reduce:flex-wrap motion-reduce:gap-2.5">
+            {resume.skills.map((s) => <li class={skillPill}>{s}</li>)}
+          </ul>
+
+          <!-- Marquee: two identical halves, the track slides by -50% for a seamless loop -->
+          <div
+            class="marquee group/marquee min-w-0 overflow-hidden motion-reduce:hidden"
+            style={`--marquee-duration: ${Math.max(20, marqueeSkills.length * 3)}s`}
+            aria-hidden="true"
+          >
+            <div class="marquee-track flex w-max group-hover/marquee:[animation-play-state:paused]">
+              {[0, 1].map(() => (
+                <div class="flex shrink-0 gap-2.5 pr-2.5">
+                  {marqueeSkills.map((s) => <span class={skillPill}>{s}</span>)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- 03 — Writing -->
+  <section id="writing" data-section="writing" class="container-page py-16 md:py-24">
+    <SectionLabel num="03" label="Writing" eyebrow="What I've been thinking">
+      <a href="/blog" class="link-arrow">
+        See all posts
+        <Icon name="arrow-right" class="h-4 w-5" />
+      </a>
+    </SectionLabel>
+
+    {posts.length > 0 ? (
+      <div class="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {posts.map((post) => <PostCard post={post} />)}
+      </div>
+    ) : (
+      <EmptyPosts />
+    )}
+  </section>
+
+  <!-- 04 — Connect: navy band -->
+  {profile && (
+    <section id="connect" data-section="connect" class="relative overflow-hidden bg-navy text-white">
+      <!-- Hive + dots composition (decorative) -->
+      <div class="pointer-events-none absolute inset-y-0 right-0 w-full lg:w-[45%]" aria-hidden="true">
+        <div class="hex absolute -bottom-20 -left-16 aspect-[1.15] w-64 bg-teal/15 lg:hidden"></div>
+        <div class="dots absolute top-[18%] right-[30%] hidden h-36 w-56 text-white/15 lg:block"></div>
+        <div class="hex absolute top-[14%] right-[8%] hidden aspect-[1.15] w-52 bg-teal/25 lg:block"></div>
+        <div class="hex absolute top-[52%] right-[34%] hidden aspect-[1.15] w-24 bg-peach lg:block"></div>
+        <div class="hex absolute right-[14%] bottom-[12%] hidden aspect-[1.15] w-14 bg-butter lg:block"></div>
+        <div class="hex absolute top-[10%] right-[46%] hidden aspect-[1.15] w-9 bg-lilac lg:block"></div>
+      </div>
+
+      <div class="container-page relative py-16 md:py-24">
+        <div class="max-w-xl">
+          <SectionLabel num="04" label="Connect" eyebrow="Let's talk" inverse />
+          <p class="-mt-4 type-h3 text-white">
+            <span class="text-peach">Have an idea?</span> I'm always open to interesting conversations, collaborations, and opportunities.
+          </p>
+          <div class="mt-9 flex flex-wrap items-center gap-3">
+            {email && (
+              <a href={`mailto:${email}`} class="btn btn-primary">
+                <Icon name="mail" class="h-4 w-4" strokeWidth={2} />
+                Send an email
+              </a>
+            )}
+            {socials.map((s) => (
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn border-white/30 text-white hover:border-teal hover:bg-teal"
+              >
+                {s.name}
+                <Icon name="external" class="h-4 w-4" strokeWidth={2} />
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+</Base>

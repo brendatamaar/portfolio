@@ -1,0 +1,15 @@
+---
+import PostPage from '../../components/PostPage.astro'
+import { api } from '../../../lib/api'
+
+const { slug } = Astro.params
+
+let data
+try {
+  data = await api.getPost(slug!, 'en')
+} catch {
+  return Astro.redirect('/blog', 302)
+}
+---
+
+<PostPage {data} lang="en" />

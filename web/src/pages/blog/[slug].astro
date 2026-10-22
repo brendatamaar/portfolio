@@ -1,15 +1,327 @@
 ---
-import PostPage from '../../components/PostPage.astro'
+import V2 from '../../v2/layouts/V2.astro'
+import '../../v2/styles/post.css'
+import NotFound from '../../v2/components/NotFound.astro'
 import { api } from '../../lib/api'
+import { readingTime } from '../../lib/utils'
+import { formatDate, site } from '../../v2/data/content'
+import { formatCitation } from '@portfolio/shared/markdown/citation'
+import type { PostDetail } from '../../lib/types'
 
 const { slug } = Astro.params
 
-let data
+let data: PostDetail | null = null
 try {
   data = await api.getPost(slug!, 'en')
 } catch {
-  return Astro.redirect('/blog', 302)
+  data = null
 }
+if (!data) Astro.response.status = 404
+
+const post = data?.post
+const mins = data ? readingTime(data.html) : 0
+const toc = data?.toc ?? []
+const minLevel = toc.length ? Math.min(...toc.map((t) => t.level)) : 2
+const counters = new Array(7).fill(0)
+const numberedToc = toc.map((item) => {
+  counters[item.level]++
+  for (let l = item.level + 1; l <= 6; l++) counters[l] = 0
+  return { ...item, num: counters.slice(minLevel, item.level + 1).join('.') }
+})
+const sidenotes = data?.sidenotes ?? []
+const glossary = [...(data?.glossary ?? [])].sort((a, b) => a.num - b.num)
+const bibliography = data?.bibliography ?? []
+
+// Some posts carry their glossary/bibliography as plain-text sections in the article
+// ("key: Term | definition" lines) instead of stored entries. Parse those as fallback
+// popup data so the reference numbers still open the modal.
+function sectionLines(html: string, id: string): string[] {
+  const m = html.match(new RegExp(`<h2 id="${id}">[\\s\\S]*?<p>([\\s\\S]*?)</p>`))
+  return m ? m[1].split(/<br\s*\/?>/) : []
+}
+const stripTags = (s: string) => s.replace(/<[^>]+>/g, '').trim()
+const fallbackGlossary = sectionLines(data?.html ?? '', 'glossary').flatMap((line, i) => {
+  const m = line.match(/^\s*([\w-]+):\s*([^|]+)\|\s*([\s\S]*)$/)
+  return m
+    ? [{ key: m[1], term: stripTags(m[2]), definition: m[3].trim(), num: i + 1 }]
+    : []
+})
+const fallbackBibliography = sectionLines(data?.html ?? '', 'bibliography').flatMap((line, i) => {
+  const m = line.match(/^\s*([\w-]+):\s*([^|]+)\|\s*([\s\S]*)$/)
+  return m ? [{ key: m[1], sourceType: stripTags(m[2]).toLowerCase(), text: stripTags(m[3]), num: i + 1 }] : []
+})
+const popupGlossary = [
+  ...glossary,
+  ...fallbackGlossary.filter((f) => !glossary.some((g) => g.key === f.key)),
+]
+const popupBibliography = [
+  ...bibliography,
+  ...fallbackBibliography.filter((f) => !bibliography.some((b) => b.key === f.key)),
+]
+
+let next: { slug: string; title: string; description: string } | null = null
+if (data) {
+  const posts = await api
+    .getPosts('en', 100)
+    .then((r) => r.data)
+    .catch(() => [])
+  const idx = posts.findIndex((p) => p.slug === slug)
+  const candidate = idx > -1 ? posts[idx + 1] : undefined
+  if (candidate) next = candidate
+}
+
+const schema = post
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: post.description,
+      datePublished: post.publishedAt ?? post.createdAt,
+      author: { '@type': 'Person', name: site.fullName, url: site.url },
+      keywords: post.tags.map((t) => t.name).join(', '),
+    }
+  : undefined
 ---
 
-<PostPage {data} lang="en" />
+{
+  data && post ? (
+    <V2 title={post.title} description={post.description} current="blog" schema={schema}>
+      <div class="post__progress" aria-hidden="true">
+        <span data-progress />
+      </div>
+
+      <article class="post">
+        <header class="post__headwrap">
+          <a class="post__back mono" href="/blog" data-intro>
+            ← Writing
+          </a>
+          {post.tags.length > 0 && (
+            <ul class="post__tags" data-intro data-delay="0.1">
+              {post.tags.map((tag, i) => (
+                <li class={i > 0 ? 'post__tag--outline' : undefined}>{tag.name}</li>
+              ))}
+            </ul>
+          )}
+          <h1 class="post__title post__title--article" data-split="words" data-intro data-delay="0.2">
+            {post.title}
+          </h1>
+          {post.description && (
+            <p class="post__lede post__lede--article" data-intro data-delay="0.35">
+              {post.description}
+            </p>
+          )}
+          <div class="post__meta post__meta--article" data-intro data-delay="0.45">
+            <span class="post__meta-item">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3.5" y="5" width="17" height="16" rx="2.5" />
+                <path d="M3.5 9.5h17M8 3v4M16 3v4" />
+              </svg>
+              <time datetime={(post.publishedAt ?? post.createdAt).slice(0, 10)}>
+                {formatDate(post.publishedAt ?? post.createdAt)}
+              </time>
+            </span>
+            <span class="post__meta-item">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5V12l3 2" />
+              </svg>
+              {mins} min read
+            </span>
+            <div class="share">
+              <button
+                type="button"
+                class="share__btn"
+                data-share-btn
+                data-title={post.title}
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="share-menu"
+              >
+                <svg class="share__icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 14.5V3.5" />
+                  <path d="m7 8 5-4.5L17 8" />
+                  <path d="M5 13.5V19a1.8 1.8 0 0 0 1.8 1.8h10.4A1.8 1.8 0 0 0 19 19v-5.5" />
+                </svg>
+                <span>Share</span>
+                <svg class="share__chev" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m6 9.5 6 6 6-6" />
+                </svg>
+              </button>
+              <div class="share__menu" id="share-menu" data-share-menu hidden role="menu" aria-label="Share this post">
+                <button type="button" role="menuitem" data-share-copy data-label="Copy link" data-copied="Copied!">
+                  Copy link
+                </button>
+                <hr class="share__divider" />
+                <button type="button" role="menuitem" data-share-to="twitter">
+                  Twitter
+                </button>
+                <button type="button" role="menuitem" data-share-to="linkedin">
+                  LinkedIn
+                </button>
+                <button type="button" role="menuitem" data-share-to="facebook">
+                  Facebook
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="post__layout">
+          {(numberedToc.length > 0 || glossary.length > 0 || bibliography.length > 0) && (
+            <details class="post__toc-mobile">
+              <summary class="post__toc-mobile-head">
+                <span class="mono">Contents</span>
+                <span aria-hidden="true">▾</span>
+              </summary>
+              <ul class="post__toc-list">
+                {numberedToc.map((item) => (
+                  <li style={`padding-left: ${(item.level - minLevel) * 10}px`}>
+                    <a href={`#${item.id}`} data-toc-link={item.id}>
+                      <span class="post__toc-num mono">{item.num}</span>
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+                {glossary.length > 0 && (
+                  <li>
+                    <a href="#glossary-section" data-toc-link="glossary-section">
+                      Glossary
+                    </a>
+                  </li>
+                )}
+                {bibliography.length > 0 && (
+                  <li>
+                    <a href="#bibliography-section" data-toc-link="bibliography-section">
+                      Bibliography
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </details>
+          )}
+          {sidenotes.length > 0 ? (
+            <div class="post__notes-col" aria-label="Sidenotes">
+              {sidenotes.map((note) => (
+                <aside class="post__note" data-sidenote={note.id}>
+                  <sup>[{note.id}]</sup>
+                  <span set:html={note.html} />
+                </aside>
+              ))}
+            </div>
+          ) : (
+            <div aria-hidden="true" />
+          )}
+
+          <div class="prose" set:html={data.html} />
+
+          {numberedToc.length > 0 || glossary.length > 0 || bibliography.length > 0 ? (
+            <nav class="post__toc" aria-label="Table of contents">
+              <p class="post__toc-title mono">Contents</p>
+              <ul class="post__toc-list">
+                {numberedToc.map((item) => (
+                  <li style={`padding-left: ${(item.level - minLevel) * 10}px`}>
+                    <a href={`#${item.id}`} data-toc-link={item.id}>
+                      <span class="post__toc-num mono">{item.num}</span>
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+                {glossary.length > 0 && (
+                  <li>
+                    <a href="#glossary-section" data-toc-link="glossary-section">
+                      Glossary
+                    </a>
+                  </li>
+                )}
+                {bibliography.length > 0 && (
+                  <li>
+                    <a href="#bibliography-section" data-toc-link="bibliography-section">
+                      Bibliography
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </nav>
+          ) : (
+            <div aria-hidden="true" />
+          )}
+        </div>
+
+        <div
+          id="post-data"
+          data-glossary={JSON.stringify(popupGlossary)}
+          data-bibliography={JSON.stringify(popupBibliography)}
+          data-sidenotes={JSON.stringify(sidenotes)}
+          hidden
+        />
+
+        <div class="post__footwrap">
+          {glossary.length > 0 && (
+            <details class="post__panel post__panel--gloss bite" id="glossary-section">
+              <summary class="post__panel-head">
+                <span class="post__panel-title display">
+                  Glossary <span class="post__count mono">{glossary.length}</span>
+                </span>
+                <span class="post__panel-chevron bite__btn" aria-hidden="true">↓</span>
+              </summary>
+              <dl class="post__glossary">
+                {glossary.map((entry) => (
+                  <div class="post__gloss-entry" data-gloss-entry={entry.key}>
+                    <dt>
+                      <span class="post__num mono">{entry.num}</span>
+                      {entry.term}
+                    </dt>
+                    <dd set:html={entry.definition} />
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
+
+          {bibliography.length > 0 && (
+            <details class="post__panel post__panel--bib bite" id="bibliography-section">
+              <summary class="post__panel-head">
+                <span class="post__panel-title display">
+                  Bibliography <span class="post__count mono">{bibliography.length}</span>
+                </span>
+                <span class="post__panel-chevron bite__btn" aria-hidden="true">↓</span>
+              </summary>
+              <ol class="post__biblio">
+                {bibliography.map((entry) => (
+                  <li class="post__bib-entry" data-cite-entry={entry.key}>
+                    <span class="post__num mono">{entry.num}</span>
+                    <span set:html={formatCitation(entry.text)} />
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
+
+          {next && (
+            <nav class="next next--post" aria-label="Next post" data-reveal="up">
+              <a class="next__link" href={`/blog/${next.slug}`}>
+                <span class="next__label mono">Next post</span>
+                <span class="next__title next__title--post">{next.title}</span>
+                <span class="next__kind">{next.description}</span>
+                <span class="next__track" aria-hidden="true">
+                  <span />
+                </span>
+              </a>
+            </nav>
+          )}
+
+          <p class="post__all">
+            <a class="arrow-link" href="/blog">
+              <span>All posts</span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </a>
+          </p>
+        </div>
+      </article>
+    </V2>
+  ) : (
+    <V2 title="Not found" description="This post isn't part of the writing here. The blog lists everything published so far.">
+      <NotFound />
+    </V2>
+  )
+}
