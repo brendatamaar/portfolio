@@ -14,8 +14,8 @@ const handle = (href: string) => {
 const github = site.socials.find((s) => s.label === 'GitHub')
 const linkedin = site.socials.find((s) => s.label === 'LinkedIn')
 const links = [
-  { label: 'Projects', href: '/v2/#projects' },
-  { label: 'Work', href: '/v2/#work' },
+  { label: 'Projects', href: '/#projects' },
+  { label: 'Work', href: '/#work' },
   { label: 'Writing', href: '/blog', reload: true },
 ]
 ---
@@ -84,10 +84,6 @@ const links = [
     </li>
   </ul>
 
-  <p class="foot__mark" aria-hidden="true">
-    <Logo class="foot__logo" /><span>Brendatama</span>
-  </p>
-
   <div class="foot__base">
     <nav class="foot__nav" aria-label="Footer">
       <ul>
@@ -104,7 +100,7 @@ const links = [
     </nav>
     <div class="foot__weight">
       <span class="foot__weight-bar" data-weight aria-hidden="true"></span>
-      <p class="foot__colophon"><span data-colophon>This page is built with Astro.</span> Set in Archivo and JetBrains Mono.</p>
+      <p class="foot__colophon"><span data-colophon>This page is built with Astro.</span></p>
     </div>
     <p class="foot__copy-line">© {year} {site.fullName}</p>
     <button class="pill pill--light foot__top" type="button" data-top>

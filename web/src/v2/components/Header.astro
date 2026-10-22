@@ -1,5 +1,5 @@
 ---
-import { site } from '../data/content'
+
 import Logo from './Logo.astro'
 import type { Current } from '../layouts/V2.astro'
 
@@ -8,19 +8,15 @@ interface Props {
 }
 const { current } = Astro.props
 const links = [
-  { label: 'Projects', href: '/v2/#projects', key: 'projects' },
-  { label: 'Work', href: '/v2/#work', key: 'work' },
-  { label: 'Writing', href: '/blog', key: 'blog', reload: true },
-  { label: 'Connect', href: '/v2/#connect', key: 'connect' },
+  { label: 'Home', href: '/', key: 'home' },
+  { label: 'Writing', href: '/blog', key: 'blog' },
 ]
 ---
 
 <header class="nav">
   <div class="nav__bar">
-    <a class="nav__brand" href="/v2/" aria-current={current === 'home' ? 'page' : undefined}>
+    <a class="nav__brand" href="/" aria-current={current === 'home' ? 'page' : undefined}>
       <Logo />
-      <span class="nav__word">Brendatama</span>
-      <span class="sr-only"> Akbar, home</span>
     </a>
     <nav class="nav__links" aria-label="Main">
       <ul>
@@ -31,7 +27,7 @@ const links = [
                 class="nav-link"
                 href={l.href}
                 aria-current={current === l.key ? 'page' : undefined}
-                data-astro-reload={l.reload || undefined}
+
               >
                 {l.label}
               </a>
@@ -40,8 +36,5 @@ const links = [
         }
       </ul>
     </nav>
-    <a class="pill pill--light nav__cta" href={site.resume} download data-astro-reload>
-      <span>Resume</span><span class="pill__arrow" aria-hidden="true">↓</span>
-    </a>
   </div>
 </header>

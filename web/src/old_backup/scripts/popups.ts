@@ -1,5 +1,5 @@
 import { formatCitation } from '@portfolio/shared/markdown/citation'
-import type { GlossaryEntry, BibliographyEntry } from '../lib/types'
+import type { GlossaryEntry, BibliographyEntry } from '../../lib/types'
 
 interface PopupDimensions {
   width: number
