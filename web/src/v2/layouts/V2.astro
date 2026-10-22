@@ -5,9 +5,9 @@ import Header from '../components/Header.astro'
 import Footer from '../components/Footer.astro'
 import '../styles/tokens.css'
 import '../styles/engine.css'
-import '../styles/site.css'
+import '../styles/shared.css'
 
-export type Current = 'home' | 'work' | 'none'
+export type Current = 'home' | 'work' | 'blog' | 'none'
 
 interface Props {
   title?: string
@@ -87,7 +87,6 @@ const person = {
     <script is:inline type="application/ld+json" set:html={JSON.stringify(person)} />
     {schema && <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />}
     <link rel="preload" href="/v2/fonts/archivo-100_900-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/v2/fonts/jb-mono-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <!-- Before first paint: flag JS + motion so hidden-until-revealed states never flash. -->
     <script is:inline>
       document.documentElement.classList.add('js')
