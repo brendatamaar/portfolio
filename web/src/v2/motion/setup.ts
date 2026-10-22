@@ -21,6 +21,7 @@ export function setupMotion() {
   writing()
   blogFilter()
   rail()
+  fan()
   requestPath()
   notFound()
   footer()
@@ -296,6 +297,35 @@ function rail() {
       next?.removeEventListener('click', onNext)
       list.removeEventListener('scroll', sync)
     }
+  })
+}
+
+// Selected work fan: hover or focus brings a card to the front; on touch the first tap does it.
+function fan() {
+  onPage(() => {
+    const items = [...document.querySelectorAll<HTMLElement>('[data-fan-item]')]
+    if (!items.length) return
+    const activate = (el: HTMLElement) =>
+      items.forEach((i) => i.toggleAttribute('data-active', i === el))
+    const cleanups = items.map((el) => {
+      const on = () => activate(el)
+      const tap = (e: Event) => {
+        if (!el.hasAttribute('data-active')) {
+          e.preventDefault()
+          activate(el)
+        }
+      }
+      const touch = matchMedia('(hover: none)').matches
+      el.addEventListener('pointerenter', on)
+      el.addEventListener('focusin', on)
+      if (touch) el.addEventListener('click', tap)
+      return () => {
+        el.removeEventListener('pointerenter', on)
+        el.removeEventListener('focusin', on)
+        el.removeEventListener('click', tap)
+      }
+    })
+    return () => cleanups.forEach((c) => c())
   })
 }
 

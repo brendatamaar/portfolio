@@ -35,6 +35,8 @@ const firstCompany = workProjects[0]?.company
 const companyName = (c?: string) => (c === 'Icon Plus' ? 'PLN Icon Plus' : c)
 const coverTones = ['orange', 'lavender', 'green', 'coral'] as const
 const chipTones = ['lime', 'lavender', 'orange', 'green', 'coral'] as const
+const fanTilts = ['-7deg', '-3.5deg', '2deg', '5deg', '-2deg', '6.5deg'] as const
+const fanLifts = ['1.2rem', '0rem', '1.6rem', '0.2rem', '1.4rem', '0rem'] as const
 const scrapTones = ['orange', 'lavender', 'lime', 'coral', 'green'] as const
 const scrapStickers = [
   { kind: 'sparkle', color: '#ffffff' },
@@ -50,6 +52,8 @@ const stepStickers = [
   { kind: 'bolt', color: '#ffffff' },
   { kind: 'seal', color: '#d7ec4a' },
 ] as const
+const total = sideProjects.length
+const mid = Math.floor((total - 1) / 2)
 const [lead, ...rest] = posts
 ---
 
@@ -124,69 +128,64 @@ const [lead, ...rest] = posts
       </div>
       <p class="section__note">{copy.projects.note}</p>
     </div>
-    <ul class="cards">
+    <ul class="fan fan--side" data-fan style={`--n:${total}`}>
       {
         sideProjects.map((p, i) => (
-          <li data-reveal="up" data-delay={String((i % 3) * 0.06)}>
+          <li
+            class="fan__item"
+            data-fan-item
+            data-active={i === mid ? '' : undefined}
+            data-reveal="up"
+            data-delay={String(i * 0.06)}
+            style={`--i:${i};--r:${fanTilts[i % fanTilts.length]};--y:${fanLifts[i % fanLifts.length]}`}
+          >
             <a
-              class={`card card--${tones[i % tones.length]} card--media`}
+              class={`fan__card cover--${coverTones[i % coverTones.length]}`}
               href={projectUrl(p)}
               target={projectUrl(p) ? '_blank' : undefined}
               rel={projectUrl(p) ? 'noopener' : undefined}
             >
-              <span class={`card__media cover--${coverTones[i % coverTones.length]}`}>
-                {p.cover ? (
-                  <img
-                    class="card__img"
-                    src={p.cover}
-                    srcset={srcset(p.cover)}
-                    sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                    width="1920"
-                    height="1080"
-                    alt={`Screenshot of ${p.title}`}
-                    loading="lazy"
-                    fetchpriority="low"
-                    decoding="async"
-                  />
-                ) : (
-                  <span class="proj__bars" aria-hidden="true">
-                    {p.techStack.slice(0, 4).map((s, j) => (
-                      <span class="proj__bar" style={`--j:${j}`}>
-                        <span>{s}</span>
-                      </span>
-                    ))}
-                  </span>
-                )}
-              </span>
-              <span class="card__body">
-                <span class="card__head">
-                  <h3 class="card__title display">{p.title}</h3>
-                  {projectUrl(p) && <span class="bite__btn" aria-hidden="true">↗</span>}
-                </span>
-                <p class="card__text">{p.description}</p>
-                <ul class="chips card__chips">
-                  {p.techStack.map((s) => (
-                    <li class="chip chip--card">{s}</li>
+              {p.cover ? (
+                <img
+                  class="fan__img"
+                  src={p.cover}
+                  srcset={srcset(p.cover)}
+                  sizes="(max-width: 639px) 82vw, 34vw"
+                  width="1920"
+                  height="1080"
+                  alt={`Screenshot of ${p.title}`}
+                  loading="lazy"
+                  fetchpriority="low"
+                  decoding="async"
+                />
+              ) : (
+                <span class="proj__bars" aria-hidden="true">
+                  {p.techStack.slice(0, 4).map((s, j) => (
+                    <span class="proj__bar" style={`--j:${j}`}>
+                      <span>{s}</span>
+                    </span>
                   ))}
-                </ul>
+                </span>
+              )}
+              <span class="fan__cap">
+                <span class="fan__title display">{p.title}</span>
+                <span class="fan__desc">{p.description}</span>
               </span>
+              {projectUrl(p) && <span class="bite__btn" aria-hidden="true">↗</span>}
             </a>
           </li>
         ))
       }
-      {
-        github && (
-          <li data-reveal="up" data-delay="0.12">
-            <a class="card card--navy bite" href={github.href} rel="me noopener">
-              <h3 class="card__title display">More on GitHub</h3>
-              <p class="card__text">Experiments, tools and the code behind everything on this page.</p>
-              <span class="card__cta">{github.href.replace(/^https?:\/\//, '')}</span>
-              <span class="bite__btn" aria-hidden="true">↗</span>
-            </a>
-          </li>
-        )
-      }
     </ul>
+    {
+      github && (
+        <div class="fan__more">
+          <a class="pill pill--dark" href={github.href} rel="me noopener">
+            <span>More on GitHub</span><span class="pill__arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      )
+    }
   </section>
 
   <!-- 02 Work -->
