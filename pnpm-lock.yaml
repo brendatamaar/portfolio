@@ -80,7 +80,7 @@ importers:
     dependencies:
       drizzle-orm:
         specifier: ^0.36.0
-        version: 0.36.4(@libsql/client@0.17.3)(bun-types@1.4.3)
+        version: 0.36.4(@libsql/client@0.17.3)(bun-types@1.4.4)
       hono:
         specifier: ^4.6.0
         version: 4.12.18
@@ -102,7 +102,7 @@ importers:
         version: 9.0.10
       bun-types:
         specifier: latest
-        version: 1.4.3
+        version: 1.4.4
       drizzle-kit:
         specifier: ^0.27.0
         version: 0.27.2
@@ -120,6 +120,9 @@ importers:
       '@astrojs/sitemap':
         specifier: ^3.2.0
         version: 3.7.2
+      '@fontsource/plus-jakarta-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/poppins':
         specifier: ^5.3.0
         version: 5.3.0
@@ -875,6 +878,9 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fontsource/plus-jakarta-sans@5.3.0':
+    resolution: {integrity: sha512-9WRw3G74Ve4cyPApAZSXLPY5DiLOZXDn7Q7dIBjFBpA0Pj56ljDItEdy2UUajjJxRuTg2HkMLO5C3K2nAQORWg==}
 
   '@fontsource/poppins@5.3.0':
     resolution: {integrity: sha512-cms1nM7U6SN8epIV1WMVOV8VsA645aSm3wHfzIQnkk188U341ThbJGSl2Sv54V29gnDbT2arMPfLzvVIIVCceQ==}
@@ -1717,8 +1723,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bun-types@1.4.3:
-    resolution: {integrity: sha512-tinRJNGOmUN+tEAsn2y2e942n9JHRHR42iUYzDH75NmhJqVBokGSQkkfSFdNWwsANIdrK6ACH9t01M452YyTwg==}
+  bun-types@1.4.4:
+    resolution: {integrity: sha512-yjrJh5oGX7mMPKGd19YXyIjmEuj4G4zNC30bs7PM9Az7NQ3ndF3j6hbeRdvJTRQEhJ/FYQwW0a2moweEi2hMxQ==}
 
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
@@ -4271,6 +4277,8 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
+  '@fontsource/plus-jakarta-sans@5.3.0': {}
+
   '@fontsource/poppins@5.3.0': {}
 
   '@humanfs/core@0.19.2':
@@ -5105,7 +5113,7 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bun-types@1.4.3:
+  bun-types@1.4.4:
     dependencies:
       '@types/node': 20.19.41
       undici-types: 7.16.0
@@ -5304,10 +5312,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.36.4(@libsql/client@0.17.3)(bun-types@1.4.3):
+  drizzle-orm@0.36.4(@libsql/client@0.17.3)(bun-types@1.4.4):
     optionalDependencies:
       '@libsql/client': 0.17.3
-      bun-types: 1.4.3
+      bun-types: 1.4.4
 
   dset@3.1.4: {}
 
