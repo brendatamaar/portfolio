@@ -1,0 +1,90 @@
+---
+import '@fontsource/plus-jakarta-sans/400.css'
+import '@fontsource/plus-jakarta-sans/500.css'
+import '../styles/folio.css'
+import { copy, homePath, site, socials, type Lang } from '../data/content'
+
+interface Props {
+  lang: Lang
+  /** The same page in each language, as root-relative paths: emits hreflang links. */
+  alternates?: Partial<Record<Lang, string>>
+  /** Page title (without the site name). Omit for the homepage title. */
+  title?: string
+  description?: string
+  /** Root-relative canonical path. Defaults to the language's home. */
+  path?: string
+  ogType?: 'website' | 'article'
+  /** Extra JSON-LD for this page. */
+  schema?: Record<string, unknown>
+}
+
+const { lang, alternates, title, description, path, ogType = 'website', schema } = Astro.props
+const t = copy[lang]
+const fullTitle = title ? `${title} | ${site.name}` : t.title
+const desc = description ?? t.description
+// Astro.url reflects the internal host behind the reverse proxy: build from the site URL instead
+const base = Astro.site ?? site.url
+const canonical = new URL(path ?? homePath[lang], base).href
+const ogImage = new URL('/v2/og.png', base).href
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.name,
+  jobTitle: copy.en.role,
+  url: site.url,
+  email: site.email,
+  worksFor: {
+    '@type': 'Organization',
+    name: 'Icon Plus',
+    url: 'https://plniconplus.co.id/',
+  },
+  sameAs: [socials.github.href, socials.linkedin.href],
+}
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    {alternates && Object.entries(alternates).map(([l, p]) => <link rel="alternate" hreflang={l} href={new URL(p, base).href} />)}
+    {alternates?.en && <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, base).href} />}
+    {/* Preview beside the live site: keep it out of search until it replaces the homepage */}
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" content="#131313" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="author" content={site.name} />
+    <link rel="icon" type="image/svg+xml" href="/images/favicon/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
+    <link rel="apple-touch-icon" href="/images/favicon/apple-touch-icon.png" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang === 'id' ? 'id_ID' : 'en_US'} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={desc} />
+    <meta name="twitter:image" content={ogImage} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(person)} />
+    {schema && <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />}
+    <!-- Before first paint: apply the saved theme so there is no flash. -->
+    <script is:inline>
+      try {
+        var th = localStorage.getItem('ka-theme')
+        if (th === 'light' || th === 'dark') document.documentElement.dataset.theme = th
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <slot />
+  </body>
+</html>

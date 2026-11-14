@@ -1,0 +1,11 @@
+---
+// Hover card: one picture that follows the cursor over project rows and the Airtax / cheSKP names.
+const { previews } = Astro.props as { previews: Record<string, string> }
+---
+
+<div class="pv" id="pv" aria-hidden="true"><img id="pvImg" alt="" width="280" height="158" decoding="async" /></div>
+<script is:inline type="application/json" id="pv-data" set:html={JSON.stringify(previews).replace(/</g, '\\u003c')} />
+<script>
+  import { initPreview } from '../scripts/preview'
+  initPreview()
+</script>

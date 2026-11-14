@@ -1,0 +1,50 @@
+---
+// One list of rows: name, dotted leader, description. `href` makes the row a link.
+export interface Row {
+  k: string
+  v: string
+  href?: string
+  external?: boolean
+}
+interface Props {
+  rows: Row[]
+  id?: string
+  /** Marks rows as preview triggers (project list). */
+  preview?: boolean
+}
+const { rows, id, preview } = Astro.props
+---
+
+<ul id={id}>
+  {
+    rows.map((r) => {
+      const inner = (
+        <Fragment>
+          <span class="k">{r.k}</span>
+          <span class="dots" aria-hidden="true" />
+          <span class="v">{r.v}</span>
+        </Fragment>
+      )
+      return (
+        <li>
+          {r.href ? (
+            <a
+              class="row"
+              href={r.href}
+              target={r.external ? '_blank' : undefined}
+              rel={r.external ? 'noopener' : undefined}
+              data-pv={preview ? r.k : undefined}
+              aria-label={`${r.k}, ${r.v}`}
+            >
+              {inner}
+            </a>
+          ) : (
+            <div class="row" data-pv={preview ? r.k : undefined}>
+              {inner}
+            </div>
+          )}
+        </li>
+      )
+    })
+  }
+</ul>

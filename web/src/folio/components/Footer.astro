@@ -1,0 +1,7 @@
+---
+import { copyright, homePath, type Lang } from '../data/content'
+
+const { lang } = Astro.props as { lang: Lang }
+---
+
+<footer class="foot"><a href={homePath[lang]}>{copyright()}</a></footer>
