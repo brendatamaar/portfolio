@@ -1,0 +1,21 @@
+---
+import Page from '../../../folio/components/Page.astro'
+import NotFound from '../../../folio/components/NotFound.astro'
+import PostView from '../../../folio/components/PostView.astro'
+import { blog } from '../../../folio/data/content'
+import { loadPostPage } from '../../../folio/data/post'
+
+// The API falls back to the English text for any field without a translation
+const page = await loadPostPage(Astro.params.slug!, 'id')
+if (!page) Astro.response.status = 404
+---
+
+{
+  page ? (
+    <PostView lang="id" page={page} />
+  ) : (
+    <Page lang="id" title={blog.id.notFoundTitle} description={blog.id.postNotFoundDescription}>
+      <NotFound lang="id" what="post" />
+    </Page>
+  )
+}

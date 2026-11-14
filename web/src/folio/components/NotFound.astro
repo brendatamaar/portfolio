@@ -1,0 +1,31 @@
+---
+// 404 body. Wrap it in <Page> from the page that sets the 404 status.
+import { blog, blogPath, homePath, type Lang } from '../data/content'
+
+interface Props {
+  lang?: Lang
+  /** What is missing: the page, or a blog post. */
+  what?: 'page' | 'post'
+}
+const { lang = 'en', what = 'page' } = Astro.props
+const t = blog[lang]
+const [a, home, b, blogLabel, c] = t.notFoundLinks
+---
+
+<section class="nf">
+  <div class="who">
+    <h1><span class="mk circle draw d1">404<svg viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M24 38 C 16 16, 72 5, 120 8 C 170 11, 197 24, 190 39 C 183 54, 118 58, 72 55 C 32 52, 5 43, 12 27 C 17 17, 42 10, 66 9" /></svg></span></h1>
+  </div>
+  <div class="intro">
+    <p>{what === 'post' ? t.notFoundPost : t.notFoundPage}
+        {a} <a href={homePath[lang]}>{home}</a>
+        {b}<a href={blogPath(lang)}>{blogLabel}</a>
+        {c}
+    </p>
+  </div>
+</section>
+
+<script>
+  import { initMarks } from '../scripts/marks'
+  initMarks(document.querySelector('.nf'))
+</script>

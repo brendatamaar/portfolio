@@ -1,0 +1,30 @@
+---
+import Page from './Page.astro'
+import Rows from './Rows.astro'
+import { blog, blogPath, postPath, type Lang } from '../data/content'
+import { loadPosts, monthYear } from '../data/posts'
+
+const { lang } = Astro.props as { lang: Lang }
+const t = blog[lang]
+const posts = await loadPosts(lang, 100)
+---
+
+<Page
+  lang={lang}
+  title={t.title}
+  description={t.description}
+  path={blogPath(lang)}
+  alternates={{ en: blogPath('en'), id: blogPath('id') }}
+>
+  <section aria-labelledby="h-blog">
+    <h1 class="label" id="h-blog">{t.title}</h1>
+    <p class="lede">{t.lede}</p>
+    {
+      posts.length > 0 ? (
+        <Rows rows={posts.map((p) => ({ k: p.title, v: monthYear(p.date, lang), href: postPath(lang, p.slug) }))} />
+      ) : (
+        <p class="empty">{t.empty}</p>
+      )
+    }
+  </section>
+</Page>

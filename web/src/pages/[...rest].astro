@@ -1,10 +1,14 @@
 ---
-import V2 from '../v2/layouts/V2.astro'
-import NotFound from '../v2/components/NotFound.astro'
+import Page from '../folio/components/Page.astro'
+import NotFound from '../folio/components/NotFound.astro'
+import { blog, type Lang } from '../folio/data/content'
 
 Astro.response.status = 404
+// Unknown addresses under /id get the Indonesian 404
+const lang: Lang = /^\/id(\/|$)/.test(Astro.url.pathname) ? 'id' : 'en'
+const t = blog[lang]
 ---
 
-<V2 title="Not found" description="This address returned 404. Nothing was ever served here, but the projects, the work history and the writing are one click away.">
-  <NotFound />
-</V2>
+<Page lang={lang} title={t.notFoundTitle} description={t.notFoundDescription}>
+  <NotFound lang={lang} />
+</Page>

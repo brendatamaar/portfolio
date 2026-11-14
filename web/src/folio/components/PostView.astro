@@ -1,0 +1,153 @@
+---
+import Page from './Page.astro'
+import Rows from './Rows.astro'
+import { blog, blogPath, copy, postPath, site, type Lang } from '../data/content'
+import type { PostPage } from '../data/post'
+import { fullDate } from '../data/posts'
+import { formatCitation } from '@portfolio/shared/markdown/citation'
+
+interface Props {
+  lang: Lang
+  page: PostPage
+}
+const { lang, page } = Astro.props
+const t = blog[lang]
+const post = page.post
+const published = post.publishedAt ?? post.createdAt
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.title,
+  description: post.description,
+  inLanguage: lang,
+  datePublished: published,
+  author: { '@type': 'Person', name: site.name, url: site.url },
+  keywords: post.tags.map((tag) => tag.name).join(', '),
+}
+// JSON for the popup script; "<" is escaped so post content can never close the tag
+const island = JSON.stringify({ glossary: page.popupGlossary, bibliography: page.popupBibliography }).replace(/</g, '\\u003c')
+const hasContents = page.toc.length > 0 || page.glossary.length > 0 || page.bibliography.length > 0
+---
+
+<Page
+  lang={lang}
+  title={post.title}
+  description={post.description}
+  path={postPath(lang, post.slug)}
+  ogType="article"
+  schema={schema}
+  alternates={{ en: postPath('en', post.slug), id: postPath('id', post.slug) }}
+>
+  <article class="post">
+    <header>
+      <a class="back" href={blogPath(lang)}>{t.back}</a>
+      <h1 class="post-title">{post.title}</h1>
+      {post.description && <p class="lede">{post.description}</p>}
+      <p class="meta">
+        <time datetime={published.slice(0, 10)}>{fullDate(published, lang)}</time>
+        <span aria-hidden="true">·</span>
+        <span>{t.minRead(page.mins)}</span>
+        {post.tags.length > 0 && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>{post.tags.map((tag) => tag.name).join(', ')}</span>
+          </>
+        )}
+        <span aria-hidden="true">·</span>
+        <button type="button" class="link-btn" data-copy-link data-label={t.copyLink} data-copied={t.copied}>{t.copyLink}</button>
+      </p>
+    </header>
+
+    {hasContents && (
+      <details class="contents">
+        <summary>{t.contents}</summary>
+        <ul>
+          {page.toc.map((item) => (
+            <li style={`padding-left: ${(item.level - page.minLevel) * 14}px`}>
+              <a href={`#${item.id}`}>
+                <span class="num">{item.num}</span>
+                {item.text}
+              </a>
+            </li>
+          ))}
+          {page.glossary.length > 0 && <li><a href="#glossary-section">{t.glossary}</a></li>}
+          {page.bibliography.length > 0 && <li><a href="#bibliography-section">{t.bibliography}</a></li>}
+        </ul>
+      </details>
+    )}
+
+    <div class="post-body">
+      {hasContents && (
+        <aside class="side-toc" aria-label={t.contents}>
+          <nav>
+            <p class="side-label">{t.contents}</p>
+            <ul>
+              {page.toc.map((item) => (
+                <li style={`padding-left: ${(item.level - page.minLevel) * 12}px`}>
+                  <a href={`#${item.id}`} data-toc-link={item.id}>
+                    <span class="num">{item.num}</span>
+                    {item.text}
+                  </a>
+                </li>
+              ))}
+              {page.glossary.length > 0 && <li><a href="#glossary-section" data-toc-link="glossary-section">{t.glossary}</a></li>}
+              {page.bibliography.length > 0 && <li><a href="#bibliography-section" data-toc-link="bibliography-section">{t.bibliography}</a></li>}
+            </ul>
+          </nav>
+        </aside>
+      )}
+      <div class="prose" set:html={page.html} />
+      {page.sidenotes.length > 0 && (
+        <aside class="side-notes" aria-label={copy[lang].notes}>
+          {page.sidenotes.map((note) => (
+            <div class="note" data-sidenote={note.id}>
+              <sup>[{note.id}]</sup> <span set:html={note.html} />
+            </div>
+          ))}
+        </aside>
+      )}
+    </div>
+
+    <script is:inline type="application/json" id="post-data" set:html={island} />
+
+    {page.glossary.length > 0 && (
+      <details class="refs" id="glossary-section">
+        <summary>{t.glossary} <span class="count">{page.glossary.length}</span></summary>
+        <dl>
+          {page.glossary.map((entry) => (
+            <div data-gloss-entry={entry.key}>
+              <dt><span class="num">{entry.num}</span>{entry.term}</dt>
+              <dd set:html={entry.definition} />
+            </div>
+          ))}
+        </dl>
+      </details>
+    )}
+
+    {page.bibliography.length > 0 && (
+      <details class="refs" id="bibliography-section">
+        <summary>{t.bibliography} <span class="count">{page.bibliography.length}</span></summary>
+        <ol>
+          {page.bibliography.map((entry) => (
+            <li data-cite-entry={entry.key}>
+              <span class="num">{entry.num}</span>
+              <span set:html={formatCitation(entry.text)} />
+            </li>
+          ))}
+        </ol>
+      </details>
+    )}
+  </article>
+
+  {page.next && (
+    <nav class="next" aria-label={t.next}>
+      <h2 class="label">{t.next}</h2>
+      <Rows rows={[{ k: page.next.title, v: t.read, href: postPath(lang, page.next.slug) }]} />
+    </nav>
+  )}
+</Page>
+
+<script>
+  import { initPost } from '../scripts/post'
+  initPost()
+</script>

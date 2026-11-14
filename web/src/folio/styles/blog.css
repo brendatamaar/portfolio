@@ -1,0 +1,576 @@
+/* Blog index, post page and 404. Same column and tokens as the homepage (folio.css). */
+:root {
+  --raised: color-mix(in srgb, var(--ink) 6%, var(--bg));
+}
+
+.lede {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--quiet);
+  margin-bottom: 10px;
+}
+h1.label {
+  font-weight: 400;
+}
+
+/* 404 reuses .who / .intro; the ring is the pen mark from the homepage */
+.nf .who {
+  margin-bottom: 20px;
+}
+.nf .who h1 {
+  font-size: 40px;
+  line-height: 1.2;
+  padding: 6px 4px;
+}
+
+/* post header */
+.back {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--quiet);
+  transition: color 0.15s;
+  padding-block: 6px;
+}
+.back:hover {
+  color: var(--ink);
+}
+.post-title {
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 12px 0 10px;
+  text-wrap: balance;
+}
+.post .lede {
+  font-size: 16px;
+  color: var(--body);
+  margin-bottom: 14px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 14px;
+  color: var(--quiet);
+}
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--quiet);
+  border-bottom: 1px dotted var(--quiet);
+  transition: color 0.15s;
+}
+.link-btn:hover {
+  color: var(--ink);
+}
+
+/* contents + glossary / bibliography */
+.contents,
+.refs {
+  margin-top: 28px;
+  font-size: 14px;
+  color: var(--body);
+  border-top: 1px dotted var(--leader);
+  padding-top: 10px;
+}
+.contents summary,
+.refs summary {
+  cursor: pointer;
+  color: var(--quiet);
+  padding-block: 4px;
+  transition: color 0.15s;
+}
+.contents summary:hover,
+.refs summary:hover {
+  color: var(--ink);
+}
+.contents ul {
+  margin-top: 8px;
+}
+.contents li a {
+  display: block;
+  padding-block: 2px;
+  transition: color 0.15s;
+}
+.contents li a:hover {
+  color: var(--ink);
+}
+.num {
+  display: inline-block;
+  min-width: 2.2ch;
+  margin-right: 8px;
+  color: var(--quiet);
+  font-variant-numeric: tabular-nums;
+}
+.count {
+  margin-left: 4px;
+  color: var(--quiet);
+}
+.refs dl,
+.refs ol {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.refs dt {
+  color: var(--ink);
+  font-weight: 500;
+}
+.refs dd {
+  margin: 0 0 10px 0;
+  color: var(--body);
+}
+.refs dl > div,
+.refs li {
+  cursor: pointer;
+  padding-block: 4px;
+}
+.refs li {
+  display: flex;
+  gap: 0;
+}
+
+/* prose */
+.prose {
+  margin-top: 32px;
+  color: var(--body);
+  overflow-wrap: break-word;
+}
+.prose > * + * {
+  margin-top: 1.1em;
+}
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  scroll-margin-top: 24px;
+}
+.prose h2 {
+  font-size: 20px;
+  margin-top: 2.2em;
+}
+.prose h3 {
+  font-size: 17px;
+  margin-top: 1.8em;
+}
+.prose h4 {
+  font-size: 16px;
+  margin-top: 1.6em;
+}
+.prose h2 + *,
+.prose h3 + *,
+.prose h4 + * {
+  margin-top: 0.6em;
+}
+.prose .heading-anchor {
+  display: none;
+}
+.prose a {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom: 1px solid var(--leader);
+  transition: border-color 0.15s;
+}
+.prose a:hover {
+  border-bottom-color: var(--ink);
+}
+.prose strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.prose ul,
+.prose ol {
+  list-style: revert;
+  padding-left: 1.3em;
+}
+.prose li + li {
+  margin-top: 0.4em;
+}
+.prose li::marker {
+  color: var(--quiet);
+}
+.prose hr {
+  border: 0;
+  border-top: 1px dotted var(--leader);
+  margin-block: 2em;
+}
+.prose blockquote {
+  margin-inline: 0;
+  padding-left: 16px;
+  border-left: 2px solid var(--leader);
+  color: var(--quiet);
+}
+.prose :not(pre) > code {
+  font: 400 0.85em var(--mono);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--raised);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.prose .code-block {
+  position: relative;
+  background: var(--raised);
+  border: 1px solid var(--ring);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-block: 1.6em;
+}
+.prose pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background: transparent !important;
+  font: 400 13px/1.65 var(--mono);
+  color: var(--body);
+}
+.prose pre code {
+  font: inherit;
+}
+.prose .code-lang {
+  position: absolute;
+  top: 6px;
+  left: 16px;
+  font: 400 11px/1 var(--mono);
+  color: var(--quiet);
+}
+.prose .code-lang + pre {
+  padding-top: 28px;
+}
+.prose .copy-btn {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: none;
+  border: 0;
+  padding: 4px 6px;
+  font: 400 12px var(--sans);
+  color: var(--quiet);
+  cursor: pointer;
+}
+.prose .copy-btn:hover {
+  color: var(--ink);
+}
+.prose .hl-comment {
+  color: var(--quiet);
+}
+.prose .hl-string,
+.prose .hl-value {
+  color: var(--thread);
+}
+.prose .hl-keyword,
+.prose .hl-tag {
+  color: var(--rose);
+}
+.prose .hl-number {
+  color: var(--cord);
+}
+.prose .hl-function {
+  color: var(--pen);
+}
+.prose .hl-type,
+.prose .hl-attr,
+.prose .hl-builtin,
+.prose .hl-property {
+  color: var(--heart);
+}
+.prose .hl-operator,
+.prose .hl-variable,
+.prose .hl-punctuation {
+  color: var(--body);
+}
+.prose table {
+  width: 100%;
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.prose th,
+.prose td {
+  padding: 6px 12px 6px 0;
+  text-align: left;
+  border-bottom: 1px dotted var(--leader);
+  vertical-align: top;
+}
+.prose th {
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.prose figure {
+  margin: 1.6em 0;
+}
+.prose figure img,
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  cursor: zoom-in;
+}
+.prose figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--quiet);
+}
+
+/* callouts: no icon in the header */
+.prose .admonition-icon {
+  display: none;
+}
+/* no italics anywhere in the article */
+.prose em,
+.prose i,
+.prose cite {
+  font-style: normal;
+  color: var(--ink);
+}
+
+/* callouts */
+.prose .admonition {
+  --accent: var(--quiet);
+  border: 1px solid var(--ring);
+  border-left: 2px solid var(--accent);
+  border-radius: 6px;
+  background: var(--raised);
+  padding: 12px 16px;
+  font-size: 15px;
+}
+.prose .admonition-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.prose .admonition-label {
+  flex: 1;
+}
+.prose .admonition-copy-btn {
+  background: none;
+  border: 1px solid var(--leader);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font: 400 11px var(--sans);
+  color: var(--quiet);
+  cursor: pointer;
+}
+.prose .admonition-copy-btn:hover {
+  color: var(--ink);
+  border-color: var(--quiet);
+}
+.prose .admonition-body > * + * {
+  margin-top: 0.7em;
+}
+.prose .admonition-body-mono {
+  /* the Ask AI prompt: same sans as the rest, line breaks kept */
+  font: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.prose .admonition-tip {
+  --accent: var(--thread);
+}
+.prose .admonition-warning,
+.prose .admonition-tldr {
+  --accent: var(--cord);
+}
+.prose .admonition-danger {
+  --accent: var(--rose);
+}
+.prose .admonition-info,
+.prose .admonition-note,
+.prose .admonition-ai {
+  --accent: var(--pen);
+}
+
+/* footnotes, glossary and citation numbers */
+.prose .footnote-def {
+  font-size: 14px;
+  color: var(--quiet);
+  scroll-margin-top: 24px;
+}
+.prose .footnote-def:target,
+.prose [id^='fnref-']:target {
+  color: var(--ink);
+}
+.prose sup {
+  font-size: 0.7em;
+  line-height: 0;
+}
+.prose .footnote-ref a,
+.prose .gloss-ref a,
+.prose .cite-ref a {
+  font-weight: 400;
+  border-bottom: 0;
+  color: var(--pen);
+  cursor: pointer;
+}
+.prose .gloss-ref a {
+  border-bottom: 1px dotted var(--pen);
+}
+.ref-popup {
+  position: fixed;
+  z-index: 40;
+  padding: 12px 14px;
+  background: var(--bg);
+  color: var(--body);
+  border: 1px solid var(--leader);
+  border-radius: 10px;
+  box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.5);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.ref-popup__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.ref-popup__close {
+  background: none;
+  border: 0;
+  padding: 0 4px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--quiet);
+  cursor: pointer;
+}
+.zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.85);
+  cursor: zoom-out;
+}
+.zoom img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+}
+
+.next {
+  margin-top: 56px;
+}
+
+/* wide screens: the table of contents sits in the left margin and footnotes in the right,
+   level with where they are cited. Narrower screens keep the collapsible contents and inline footnotes. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+.post-body {
+  position: relative;
+}
+.side-toc,
+.side-notes {
+  display: none;
+}
+@media (min-width: 1240px) {
+  .side-toc {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(100% + 44px);
+    width: 190px;
+  }
+  .side-toc nav {
+    position: sticky;
+    top: 24px;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .side-label {
+    margin: 0 0 8px;
+    color: var(--quiet);
+  }
+  .side-toc ul {
+    border-left: 1px solid var(--leader);
+  }
+  .side-toc li a {
+    display: block;
+    padding: 3px 0 3px 12px;
+    margin-left: -1px;
+    border-left: 1px solid transparent;
+    color: var(--quiet);
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+  .side-toc li a:hover {
+    color: var(--ink);
+  }
+  .side-toc li a[data-active] {
+    color: var(--ink);
+    border-left-color: var(--ink);
+  }
+  .side-toc .num {
+    min-width: 0;
+    margin-right: 6px;
+  }
+  .contents {
+    display: none;
+  }
+  .side-notes {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: calc(100% + 44px);
+    width: 210px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--quiet);
+  }
+  .side-notes .note {
+    position: absolute;
+    left: 0;
+    right: 0;
+    visibility: hidden; /* shown once the script has lined it up with its reference */
+    border-right: 1px solid var(--leader);
+    padding-right: 12px;
+    text-align: right;
+  }
+  .post-body.side .note {
+    visibility: visible;
+  }
+  .post-body.side .prose .footnote-def {
+    display: none;
+  }
+  .side-notes .note.is-lit {
+    animation: lit 1.4s ease-out;
+  }
+}
+@keyframes lit {
+  0%,
+  35% {
+    color: var(--ink);
+    border-right-color: var(--pen);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .side-notes .note.is-lit {
+    animation: none;
+    color: var(--ink);
+  }
+}

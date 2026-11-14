@@ -1,0 +1,30 @@
+---
+// Shared frame for the inner pages (blog, post, 404): header, one column, footer.
+import Folio from '../layouts/Folio.astro'
+import Header from './Header.astro'
+import Footer from './Footer.astro'
+import '../styles/blog.css'
+import type { Lang } from '../data/content'
+
+interface Props {
+  lang?: Lang
+  title?: string
+  description?: string
+  path?: string
+  ogType?: 'website' | 'article'
+  schema?: Record<string, unknown>
+  /** The same page in each language: emits hreflang links. */
+  alternates?: Partial<Record<Lang, string>>
+}
+const { lang = 'en', alternates, ...rest } = Astro.props
+---
+
+<Folio lang={lang} alternates={alternates} {...rest}>
+  <div class="wrap">
+    <Header lang={lang} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+  </div>
+  <Footer lang={lang} />
+</Folio>
