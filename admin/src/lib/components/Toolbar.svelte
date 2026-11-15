@@ -37,6 +37,7 @@
     onFormat: (prefix: string, suffix?: string, placeholder?: string) => void
     onLinePrefix: (prefix: string) => void
     onInsert: (text: string) => void
+    onFootnote: () => void
     onGallery: () => void
     onMetaToggle: () => void
     metaOpen: boolean
@@ -50,6 +51,7 @@
     onFormat,
     onLinePrefix,
     onInsert,
+    onFootnote,
     onGallery,
     onMetaToggle,
     metaOpen,
@@ -130,7 +132,7 @@
   <button type="button" title="Image" onclick={onGallery} class="{base} {inactive}">
     <Image size={13} />
   </button>
-  <button type="button" title="Footnote/sidenote" onclick={() => onInsert('^[note]')} class="{labelBase} {inactive}">
+  <button type="button" title="Footnote/sidenote" onclick={onFootnote} class="{labelBase} {inactive}">
     <StickyNote size={13} />
     <span>Note</span>
   </button>

@@ -196,7 +196,8 @@
 
   // ----- click an entry in the section list → scroll content to its ref + highlight -----
 
-  function scrollToRef(selector: string, highlightClass: string) {
+  function scrollToRef(selector: string) {
+    const highlightClass = 'animate-ref-flash'
     if (!contentRef) return
     const el = contentRef.querySelector(selector) as HTMLElement | null
     if (!el) return
@@ -400,11 +401,11 @@
                       role="button"
                       tabindex="0"
                       onclick={() =>
-                        scrollToRef(`[data-gloss-key="${entry.key}"]`, 'gloss-ref-highlighted')}
+                        scrollToRef(`[data-gloss-key="${entry.key}"]`)}
                       onkeydown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
-                          scrollToRef(`[data-gloss-key="${entry.key}"]`, 'gloss-ref-highlighted')
+                          scrollToRef(`[data-gloss-key="${entry.key}"]`)
                         }
                       }}
                     >
@@ -452,12 +453,12 @@
                         tabindex="0"
                         onclick={(e) => {
                           if ((e.target as HTMLElement).closest('a')) return
-                          scrollToRef(`[data-cite-id="${entry.key}"]`, 'cite-ref-highlighted')
+                          scrollToRef(`[data-cite-id="${entry.key}"]`)
                         }}
                         onkeydown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
-                            scrollToRef(`[data-cite-id="${entry.key}"]`, 'cite-ref-highlighted')
+                            scrollToRef(`[data-cite-id="${entry.key}"]`)
                           }
                         }}
                       >

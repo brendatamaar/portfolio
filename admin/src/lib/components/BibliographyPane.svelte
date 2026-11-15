@@ -54,7 +54,7 @@
         oninput={(e) => onrawchange((e.target as HTMLTextAreaElement).value)}
         spellcheck="false"
         placeholder={"my-source [web]\nCitation text with **markdown** and a [link](url).\n\nanother-ref [book]\nAnother citation."}
-        class="editor-textarea min-h-0 flex-1 resize-none border border-black/10 bg-transparent p-3 font-mono text-sm leading-relaxed text-black outline-none focus:border-black/30 dark:border-white/10 dark:text-white dark:focus:border-white/30"
+        class="editor-textarea min-h-0 flex-1"
       ></textarea>
       <button
         type="button"

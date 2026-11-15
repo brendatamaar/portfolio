@@ -207,6 +207,23 @@
     })
   }
 
+  // Footnote: [^N] at the cursor and its "[^N]: " definition at the end of the
+  // document, where N is the next unused number
+  function insertFootnote() {
+    const el = textareaRef
+    if (!el) return
+    const used = [...el.value.matchAll(/\[\^(\d+)\]/g)].map((m) => Number(m[1]))
+    const ref = `[^${Math.max(0, ...used) + 1}]`
+    const start = el.selectionStart
+    const body = el.value.slice(0, start) + ref + el.value.slice(el.selectionEnd)
+    setContent(`${body.trimEnd()}\n\n${ref}: `)
+    requestAnimationFrame(() => {
+      if (!el) return
+      el.selectionStart = el.selectionEnd = start + ref.length
+      el.focus()
+    })
+  }
+
   function insertLinePrefix(prefix: string) {
     const el = textareaRef
     if (!el) return
@@ -584,6 +601,7 @@
     onFormat={wrapSelection}
     onLinePrefix={insertLinePrefix}
     onInsert={insertAtCursor}
+    onFootnote={insertFootnote}
     onGallery={() => (showGallery = true)}
     onMetaToggle={() => (showMeta = !showMeta)}
     metaOpen={showMeta}
@@ -602,7 +620,7 @@
               onpaste={handlePaste}
               placeholder={langTab === 'id' ? 'Mulai menulis dalam markdown... (ID)' : 'Start writing in markdown...'}
               spellcheck="false"
-              class="editor-textarea editor-pane"
+              class="editor-textarea"
             ></textarea>
           </div>
         {/if}
@@ -611,7 +629,7 @@
             bind:this={previewRef}
             class={mode === 'split'
               ? 'preview-content min-h-0 w-1/2 overflow-y-auto'
-              : 'preview-content preview-content-full min-h-0 w-full overflow-y-auto'}
+              : 'preview-content min-h-0 w-full overflow-y-auto'}
           >
             {@html previewHtml}
           </div>
