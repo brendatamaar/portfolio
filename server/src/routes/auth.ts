@@ -1,11 +1,10 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import jwt from 'jsonwebtoken'
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie'
 import { db } from '../db/index.js'
 import { adminUsers, sessions } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
-import { getJwtSecret, getSessionUser } from '../middleware/auth.js'
+import { getSessionUser } from '../middleware/auth.js'
 import { verifyPassword } from '../lib/crypto.js'
 
 const app = new Hono()
@@ -29,17 +28,14 @@ app.post('/login', async (c) => {
     .from(adminUsers)
     .where(eq(adminUsers.username, username))
     .get()
-  console.debug('[login] user found:', !!user)
   if (!user) return c.json({ error: 'Invalid credentials' }, 401)
 
   let valid = false
   try {
     valid = await verifyPassword(password, user.passwordHash)
-  } catch (err) {
-    console.debug('[login] verifyPassword threw:', err)
+  } catch {
     return c.json({ error: 'Invalid credentials' }, 401)
   }
-  console.debug('[login] password valid:', valid)
   if (!valid) return c.json({ error: 'Invalid credentials' }, 401)
 
   const isProduction = process.env.NODE_ENV === 'production'
@@ -51,7 +47,6 @@ app.post('/login', async (c) => {
     ...(isProduction && { domain: '.brendatama.dev' }),
   }
 
-  // New: session-based cookie
   const sessionId = crypto.randomUUID()
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS)
   db.insert(sessions)
@@ -66,14 +61,6 @@ app.post('/login', async (c) => {
   setCookie(c, 'session', sessionId, {
     ...cookieOpts,
     maxAge: SESSION_TTL_MS / 1000,
-  })
-
-  // Legacy: JWT cookie (kept for backward compat during migration)
-  const secret = await getJwtSecret()
-  const token = jwt.sign({ sub: String(user.id) }, secret, { expiresIn: '30d' })
-  setCookie(c, 'admin_token', token, {
-    ...cookieOpts,
-    maxAge: 60 * 60 * 24 * 30,
   })
 
   return c.json({ ok: true })
@@ -93,7 +80,6 @@ app.post('/logout', (c) => {
   }
 
   deleteCookie(c, 'session', cookieOpts)
-  deleteCookie(c, 'admin_token', cookieOpts)
   return c.json({ ok: true })
 })
 

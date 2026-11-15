@@ -1,5 +1,5 @@
 /**
- * Protected admin routes (all require httpOnly cookie JWT).
+ * Protected admin routes (all require the session cookie, see middleware/auth.ts).
  */
 
 import { Hono } from 'hono'
@@ -18,11 +18,6 @@ import { UPLOADS_DIR } from '../lib/uploads.js'
 const unlinkAsync = promisify(unlink)
 
 const app = new Hono()
-
-// Me endpoint — lets the admin UI verify cookie auth is valid
-app.get('/me', (c) => {
-  return c.json({ ok: true })
-})
 
 // Helper
 

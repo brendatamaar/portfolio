@@ -45,7 +45,7 @@ const EN_PROFILE = {
 
 const ID_PROFILE = {
   locale: 'id' as const,
-  name: 'Brendatama Akbar Ramadhan',
+  name: 'Brendatama Akbar Ramadan',
   initials: 'BA',
   location: 'Jakarta, Indonesia',
   locationLink: 'https://www.google.com/maps/place/Jakarta',

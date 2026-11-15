@@ -80,21 +80,6 @@ export function runMigrations(): void {
     }
   }
 
-  // Add glossary and bibliography columns
-  for (const col of [
-    "glossary_en TEXT NOT NULL DEFAULT '[]'",
-    'glossary_id TEXT',
-    "bibliography_en TEXT NOT NULL DEFAULT '[]'",
-    'bibliography_id TEXT',
-  ]) {
-    try {
-      sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      if (!message.includes('duplicate column')) throw err
-    }
-  }
-
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS profile (
       locale               TEXT PRIMARY KEY CHECK(locale IN ('en', 'id')),
@@ -247,10 +232,24 @@ export function runMigrations(): void {
       .run()
   }
 
-  // Add language + translation linking to posts
+  // Drop the per-row language columns: nothing ever read or wrote them, a
+  // translation lives in the *_id columns of the same row
+  sqlite.exec('DROP INDEX IF EXISTS idx_posts_language')
+  const postColumns = sqlite
+    .prepare("SELECT name FROM pragma_table_info('posts')")
+    .all() as { name: string }[]
+  for (const col of ['language', 'translation_of_id']) {
+    if (postColumns.some((c) => c.name === col))
+      sqlite.exec(`ALTER TABLE posts DROP COLUMN ${col}`)
+  }
+
+  // Add glossary and bibliography columns. Must run after the posts rebuild
+  // above, which would otherwise drop them on a fresh database.
   for (const col of [
-    "language TEXT NOT NULL DEFAULT 'en'",
-    'translation_of_id INTEGER REFERENCES posts(id)',
+    "glossary_en TEXT NOT NULL DEFAULT '[]'",
+    'glossary_id TEXT',
+    "bibliography_en TEXT NOT NULL DEFAULT '[]'",
+    'bibliography_id TEXT',
   ]) {
     try {
       sqlite.exec(`ALTER TABLE posts ADD COLUMN ${col}`)
@@ -291,9 +290,6 @@ export function runMigrations(): void {
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_posts_status_published_at
       ON posts(status, published_at DESC);
-
-    CREATE INDEX IF NOT EXISTS idx_posts_language
-      ON posts(language);
 
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id
       ON sessions(user_id);

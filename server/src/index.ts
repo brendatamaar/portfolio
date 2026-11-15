@@ -2,7 +2,6 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { resolve, sep } from 'path'
 import { runMigrations } from './db/migrate.js'
-import { initJwtSecret } from './lib/init.js'
 import { db, sqlite } from './db/index.js'
 import { sql } from 'drizzle-orm'
 import authRoutes from './routes/auth.js'
@@ -20,7 +19,6 @@ import { UPLOADS_DIR } from './lib/uploads.js'
 // Bootstrap
 
 runMigrations()
-await initJwtSecret()
 sqlite.run('PRAGMA wal_checkpoint(PASSIVE)')
 
 // App

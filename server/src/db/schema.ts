@@ -10,8 +10,6 @@ export const posts = sqliteTable('posts', {
   status: text('status', { enum: ['draft', 'published'] })
     .notNull()
     .default('draft'),
-  language: text('language').notNull().default('en'),
-  translationOfId: integer('translation_of_id'),
   titleId: text('title_id'),
   descriptionId: text('description_id'),
   contentId: text('content_id'),

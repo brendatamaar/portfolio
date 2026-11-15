@@ -1,6 +1,9 @@
 import type { Context, Next } from 'hono'
 import type { RateLimitEntry } from '../types/rate-limit.js'
 
+// Past this many tracked addresses, expired windows are swept on the next request
+const MAX_TRACKED = 1000
+
 export function createRateLimit(opts: { windowMs: number; max: number }) {
   const store = new Map<string, RateLimitEntry>()
 
@@ -13,6 +16,9 @@ export function createRateLimit(opts: { windowMs: number; max: number }) {
       'unknown'
 
     const now = Date.now()
+    if (store.size > MAX_TRACKED) {
+      for (const [key, e] of store) if (e.resetAt < now) store.delete(key)
+    }
     const entry = store.get(ip)
 
     if (!entry || entry.resetAt < now) {
