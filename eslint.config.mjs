@@ -1,21 +1,18 @@
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { FlatCompat } from '@eslint/eslintrc'
+import tseslint from 'typescript-eslint'
+import prettierRecommended from 'eslint-plugin-prettier/recommended'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
-
-const eslintConfig = [
-  ...compat.extends('plugin:prettier/recommended'),
+// Lints .js/.mjs and .ts. Astro and Svelte components are checked by
+// `astro check` and `svelte-check` in their own packages.
+export default tseslint.config(
+  // Build output: linting it reports thousands of errors that are not ours
+  {
+    ignores: ['**/dist/**', '**/build/**', '**/.svelte-kit/**', '**/.astro/**'],
+  },
+  ...tseslint.configs.recommended,
+  prettierRecommended,
   {
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
     },
   },
-]
-
-export default eslintConfig
+)
