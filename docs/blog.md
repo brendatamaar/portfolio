@@ -8,15 +8,15 @@ Applies to both the author (writing reference) and Claude (AI context for this p
 ## Architecture Overview
 
 ```
-Admin editor (admin/)  →  Hono API (server/)  →  SQLite  →  Portfolio frontend (src/)
+Admin editor (admin/)  →  Hono API (server/)  →  SQLite  →  Public site (web/)
                                   ↑
                          shared/markdown/  (isomorphic parser)
 ```
 
-- **Editor**: `admin/src/pages/PostEditor.tsx` — split-pane markdown editor
-- **Parser**: `shared/markdown/parser.ts` — `parse(md) → { html, toc, sidenotes, bibliography }`
-- **Viewer**: `src/pages/BlogPost.tsx` + `src/components/blog/MarkdownRenderer.tsx`
-- **Layout**: 3-column (sidenotes | article | TOC) on desktop, collapses to single column on mobile
+- **Editor**: `admin/src/lib/components/Editor.svelte` (SvelteKit) — split-pane markdown editor, with `Toolbar`, `EditorHeader`, `MetaSidebar`, `GlossaryPane`, `BibliographyPane` and `PostPreviewModal` beside it
+- **Parser**: `shared/markdown/parser.ts` — `parse(md, ctx?) → { html, toc, sidenotes }`. The server runs it and returns rendered HTML; the editor runs the same code for its live preview.
+- **Viewer**: `web/src/pages/blog/[slug].astro` (and `web/src/pages/id/blog/[slug].astro`) → `web/src/folio/components/PostView.astro`, data from `web/src/folio/data/post.ts`, behaviour in `web/src/folio/scripts/post.ts`, styles in `web/src/folio/styles/post.css`
+- **Layout**: one 672px text column. From 1240px wide, margin notes sit to its left and the contents list to its right.
 
 ---
 
@@ -24,17 +24,17 @@ Admin editor (admin/)  →  Hono API (server/)  →  SQLite  →  Portfolio fron
 
 ### Layout
 
-The editor is a full-screen split-pane app at `http://localhost:5174`.
+The editor is a full-screen split-pane app at `http://localhost:4322` (`pnpm -C admin dev`).
 
-| Zone             | Description                                                                              |
-| ---------------- | ---------------------------------------------------------------------------------------- |
-| **Header bar**   | Title input, language tabs (EN/ID), status badge, Save/Publish buttons                   |
-| **Tab bar**      | Content / Glossary / Bibliography tabs                                                   |
-| **Toolbar**      | Formatting buttons + view mode toggle                                                    |
-| **Editor pane**  | Raw markdown textarea (Content tab) or form/markdown editor (Glossary/Bibliography tabs) |
-| **Preview pane** | Live rendered HTML (uses the same parser as production)                                  |
-| **Meta sidebar** | Slug, date, description, cover image, tags, heading outline                              |
-| **Footer**       | Word count + character count                                                             |
+| Zone             | Description                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| **Header bar**   | Back link, language tabs (EN/ID), title input, status badge, Preview/Publish/Save   |
+| **Tab bar**      | Content / Glossary / Bibliography tabs                                              |
+| **Toolbar**      | Formatting buttons + view mode toggle                                               |
+| **Editor pane**  | Raw markdown textarea (Content tab) or form/raw editor (Glossary/Bibliography tabs) |
+| **Preview pane** | Live rendered HTML (uses the same parser as production)                             |
+| **Meta sidebar** | Slug, date, description, cover image, tags, heading outline                         |
+| **Footer**       | Word count + character count                                                        |
 
 ### View Modes
 
@@ -52,32 +52,30 @@ Three modes toggled from the toolbar (right side):
 
 Three tabs below the header bar organize post content:
 
-| Tab              | Description                                                                                 |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| **Content**      | Main article markdown editor. Supports split-pane editing with live preview.                |
-| **Glossary**     | Term definitions referenced via `[gloss:key]` in content. Dual-mode editor (Form/Markdown). |
-| **Bibliography** | Citations referenced via `[cite:key]` in content. Dual-mode editor (Form/Markdown).         |
+| Tab              | Description                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| **Content**      | Main article markdown editor. Supports split-pane editing with live preview.           |
+| **Glossary**     | Term definitions referenced via `[gloss:key]` in content. Dual-mode editor (Form/Raw). |
+| **Bibliography** | Citations referenced via `[cite:key]` in content. Dual-mode editor (Form/Raw).         |
 
 **Glossary & Bibliography Editor Features:**
 
-- **Form Mode**: Add entries individually with form fields
-- **Markdown Mode**: Edit all entries as compact text (see Glossary and Bibliography sections below for syntax)
-- **Live Preview**: Shows rendered entries with error highlighting
-- **Error Display**: Parse errors shown with line numbers and descriptions
-- **Mode Toggle**: Form/Markdown buttons or `Ctrl/Cmd+Shift+M` keyboard shortcut
-- **Persistence**: Preferred editor mode is saved per tab
+- **Form mode**: Add, edit and remove entries one by one with form fields
+- **Raw mode**: Edit all entries as plain text (see the Glossary and Bibliography sections below for the format), then **Apply & switch to Form**
+- **Mode toggle**: Form/Raw buttons at the top of the tab. Raw mode resets when the language tab changes.
 
 ### Keyboard Shortcuts
 
-| Shortcut       | Action                                                 |
-| -------------- | ------------------------------------------------------ |
-| `Ctrl+S`       | Save (draft)                                           |
-| `Ctrl+B`       | Bold — inserts `****`, cursor between                  |
-| `Ctrl+I`       | Italic — inserts `**`, cursor between                  |
-| `Ctrl+K`       | Link — inserts `[](url)`                               |
-| `Ctrl+Shift+P` | Toggle preview / split mode                            |
-| `Ctrl+Shift+M` | Toggle Form/Markdown mode (Glossary/Bibliography tabs) |
-| `Tab`          | Insert 2 spaces                                        |
+| Shortcut       | Action                                  |
+| -------------- | --------------------------------------- |
+| `Ctrl+S`       | Save (keeps the current status)         |
+| `Ctrl+B`       | Bold — wraps the selection in `**`      |
+| `Ctrl+I`       | Italic — wraps the selection in `*`     |
+| `Ctrl+K`       | Link — wraps the selection in `[](url)` |
+| `Ctrl+Shift+P` | Toggle preview / split mode             |
+| `Tab`          | Insert 2 spaces                         |
+
+`Cmd` works in place of `Ctrl` on macOS.
 
 ### Toolbar Buttons
 
@@ -105,7 +103,6 @@ Three tabs below the header bar organize post content:
 - **Note** — inserts `[^N]` at cursor + `[^N]: ` definition at end of document (auto-increments N)
 - **[G]** — inserts a glossary reference `[gloss:term]`
 - **[Cite]** — inserts a bibliography citation `[cite:key]`
-- **Fig** — inserts a figure template `![Caption text](image-url)`
 
 **Admonition** — dropdown picker for all admonition types (see Admonitions section below)
 
@@ -122,7 +119,7 @@ Three tabs below the header bar organize post content:
 3. **Paste** — paste an image from clipboard; auto-uploads and inserts markdown
 4. **Cover gallery** — in the Meta sidebar, click the cover image picker (separate from content images)
 
-All uploads go through `POST /api/images` and return a permanent URL.
+All uploads go through `POST /api/admin/upload` and return a permanent `/uploads/...` URL (a WebP copy and a thumbnail are generated alongside).
 
 ### Meta Sidebar (Post Settings)
 
@@ -144,21 +141,20 @@ Word count and character count are shown at the bottom of the sidebar (or in the
 Posts have two independent content sets: English (`title`, `description`, `content`) and Indonesian (`titleId`, `descriptionId`, `contentId`).
 
 - Switch between them with the **EN / ID tabs** in the header bar.
-- The editor, preview, description field, and meta title all switch with the tab.
-- **Make ID →** button (when on EN tab): calls the translation API to generate an Indonesian version from the current EN content. Overwrites existing ID content (prompts before overwriting).
-- **Make EN →** button (when on ID tab): reverse — generates EN from ID.
-- A **⚠** warning appears on the button when source content has changed since the last translation ("stale" indicator).
-- The slug and cover image are shared between both languages.
+- The editor, preview, title, description field, glossary and bibliography all switch with the tab.
+- There is no automatic translation: the Indonesian version is written by hand. A post with no Indonesian content is served in English on `/id/blog/:slug`.
+- The slug, cover image, tags and publish date are shared between both languages.
 
 ### Save / Publish
 
-| Button        | Action                                          |
-| ------------- | ----------------------------------------------- |
-| **Save**      | Saves current state as draft (no status change) |
-| **Publish**   | Saves and sets status → `published`             |
-| **Unpublish** | Saves and sets status → `draft`                 |
+| Button        | Action                                                                |
+| ------------- | --------------------------------------------------------------------- |
+| **Preview**   | Opens the whole post in a modal, rendered the way readers will see it |
+| **Save**      | Saves the current state (no status change)                            |
+| **Publish**   | Saves and sets status → `published`                                   |
+| **Unpublish** | Saves and sets status → `draft`                                       |
 
-Save indicator: shows "Saved X ago" in the header after saving. Error shows "Save failed" in red.
+Save indicator: shows "Saved just now", "Saved 12s ago" or "Saved 3m ago" in the header after saving. A failed save shows its error in red.
 
 ---
 
@@ -183,8 +179,9 @@ The parser is custom-built (`shared/markdown/`) with no external dependencies. I
 ```
 
 - Each heading gets a slug-based `id` for anchor links.
-- A `§` anchor link is appended to each heading in the rendered output.
-- All headings (H1–H6) are included in the TOC and the editor outline.
+- A `§` anchor link is appended to each heading in the rendered output. The editor preview shows it; the public site hides it.
+- All headings (H1–H6) are included in the TOC and the editor outline. The public site numbers them (1, 1.1, 1.2, 2…).
+- Start a post body at `##`: the page title is already the `<h1>`.
 
 ### Paragraphs
 
@@ -204,6 +201,8 @@ Plain text, separated by blank lines. Multiple lines in the same paragraph block
 | `![alt](url)`       | inline image      |
 
 External links (starting with `https://`) automatically get `target="_blank" rel="noopener noreferrer"`.
+
+Italic uses asterisks only: `_text_` is not parsed. The public site sets emphasis upright in the ink colour instead of slanting it, so `*italic*` reads as a quiet highlight there.
 
 ### Images
 
@@ -303,49 +302,32 @@ Alignment in the separator row: `:---` = left, `:---:` = center, `---:` = right,
 
 ### Glossary
 
-The glossary is managed in a **dedicated tab** in the admin editor. It can be edited using either a **Form** interface or **Markdown** syntax.
+The glossary is managed in a **dedicated tab** in the admin editor, one list per language. It can be edited in **Form** mode or as **Raw** text.
 
 **Editor Modes:**
 
-- **Form Mode**: Add entries one by one with fields for key, term, and definition
-- **Markdown Mode**: Edit all entries as text using the compact syntax below
-- Toggle between modes with the Form/Markdown buttons in the tab
-- Keyboard shortcut: `Ctrl/Cmd+Shift+M` to toggle modes
-- Editor mode preference is saved to localStorage
+- **Form mode**: Add entries one by one with fields for key, term, and definition
+- **Raw mode**: Edit all entries as text using the format below, then **Apply & switch to Form**
+- Toggle between modes with the Form/Raw buttons in the tab
 
-**Glossary Markdown Format:**
+**Glossary Raw Format:**
 
-```
-key: term | definition
-```
-
-**Examples:**
+The first line of an entry is `key :: Term`, the definition follows on the next lines, and a blank line separates entries. See `docs/sample-glossary.txt`.
 
 ```
-startViewTransition: document.startViewTransition() | API method for view transitions
-DOM: Document Object Model | The structure of HTML documents
-vt-name: view-transition-name | CSS property for named capture groups
-```
+dom :: Document Object Model
+The structure of HTML documents.
 
-**Multiline Definitions:**
-
-Use triple quotes (`"""`) for definitions spanning multiple lines:
-
-```
-complex-term: "Complex Term" | """
-This is a multiline
-definition with multiple
-paragraphs or details.
-"""
+vt-name :: view-transition-name
+CSS property for named capture groups.
+It can run over several lines.
 ```
 
 **Key Rules:**
 
-- Keys must be alphanumeric with hyphens/underscores only
-- Keys are case-insensitive and must be unique
-- Terms with special characters (like `|` or `"`) must be quoted: `"term | with pipe"`
-- Empty lines and lines starting with `#` are ignored (comments)
-- Live preview shows rendered glossary with error highlighting
+- Keep keys short, lowercase and unique: letters, digits, hyphens
+- A definition cannot contain a blank line (that starts the next entry)
+- Reference numbers follow the order of the entries in the tab
 
 **Inline glossary references:**
 
@@ -354,16 +336,13 @@ This article discusses [gloss:termKey] in detail.
 ```
 
 - References use the **key** (not the term label)
-- Renders as a superscript `[1]`, `[2]`, etc.
-- Terms are numbered alphabetically in the glossary section
-- Hover shows a quick tooltip with the definition
-- Click opens a persistent popup (dismiss with Esc or click outside)
-- Keys not found render as `[?]`
+- Renders as a superscript number
+- Hover previews the definition in a popup; click pins it (dismiss with Esc, its close button or a click outside)
+- Keys not found render as `?`
 
 **Glossary Section:**
 
-- Auto-renders at the bottom of the post (above bibliography)
-- Lists all terms alphabetically by term label
+- Renders as a collapsible block below the article (above the bibliography) and is linked from the contents list
 - Click a term to jump to its first occurrence in the text
 
 ### Footnotes / Sidenotes
@@ -375,8 +354,8 @@ This text has a footnote.[^1]
 ```
 
 - The `[^id]` reference renders as a superscript number in the text.
-- The `[^id]: text` definition renders as a **sidenote** on desktop (right margin) and as a **footnote** at the bottom on mobile.
-- On desktop, clicking the reference highlights the sidenote instead of scrolling.
+- The `[^id]: text` definition renders as a **margin note** from 1240px wide (left of the text, level with its reference) and as a **footnote** where it was written on narrower screens. Put definitions at the end of the post.
+- With margin notes showing, clicking the reference lights up its note instead of scrolling.
 - IDs can be numbers or strings: `[^note]`, `[^1]`, `[^my-note]`.
 - The toolbar **Note** button auto-increments numeric IDs.
 
@@ -392,20 +371,21 @@ This is a note.
 
 **Available types:**
 
-| Type            | Icon | Label      | Purpose                                                                 |
-| --------------- | ---- | ---------- | ----------------------------------------------------------------------- |
-| `:::note`       | ℹ   | Note       | General supplementary information the reader should be aware of         |
-| `:::warning`    | ⚠   | Warning    | Potential pitfalls, common mistakes, or things that could go wrong      |
-| `:::danger`     | 🔴   | Danger     | Critical risks or important things to avoid                             |
-| `:::tip`        | 💡   | Tip        | Helpful advice, best practices, or useful shortcuts                     |
-| `:::info`       | 📘   | Info       | Background context or explanatory detail that supports the main content |
-| `:::tldr`       | ⚡   | TL;DR      | Brief summary of a longer section for readers who want the quick take   |
-| `:::update`     | 📅   | Update     | Post-publication corrections, additions, or status changes              |
-| `:::definition` | 📖   | Definition | Defines a specific term or concept not covered in its own section       |
-| `:::ai`         | 🤖   | Ask AI     | AI prompts the reader can copy and use in their preferred AI tool       |
-| `:::see-also`   | →    | See Also   | Links to related posts, resources, or further reading                   |
+| Type          | Icon | Label    | Purpose                                                                 |
+| ------------- | ---- | -------- | ----------------------------------------------------------------------- |
+| `:::note`     | ℹ    | Note     | General supplementary information the reader should be aware of         |
+| `:::warning`  | ⚠    | Warning  | Potential pitfalls, common mistakes, or things that could go wrong      |
+| `:::danger`   | 🔴   | Danger   | Critical risks or important things to avoid                             |
+| `:::tip`      | 💡   | Tip      | Helpful advice, best practices, or useful shortcuts                     |
+| `:::info`     | 📘   | Info     | Background context or explanatory detail that supports the main content |
+| `:::tldr`     | ⚡   | TL;DR    | Brief summary of a longer section for readers who want the quick take   |
+| `:::update`   | 📅   | Update   | Post-publication corrections, additions, or status changes              |
+| `:::ai`       | 🤖   | Ask AI   | AI prompts the reader can copy and use in their preferred AI tool       |
+| `:::see-also` | →    | See Also | Links to related posts, resources, or further reading                   |
 
-Admonitions can contain any block-level markdown (paragraphs, lists, code blocks, etc.).
+Admonitions can contain any block-level markdown (paragraphs, lists, code blocks, etc.). An unknown type renders as a note.
+
+The icons show in the editor preview. The public site drops them and marks the type with the label and a coloured left rule instead.
 
 **Special: `:::ai`**
 
@@ -419,40 +399,24 @@ Explain the concept of dependency injection in simple terms.
 
 ### Bibliography
 
-The bibliography is managed in a **dedicated tab** in the admin editor. It can be edited using either a **Form** interface or **Markdown** syntax.
+The bibliography is managed in a **dedicated tab** in the admin editor, one list per language. It can be edited in **Form** mode or as **Raw** text.
 
 **Editor Modes:**
 
-- **Form Mode**: Add entries one by one with fields for key, source type, and citation text
-- **Markdown Mode**: Edit all entries as text using the compact syntax below
-- Toggle between modes with the Form/Markdown buttons in the tab
-- Keyboard shortcut: `Ctrl/Cmd+Shift+M` to toggle modes
-- Editor mode preference is saved to localStorage
+- **Form mode**: Add entries one by one with fields for key, source type, and citation text
+- **Raw mode**: Edit all entries as text using the format below, then **Apply & switch to Form**
+- Toggle between modes with the Form/Raw buttons in the tab
 
-**Bibliography Markdown Format:**
+**Bibliography Raw Format:**
 
-```
-key: sourceType | citation text
-```
-
-**Examples:**
+The first line of an entry is `key [sourceType]`, the citation follows on the next lines, and a blank line separates entries. See `docs/sample-bibliography.txt`.
 
 ```
-mdn-vt: web | MDN Web Docs. "View Transition API". https://developer.mozilla.org/...
-react-docs: docs | React Documentation. Meta Open Source, 2024.
-js-spec: docs | ECMAScript 2024 Language Specification. Ecma International.
-```
+mdn-vt [web]
+MDN Web Docs. "View Transition API". https://developer.mozilla.org/...
 
-**Multiline Citations:**
-
-Use triple quotes (`"""`) for citations spanning multiple lines:
-
-```
-long-ref: book | """
-Author Name. Book Title, 2024.
-Chapter 3, Section 2.
-Publisher Name.
-"""
+crafting-interpreters [book]
+Robert Nystrom. "Crafting Interpreters". Genever Benning, 2021.
 ```
 
 **Source Types:**
@@ -471,12 +435,9 @@ Publisher Name.
 
 **Key Rules:**
 
-- Keys must be alphanumeric with hyphens/underscores only
-- Keys are case-insensitive and must be unique
-- Invalid source types default to `other`
-- Citations with special characters (like `|` or `"`) must be quoted: `"citation | text"`
-- Empty lines and lines starting with `#` are ignored (comments)
-- Live preview shows rendered bibliography with error highlighting
+- Keep keys short, lowercase and unique: letters, digits, hyphens
+- A first line without `[sourceType]` is read as type `web`
+- A citation cannot contain a blank line (that starts the next entry)
 
 **Inline citations:**
 
@@ -485,116 +446,103 @@ This claim is supported by research.[cite:mdn-docs]
 ```
 
 - References use the **key** (defined in the editor)
-- Renders as a superscript `[1]`, `[2]`, etc.
-- Hover or click to see the citation in a popup
-- Keys not found render as `[?]`
+- Renders as a superscript number
+- Hover previews the citation in a popup; click pins it
+- Keys not found render as `?`
 
 **Bibliography Section:**
 
-- Auto-renders at the bottom of the post (below glossary)
-- Entries numbered by citation order (first use = 1, second = 2, etc.)
-- Classic encyclopedia format with hanging indent
-- Quoted titles (`"Title"`) are rendered bold
+- Renders as a collapsible block below the article (below the glossary) and is linked from the contents list
+- Quoted titles (`"Title"`) are emphasised and URLs become links showing the host name (`shared/markdown/citation.ts`)
 - Click an entry to jump to where it's first cited in the text
 
 ---
 
 ## Blog Post View
 
+`web/src/folio/components/PostView.astro`, served at `/blog/:slug` (English) and `/id/blog/:slug` (Indonesian).
+
 ### Page Structure
 
 ```
-ScrollProgress bar (fixed, yellow, top of viewport)
-
-[ max-w-3xl centered zone ]
-  Header (site nav)
+[ one 672px column ]
+  Header (site nav, language and theme toggles)
   ← Back to blog
-  Tags (brutalist badge style)
-  H1 title (5xl–6xl, uppercase, black, font-black)
-  Description (xl, muted)
-  Date · X min read
-  ─────────────────────────────────
-
-[ max-w-[72rem] wide zone ]
-  MarkdownRenderer (3-column layout)
-    Sidenotes column (desktop, left)
-    Article content (center, flex-1)
-    TOC column (desktop, right, sticky)
-
-[ max-w-3xl centered zone ]
-  ← All posts
+  H1 title (28px, medium weight)
+  Description
+  Date · X min read · tags · copy link
+  Contents (collapsible; below 1240px only)
+  Article (.prose — the rendered markdown)
+  Glossary (collapsible)
+  Bibliography (collapsible)
+  Next post
   Footer
 ```
 
-### 3-Column Layout
+### Wide Screens (≥ 1240px)
 
-The article area is wider than the header/footer (`max-w-[72rem]` vs `max-w-3xl`) to accommodate sidenotes and TOC alongside the content.
+The column stays 672px and centred; two side columns hang off it.
 
-| Column               | Behavior                                                                                                                                 |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Sidenotes** (left) | Desktop only (`lg:`). Absolutely positioned next to their reference in the text. Falls back to footnotes (appended at bottom) on mobile. |
-| **Article**          | Center column, `flex-1`. Contains the rendered HTML.                                                                                     |
-| **TOC**              | Desktop only (`lg:`). Sticky, scrollspy — highlights the current section.                                                                |
+| Column                  | Behavior                                                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Margin notes** (left) | Each footnote sits level with its reference. Below 1240px they stay in the text as footnotes.              |
+| **Article**             | The rendered HTML.                                                                                         |
+| **Contents** (right)    | Sticky, numbered, with scrollspy — the section in view is marked. Replaces the collapsible contents block. |
+
+`scripts/post.ts` tests the same 1240px width as the `wide:` variant in `styles/folio.css`; change both together.
 
 ### Reading Time
 
-Calculated as `ceil(wordCount / 200)`, minimum 1 minute. Displayed as "X min read".
+`max(1, round(wordCount / 200))` minutes (`web/src/lib/utils.ts`), counted from the rendered HTML with the bibliography left out. Displayed as "X min read".
 
-### Scroll Progress Bar
+### Reference Popups
 
-Fixed yellow (`#FFE600`) bar at the top of the viewport showing reading progress.
-
-### Back to Top
-
-Appears after scrolling past a threshold.
+Glossary and citation numbers show their entry in a small popup: hover previews it, click pins it, and Esc, the close button or a click outside dismisses it.
 
 ### Image Zoom
 
-Clicking any `<figure> img` or `<p> img` in the article opens a full-screen overlay:
-
-- Black/90% backdrop
-- Image constrained to 90vw × 90vh
-- `[close]` button top-right
-- Click backdrop to close
+Clicking an image in the article opens it in a full-screen overlay. Click anywhere or press Esc to close.
 
 ### Code Block Copy Button
 
-Injected dynamically after render. Brutalist style: 2px black border, white bg, yellow hover. Shows "copied!" for 2 seconds after click.
+Injected after render into every code block; shows a "copied" state for a moment after a click. `:::ai` blocks get their own **Copy prompt** button from the renderer.
 
-### Sidenote Highlight
+### Copy Link
 
-On desktop (≥ `lg`), clicking a footnote reference (`[^id]`) instead of jumping to the definition:
+The last item of the meta line copies the post URL to the clipboard.
 
-- Scrolls the sidenote into view
-- Plays a highlight animation (`sidenote-highlighted` CSS class)
+### Margin Note Highlight
+
+With margin notes showing, clicking a footnote reference (`[^id]`) does not jump to the definition: its note lights up briefly (`data-lit`, the `lit` animation in `styles/folio.css`).
 
 ---
 
 ## Post Fields
 
-| Field           | Type                   | Notes                                                                                         |
-| --------------- | ---------------------- | --------------------------------------------------------------------------------------------- |
-| `title`         | string                 | EN title. Shown in H1, page title, blog listing.                                              |
-| `titleId`       | string                 | ID (Indonesian) title.                                                                        |
-| `slug`          | string                 | URL-safe identifier. Used in route `/blog/:slug`. Auto-generated from EN title for new posts. |
-| `description`   | string                 | EN excerpt. Shown below title and on blog listing card.                                       |
-| `descriptionId` | string                 | ID description.                                                                               |
-| `content`       | string                 | EN markdown body.                                                                             |
-| `contentId`     | string                 | ID markdown body.                                                                             |
-| `status`        | `draft` \| `published` | Only `published` posts appear on the public site.                                             |
-| `publishedAt`   | ISO date string        | Displayed date. Defaults to creation date.                                                    |
-| `coverImageUrl` | string \| null         | Used on blog listing cards. Not shown in the article body.                                    |
-| `tags`          | Tag[]                  | Array of `{ id, name, slug }`. Shown as brutalist badges on the post page.                    |
+| Field            | Type                        | Notes                                                                                         |
+| ---------------- | --------------------------- | --------------------------------------------------------------------------------------------- |
+| `title`          | string                      | EN title. Shown in H1, page title, blog listing.                                              |
+| `titleId`        | string \| null              | ID (Indonesian) title. `null` = no translation, the EN field is used.                         |
+| `slug`           | string                      | URL-safe identifier. Used in route `/blog/:slug`. Auto-generated from EN title for new posts. |
+| `description`    | string                      | EN excerpt. Shown below the title, on the blog listing and in meta tags.                      |
+| `descriptionId`  | string \| null              | ID description.                                                                               |
+| `content`        | string                      | EN markdown body.                                                                             |
+| `contentId`      | string \| null              | ID markdown body.                                                                             |
+| `glossaryEn`     | GlossaryEntry[]             | `{ key, term, definition }`. Stored as JSON text.                                             |
+| `glossaryId`     | GlossaryEntry[] \| null     | ID glossary.                                                                                  |
+| `bibliographyEn` | BibliographyEntry[]         | `{ key, sourceType, text }`. Stored as JSON text.                                             |
+| `bibliographyId` | BibliographyEntry[] \| null | ID bibliography.                                                                              |
+| `status`         | `draft` \| `published`      | Only `published` posts appear on the public site.                                             |
+| `publishedAt`    | ISO date string             | Displayed date. Falls back to the creation date.                                              |
+| `coverImageUrl`  | string \| null              | Stored with the post. The current site does not display it.                                   |
+| `tags`           | Tag[]                       | Array of `{ id, name, slug }`. Shown as plain text in the meta line of the post.              |
 
 ---
 
-## Design Tokens (Brutalist)
+## Design
 
-The blog view follows the site's brutalist design system:
+The public site is one text column, dark-first, set in Plus Jakarta Sans. Styling is Tailwind v4 utilities in the markup:
 
-- **Borders**: `border-2 border-black` / `dark:border-white`
-- **Shadow**: `shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]` / white variant for dark mode
-- **Accent color**: `#FFE600` (yellow) — used for scroll progress bar, copy button hover, Back to Top
-- **Typography**: `font-black`, `tracking-tighter`, `uppercase` for titles
-- **Max content width**: `max-w-3xl` (header/footer zones), `max-w-[72rem]` (article zone)
-- **Mono labels**: `font-mono text-[11px] tracking-widest uppercase` for metadata
+- **Tokens and variants**: `web/src/folio/styles/folio.css` — colours (`ink`, `body`, `quiet`, `leader`, `ring`, `raised`, `pen`…), the `light:`, `narrow:`, `wide:`, `fine:` and `coarse:` variants, and the site's own small reset. Tailwind's preflight is deliberately not imported.
+- **Post body**: `web/src/folio/styles/post.css` — the rendered markdown carries the renderer's own class names (`.code-block`, `.admonition`, `.footnote-def`, `.gloss-ref`…), so it is styled from outside with `@apply` under `.prose`.
+- **Editor preview**: `admin/src/app.css` styles the same renderer output for the admin (`.preview-content`, `.post-preview-content`). A new renderer class needs a rule in both files.
