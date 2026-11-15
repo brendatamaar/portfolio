@@ -1,0 +1,17 @@
+---
+import { WIDTH, HEIGHT } from '../scripts/meadow'
+---
+
+<div class="mt-18 flex w-full justify-center overflow-hidden select-none" aria-hidden="true">
+  <canvas
+    class="block flex-none cursor-crosshair"
+    id="meadow"
+    width={WIDTH}
+    height={HEIGHT}
+    style={`width:${WIDTH}px;height:${HEIGHT}px`}></canvas>
+</div>
+
+<script>
+  import { initMeadow } from '../scripts/meadow'
+  initMeadow(document.getElementById('meadow') as HTMLCanvasElement)
+</script>
