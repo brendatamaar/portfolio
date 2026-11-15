@@ -44,13 +44,11 @@ export function initPreview() {
     }
   }
   const trigger = (t: EventTarget | null) =>
-    (t as Element | null)?.closest<HTMLElement>(
-      '#projects .row, .intro [data-pv]',
-    ) ?? null
+    (t as Element | null)?.closest<HTMLElement>('[data-pv]') ?? null
 
   const hosts = [
     document.getElementById('projects'),
-    document.querySelector('.intro'),
+    document.querySelector('[data-intro]'),
   ]
   for (const h of hosts) {
     if (!h) continue
@@ -61,7 +59,7 @@ export function initPreview() {
       if (!el || !src) return
       preload()
       clearTimeout(hideT)
-      below = el.classList.contains('pvl')
+      below = 'pvBelow' in el.dataset
       if (img.getAttribute('src') !== src) img.src = src
       if (!on) {
         place(e)
@@ -69,7 +67,7 @@ export function initPreview() {
         y = ty
       }
       on = true
-      pv.classList.add('on')
+      pv.dataset.on = ''
       if (!raf) follow()
     })
     h.addEventListener('pointermove', (e) => place(e as PointerEvent))
@@ -79,7 +77,7 @@ export function initPreview() {
       if (el && !el.contains(e.relatedTarget as Node | null))
         hideT = window.setTimeout(() => {
           on = false
-          pv.classList.remove('on')
+          delete pv.dataset.on
         }, 60)
     })
   }

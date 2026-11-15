@@ -2,7 +2,6 @@
 // blog posts are the only thing that comes from the API (see ./posts.ts).
 
 export type Lang = 'en' | 'id'
-export const langs: Lang[] = ['en', 'id']
 
 export const site = {
   name: 'Brendatama Akbar Ramadan',
@@ -10,6 +9,8 @@ export const site = {
   location: 'Jakarta',
   url: 'https://www.brendatama.dev',
   iconPlusUrl: 'https://plniconplus.co.id',
+  /** The resume in web/public, downloaded from the header */
+  resume: '/Brendatama Akbar (2026) - English.pdf',
 }
 
 /** "© <current year> Brendatama Akbar Ramadan". The year is read when the page is rendered. */
@@ -52,10 +53,11 @@ interface Copy {
   homeLabel: string
   /** header link to the blog */
   writing: string
+  /** header link that downloads the resume */
+  resume: string
   /** aria-label of the sidenotes column */
   notes: string
   skip: string
-  langLabel: string // for the button that switches TO the other language
   themeLabel: (next: 'light' | 'dark') => string
 }
 
@@ -95,9 +97,9 @@ export const copy: Record<Lang, Copy> = {
     noProjects: 'No projects yet.',
     homeLabel: 'Brendatama Akbar Ramadan, home',
     writing: 'Writing',
+    resume: 'Resume',
     notes: 'Sidenotes',
     skip: 'Skip to content',
-    langLabel: 'Show in English',
     themeLabel: (next) => `Switch to ${next} theme`,
   },
   id: {
@@ -135,9 +137,9 @@ export const copy: Record<Lang, Copy> = {
     noProjects: 'Belum ada proyek.',
     homeLabel: 'Brendatama Akbar Ramadan, beranda',
     writing: 'Tulisan',
+    resume: 'Resume',
     notes: 'Catatan samping',
     skip: 'Lewati ke konten',
-    langLabel: 'Tampilkan dalam Bahasa Indonesia',
     themeLabel: (next) =>
       `Ganti ke tema ${next === 'light' ? 'terang' : 'gelap'}`,
   },

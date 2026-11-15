@@ -41,6 +41,11 @@ export async function loadPostPage(
   slug: string,
   lang: Lang,
 ): Promise<PostPage | null> {
+  // The post and the list (for "next") do not depend on each other: ask for both at once
+  const listing = api
+    .getPosts(lang, 100)
+    .then((r) => r.data)
+    .catch(() => [] as PostSummary[])
   let data: PostDetail
   try {
     data = await api.getPost(slug, lang)
@@ -89,10 +94,7 @@ export async function loadPostPage(
     },
   )
 
-  const all = await api
-    .getPosts(lang, 100)
-    .then((r) => r.data)
-    .catch(() => [] as PostSummary[])
+  const all = await listing
   const idx = all.findIndex((p) => p.slug === slug)
   const candidate = idx > -1 ? all[idx + 1] : undefined
 

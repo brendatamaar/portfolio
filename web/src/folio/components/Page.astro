@@ -3,7 +3,6 @@
 import Folio from '../layouts/Folio.astro'
 import Header from './Header.astro'
 import Footer from './Footer.astro'
-import '../styles/blog.css'
 import type { Lang } from '../data/content'
 
 interface Props {
@@ -20,9 +19,9 @@ const { lang = 'en', alternates, ...rest } = Astro.props
 ---
 
 <Folio lang={lang} alternates={alternates} {...rest}>
-  <div class="wrap">
+  <div class="mx-auto max-w-176 px-safe pt-8">
     <Header lang={lang} />
-    <main id="main" tabindex="-1">
+    <main id="main" tabindex="-1" class="flex flex-col gap-16 pt-10">
       <slot />
     </main>
   </div>

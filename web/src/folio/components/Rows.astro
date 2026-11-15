@@ -13,23 +13,36 @@ interface Props {
   preview?: boolean
 }
 const { rows, id, preview } = Astro.props
+// Stacked on phones: name over description, no leader.
+const row = 'flex items-center gap-4 py-1 text-[14px] leading-[1.7] narrow:flex-col narrow:items-start narrow:gap-0 narrow:py-1.5'
 ---
 
 <ul id={id}>
   {
     rows.map((r) => {
+      // Only linked rows light up on hover or focus (the "group" is the link)
       const inner = (
         <Fragment>
-          <span class="k">{r.k}</span>
-          <span class="dots" aria-hidden="true" />
-          <span class="v">{r.v}</span>
+          <span class:list={['min-w-0 text-body transition-colors', r.href && 'group-hover:text-ink group-focus-visible:text-ink']}>{r.k}</span>
+          <span
+            class:list={['min-w-6 flex-1 translate-y-px border-b border-dotted border-leader narrow:hidden', r.href && 'group-hover:border-quiet']}
+            aria-hidden="true"
+          />
+          <span
+            class:list={[
+              'max-w-[58%] truncate text-right text-quiet transition-colors narrow:max-w-full narrow:text-left narrow:whitespace-normal',
+              r.href && 'group-hover:text-body group-focus-visible:text-body',
+            ]}
+          >
+            {r.v}
+          </span>
         </Fragment>
       )
       return (
         <li>
           {r.href ? (
             <a
-              class="row"
+              class:list={['group', row]}
               href={r.href}
               target={r.external ? '_blank' : undefined}
               rel={r.external ? 'noopener' : undefined}
@@ -39,7 +52,7 @@ const { rows, id, preview } = Astro.props
               {inner}
             </a>
           ) : (
-            <div class="row" data-pv={preview ? r.k : undefined}>
+            <div class={row} data-pv={preview ? r.k : undefined}>
               {inner}
             </div>
           )}

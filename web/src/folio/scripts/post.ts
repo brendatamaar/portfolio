@@ -37,11 +37,13 @@ export function initPost() {
   // copy buttons on code blocks
   prose.querySelectorAll<HTMLPreElement>('pre').forEach((pre) => {
     const host = pre.closest<HTMLElement>('.code-block') ?? pre
-    if (host.querySelector('.copy-btn')) return
+    if (host.querySelector('[data-copy-code]')) return
     if (host === pre) pre.style.position = 'relative'
     const btn = document.createElement('button')
     btn.type = 'button'
-    btn.className = 'copy-btn'
+    btn.dataset.copyCode = ''
+    btn.className =
+      'absolute top-1 right-1.5 cursor-pointer bg-transparent px-1.5 py-1 font-sans text-[12px] leading-[normal] font-normal text-quiet hover:text-ink'
     btn.textContent = 'Copy'
     btn.addEventListener('click', async () => {
       try {
@@ -66,12 +68,14 @@ export function initPost() {
     img.addEventListener('click', () => {
       closeZoom()
       zoom = document.createElement('div')
-      zoom.className = 'zoom'
+      zoom.className =
+        'fixed inset-0 z-50 grid cursor-zoom-out place-items-center bg-black/85 p-4'
       zoom.setAttribute('role', 'dialog')
       zoom.setAttribute('aria-modal', 'true')
       const full = document.createElement('img')
       full.src = img.currentSrc || img.src
       full.alt = img.alt
+      full.className = 'max-h-full max-w-full rounded-[8px]'
       zoom.appendChild(full)
       zoom.addEventListener('click', closeZoom)
       document.body.appendChild(zoom)
@@ -90,10 +94,10 @@ export function initPost() {
   jump('data-cite-entry', (v) => `[data-cite-id="${v}"]`)
 
   // wide screens: scrollspy for the side contents, and footnotes lined up in the margin
-  const body = document.querySelector<HTMLElement>('.post-body')
+  const body = document.querySelector<HTMLElement>('[data-post-body]')
   const wide = matchMedia('(min-width: 1240px)')
   const tocLinks = Array.from(
-    document.querySelectorAll<HTMLAnchorElement>('.side-toc [data-toc-link]'),
+    document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'),
   )
   if (tocLinks.length) {
     const heads = tocLinks
@@ -103,10 +107,10 @@ export function initPost() {
     let active = ''
     const spy = new IntersectionObserver(
       (entries) => {
-        for (const e of entries)
-          e.isIntersecting
-            ? visible.add(e.target.id)
-            : visible.delete(e.target.id)
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target.id)
+          else visible.delete(e.target.id)
+        }
         const top = heads.find((h) => visible.has(h.id))
         if (top && top.id !== active) {
           active = top.id
@@ -119,7 +123,7 @@ export function initPost() {
     )
     heads.forEach((h) => spy.observe(h))
   }
-  const notesCol = body?.querySelector<HTMLElement>('.side-notes')
+  const notesCol = body?.querySelector<HTMLElement>('[data-sidenotes]')
   if (body && notesCol) {
     const pairs = Array.from(
       notesCol.querySelectorAll<HTMLElement>('[data-sidenote]'),
@@ -133,7 +137,7 @@ export function initPost() {
       .filter((p): p is { note: HTMLElement; ref: HTMLElement } => !!p.ref)
     const place = () => {
       if (!wide.matches || !pairs.length) {
-        body.classList.remove('side')
+        delete body.dataset.side
         return
       }
       const colTop = notesCol.getBoundingClientRect().top
@@ -143,7 +147,7 @@ export function initPost() {
         note.style.top = `${top}px`
         min = top + note.offsetHeight + 12
       }
-      body.classList.add('side')
+      body.dataset.side = ''
     }
     let raf = 0
     const schedule = () => {
@@ -159,15 +163,15 @@ export function initPost() {
       const ref = (e.target as HTMLElement).closest<HTMLElement>(
         '[data-sidenote-id]',
       )
-      if (!ref || !body.classList.contains('side')) return
+      if (!ref || !('side' in body.dataset)) return
       e.preventDefault()
       const note = notesCol.querySelector<HTMLElement>(
         `[data-sidenote="${ref.dataset.sidenoteId}"]`,
       )
       if (!note) return
-      note.classList.remove('is-lit')
+      delete note.dataset.lit
       void note.offsetWidth
-      note.classList.add('is-lit')
+      note.dataset.lit = ''
     })
   }
 
@@ -211,33 +215,29 @@ export function initPost() {
       el.style.transform = 'translateY(-100%)'
     }
   }
-  const closeBtn =
-    '<button type="button" class="ref-popup__close" aria-label="Close">×</button>'
+  const head = (label: string) =>
+    `<div class="mb-1 flex justify-between gap-3 font-medium text-ink"><span>${label}</span><button type="button" class="cursor-pointer bg-transparent px-1 py-0 text-[18px] leading-none text-quiet" data-close aria-label="Close">×</button></div>`
   const resolve = (ref: HTMLElement): string | null => {
     if (ref.dataset.glossKey) {
       const g = glossary.get(ref.dataset.glossKey)
-      return g
-        ? `<div class="ref-popup__head"><span>${g.term}</span>${closeBtn}</div><div>${g.definition}</div>`
-        : null
+      return g ? `${head(g.term)}<div>${g.definition}</div>` : null
     }
     if (ref.dataset.citeId) {
       const b = bibliography.get(ref.dataset.citeId)
       return b
-        ? `<div class="ref-popup__head"><span>${b.sourceType.toUpperCase()}</span>${closeBtn}</div><div>${formatCitation(b.text)}</div>`
+        ? `${head(b.sourceType.toUpperCase())}<div>${formatCitation(b.text)}</div>`
         : null
     }
     return null
   }
   const create = (html: string, ref: HTMLElement, pinned: boolean) => {
     const el = document.createElement('div')
-    el.className = 'ref-popup'
+    el.className =
+      'fixed z-40 rounded-[10px] border border-leader bg-page px-3.5 py-3 text-[14px] leading-[1.6] text-body shadow-popup'
     el.innerHTML = html
     if (!pinned) el.style.pointerEvents = 'none'
     place(el, ref)
-    el.querySelector('.ref-popup__close')?.addEventListener(
-      'click',
-      removePinned,
-    )
+    el.querySelector('[data-close]')?.addEventListener('click', removePinned)
     document.body.appendChild(el)
     return el
   }

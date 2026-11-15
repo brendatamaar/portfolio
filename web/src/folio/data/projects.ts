@@ -44,9 +44,15 @@ export async function loadProjects(lang: Lang): Promise<ProjectRow[]> {
     .map(toRow)
 }
 
+// Uploads are stored at full size and the card is 280px wide: ask the /uploads route for a 640px webp
+const cardSrc = (img: string) =>
+  img.startsWith('/uploads/') && !img.includes('?') ? `${img}?w=640` : img
+
 /** Hover-card images by name: Airtax and cheSKP (intro text) plus every project that has a screenshot. */
 export function previewMap(rows: ProjectRow[]): Record<string, string> {
   return Object.fromEntries(
-    [...workPreviews, ...rows].filter((p) => p.img).map((p) => [p.name, p.img]),
+    [...workPreviews, ...rows]
+      .filter((p) => p.img)
+      .map((p) => [p.name, cardSrc(p.img)]),
   )
 }

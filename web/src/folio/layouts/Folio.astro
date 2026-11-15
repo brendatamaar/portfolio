@@ -1,7 +1,8 @@
 ---
-import '@fontsource/plus-jakarta-sans/400.css'
-import '@fontsource/plus-jakarta-sans/500.css'
 import '../styles/folio.css'
+// The two weights the page is set in: fetched alongside the stylesheet, not after it
+import font400 from '@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2?url'
+import font500 from '@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-500-normal.woff2?url'
 import { copy, homePath, site, socials, type Lang } from '../data/content'
 
 interface Props {
@@ -25,7 +26,7 @@ const desc = description ?? t.description
 // Astro.url reflects the internal host behind the reverse proxy: build from the site URL instead
 const base = Astro.site ?? site.url
 const canonical = new URL(path ?? homePath[lang], base).href
-const ogImage = new URL('/v2/og.png', base).href
+const ogImage = new URL('/og.png', base).href
 const person = {
   '@context': 'https://schema.org',
   '@type': 'Person',
@@ -43,7 +44,7 @@ const person = {
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} class="bg-page">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -52,11 +53,11 @@ const person = {
     <link rel="canonical" href={canonical} />
     {alternates && Object.entries(alternates).map(([l, p]) => <link rel="alternate" hreflang={l} href={new URL(p, base).href} />)}
     {alternates?.en && <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, base).href} />}
-    {/* Preview beside the live site: keep it out of search until it replaces the homepage */}
-    <meta name="robots" content="noindex, follow" />
     <meta name="theme-color" content="#131313" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="author" content={site.name} />
+    <link rel="preload" as="font" type="font/woff2" href={font400} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={font500} crossorigin />
     <link rel="icon" type="image/svg+xml" href="/images/favicon/favicon.svg" />
     <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
     <link rel="apple-touch-icon" href="/images/favicon/apple-touch-icon.png" />
@@ -83,8 +84,10 @@ const person = {
       } catch (e) {}
     </script>
   </head>
-  <body>
-    <a class="skip" href="#main">{t.skip}</a>
+  <body
+    class="m-0 overflow-x-hidden bg-page font-sans text-[16px] leading-[1.75] font-normal text-ink antialiased transition-[background-color,color] duration-250 motion-reduce:transition-none"
+  >
+    <a class="absolute -top-25 left-4 z-40 bg-page px-2.5 py-1.5 text-[14px] text-ink focus:top-2" href="#main">{t.skip}</a>
     <slot />
   </body>
 </html>

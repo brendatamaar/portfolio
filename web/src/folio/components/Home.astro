@@ -4,7 +4,7 @@ import Header from './Header.astro'
 import Hero from './Hero.astro'
 import Rows from './Rows.astro'
 import Preview from './Preview.astro'
-import Garland from './Garland.astro'
+import Meadow from './Meadow.astro'
 import Footer from './Footer.astro'
 import { copy, homePath, postPath, type Lang } from '../data/content'
 import { loadPosts, monthYear } from '../data/posts'
@@ -16,13 +16,13 @@ const [posts, projects] = await Promise.all([loadPosts(lang), loadProjects(lang)
 ---
 
 <Folio lang={lang} alternates={homePath}>
-  <div class="wrap">
+  <div class="mx-auto max-w-176 px-safe pt-8">
     <Header lang={lang} />
-    <main id="main" tabindex="-1">
+    <main id="main" tabindex="-1" class="flex flex-col gap-16 pt-10">
       <Hero lang={lang} />
 
       <section aria-labelledby="h-proj">
-        <h2 class="label" id="h-proj">{t.projects}</h2>
+        <h2 class="mb-1.5 text-[14px] text-quiet" id="h-proj">{t.projects}</h2>
         {
           projects.length > 0 ? (
             <Rows
@@ -31,13 +31,13 @@ const [posts, projects] = await Promise.all([loadPosts(lang), loadProjects(lang)
               rows={projects.map((p) => ({ k: p.name, v: p.description, href: p.href, external: true }))}
             />
           ) : (
-            <p class="empty">{t.noProjects}</p>
+            <p class="text-[14px] text-quiet">{t.noProjects}</p>
           )
         }
       </section>
 
       <section aria-labelledby="h-blog">
-        <h2 class="label" id="h-blog">{t.blog}</h2>
+        <h2 class="mb-1.5 text-[14px] text-quiet" id="h-blog">{t.blog}</h2>
         {
           posts.length > 0 ? (
             <Rows
@@ -45,13 +45,13 @@ const [posts, projects] = await Promise.all([loadPosts(lang), loadProjects(lang)
               rows={posts.map((p) => ({ k: p.title, v: monthYear(p.date, lang), href: postPath(lang, p.slug) }))}
             />
           ) : (
-            <p class="empty">{t.noPosts}</p>
+            <p class="text-[14px] text-quiet">{t.noPosts}</p>
           )
         }
       </section>
     </main>
   </div>
-  <Garland />
+  <Meadow />
   <Footer lang={lang} />
   <Preview previews={previewMap(projects)} />
 </Folio>

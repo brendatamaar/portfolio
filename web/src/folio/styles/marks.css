@@ -1,0 +1,78 @@
+/* Pen marks drawn over a word: <span class="mk hl|under|circle draw d1"> text <svg><path /></svg> </span>.
+   scripts/marks.ts re-adds .draw (with .again) to redraw one on hover. */
+.mk {
+  position: relative;
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+.mk svg {
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+}
+.mk.circle {
+  margin-inline: 14px 19px;
+}
+.mk.circle svg {
+  left: -15px;
+  top: -13px;
+  width: calc(100% + 30px);
+  height: calc(100% + 21px);
+}
+/* marker highlight: a thick swipe behind the text that draws itself left to right */
+.mk.hl {
+  isolation: isolate;
+  padding-inline: 5px;
+  margin-inline: 4px 3px;
+}
+.mk.hl svg {
+  z-index: -1;
+  left: 0;
+  width: 100%;
+  /* centred on the capital letters (cap top to baseline), not on the line box, whose empty descender space would push the marker up */
+  top: calc(50% - 2px);
+  height: 6px;
+}
+.mk.hl path {
+  stroke: var(--color-hl);
+  stroke-width: 22px;
+  stroke-linecap: butt;
+}
+.mk.under svg {
+  left: -2px;
+  bottom: -5px;
+  width: calc(100% + 4px);
+  height: 9px;
+}
+.mk path {
+  fill: none;
+  stroke: var(--color-pen);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.mk.draw path {
+  animation: ink 0.85s cubic-bezier(0.5, 0, 0.3, 1) both;
+}
+.mk.d1 path {
+  animation-delay: 0.35s;
+}
+.mk.d2 path {
+  animation-delay: 0.95s;
+}
+.mk.again path {
+  animation-delay: 0s;
+}
+@keyframes ink {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk.draw path {
+    animation: none;
+  }
+}

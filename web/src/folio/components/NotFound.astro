@@ -1,5 +1,6 @@
 ---
 // 404 body. Wrap it in <Page> from the page that sets the 404 status.
+import '../styles/marks.css'
 import { blog, blogPath, homePath, type Lang } from '../data/content'
 
 interface Props {
@@ -12,14 +13,14 @@ const t = blog[lang]
 const [a, home, b, blogLabel, c] = t.notFoundLinks
 ---
 
-<section class="nf">
-  <div class="who">
-    <h1><span class="mk circle draw d1">404<svg viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M24 38 C 16 16, 72 5, 120 8 C 170 11, 197 24, 190 39 C 183 54, 118 58, 72 55 C 32 52, 5 43, 12 27 C 17 17, 42 10, 66 9" /></svg></span></h1>
+<section data-marks>
+  <div class="mb-5 flex items-center gap-3">
+    <h1 class="px-1 py-1.5 text-[40px] leading-[1.2] text-ink"><span class="mk circle draw d1">404<svg viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M24 38 C 16 16, 72 5, 120 8 C 170 11, 197 24, 190 39 C 183 54, 118 58, 72 55 C 32 52, 5 43, 12 27 C 17 17, 42 10, 66 9" /></svg></span></h1>
   </div>
-  <div class="intro">
+  <div class="flex max-w-[62ch] flex-col gap-5.5 text-body">
     <p>{what === 'post' ? t.notFoundPost : t.notFoundPage}
-        {a} <a href={homePath[lang]}>{home}</a>
-        {b}<a href={blogPath(lang)}>{blogLabel}</a>
+        {a} <a class="link" href={homePath[lang]}>{home}</a>
+        {b}<a class="link" href={blogPath(lang)}>{blogLabel}</a>
         {c}
     </p>
   </div>
@@ -27,5 +28,5 @@ const [a, home, b, blogLabel, c] = t.notFoundLinks
 
 <script>
   import { initMarks } from '../scripts/marks'
-  initMarks(document.querySelector('.nf'))
+  initMarks(document.querySelector('[data-marks]'))
 </script>

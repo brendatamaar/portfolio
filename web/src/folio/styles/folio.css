@@ -1,688 +1,225 @@
-/* One 672px column of plain text; every list is label, dotted leader, description.
-   Dark-first; a coloured ASCII roncean melati closes the page. */
-:root {
-  --bg: #131313;
-  --ink: #f5f5f5;
-  --body: #d4d4d4;
-  --quiet: #a1a1a1;
-  --leader: #404040;
-  --ring: #2a2a2a;
-  --jasmine: #f3eedc;
-  --heart: #e3e9b4;
-  --thread: #6fa073;
-  --cord: #d6ae58;
-  --rose: #e8738c;
-  --spark: #f7d77a;
-  --pen: #8ea2ff;
-  --hl: rgb(142 162 255 / 0.3); /* marker highlight, the pen blue */
-  --go-bg: #ffffff; /* tile behind the Go wordmark: white on dark, near-black on light */
-  --sans:
+/* Tailwind entry for the whole site: one 672px column of plain text, dark-first.
+   Layout and type are utilities in the markup. The only stylesheets beside this
+   one hold what utilities cannot reach: the mascot, the pen marks and the
+   rendered markdown of a post.
+   Tailwind's preflight is left out: post bodies are plain rendered HTML styled
+   against browser defaults, so the small reset in the base layer stays in charge. */
+@layer theme, base, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Plus Jakarta Sans in the two weights the page uses, Latin subsets only (English and
+   Indonesian). Ranges are the ones @fontsource ships; the layout preloads the two latin files. */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-500-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-ext-400-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-ext-500-normal.woff2')
+    format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Aksara Jawa for the meadow art on the home page, bold only, the Javanese subset only.
+   scripts/meadow.ts loads it on demand, so pages without the art never fetch it. */
+@font-face {
+  font-family: 'Noto Sans Javanese';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('@fontsource/noto-sans-javanese/files/noto-sans-javanese-javanese-700-normal.woff2')
+    format('woff2');
+  unicode-range: U+200C-200D, U+25CC, U+A980-A9DF;
+}
+
+/* Light when the OS asks for it (unless the toggle said dark), or when the toggle said light. */
+@custom-variant light {
+  @media (prefers-color-scheme: light) {
+    &:where(:root:not([data-theme='dark']), :root:not([data-theme='dark']) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme='light'], [data-theme='light'] *) {
+    @slot;
+  }
+}
+@custom-variant narrow (@media (max-width: 640px));
+/* Room for the side contents and margin notes; scripts/post.ts tests the same width. */
+@custom-variant wide (@media (min-width: 1240px));
+@custom-variant fine (@media (hover: hover) and (pointer: fine));
+@custom-variant coarse (@media (hover: none), (pointer: coarse));
+
+@theme static {
+  /* Sizes are px on purpose: the page is set at a fixed 16px. */
+  --spacing: 4px;
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: ease;
+
+  --font-sans:
     'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --mono:
+  --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     monospace;
-  color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    --bg: #ffffff;
-    --ink: #171717;
-    --body: #404040;
-    --quiet: #737373;
-    --leader: #e5e5e5;
-    --ring: #e5e5e5;
-    --pen: #2f4fd8;
-    --hl: rgb(47 79 216 / 0.17);
-    --jasmine: #5a5440;
-    --heart: #8a9a3a;
-    --thread: #3f8048;
-    --cord: #a67c1e;
-    --rose: #c9435f;
-    --spark: #c08a12;
-    --go-bg: #171717;
-    color-scheme: light;
+
+  /* Only these colours exist. The dark values are the default; light overrides are below. */
+  --color-*: initial;
+  --color-black: #000;
+  --color-page: #131313;
+  --color-ink: #f5f5f5;
+  --color-body: #d4d4d4;
+  --color-quiet: #a1a1a1;
+  --color-leader: #404040;
+  --color-ring: #2a2a2a;
+  --color-raised: color-mix(in srgb, var(--color-ink) 6%, var(--color-page));
+  --color-pen: #8ea2ff;
+  --color-hl: rgb(142 162 255 / 0.3); /* marker highlight, the pen blue */
+  --color-go-tile: #ffffff; /* tile behind the Go wordmark: white on dark, near-black on light */
+  /* the garland palette: code, callouts and the meadow art on the home page */
+  --color-jasmine: #f3eedc;
+  --color-heart: #e3e9b4;
+  --color-thread: #6fa073;
+  --color-cord: #d6ae58;
+  --color-rose: #e8738c;
+  --color-spark: #f7d77a;
+  --color-edel: #e9ecdf; /* edelweiss */
+  --color-water: #7da0b4;
+  --color-lily-tip: #f4a9bd;
+
+  --shadow-card:
+    0 22px 44px -18px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(128 128 128 / 0.25);
+  --shadow-popup: 0 18px 40px -16px rgb(0 0 0 / 0.5);
+
+  /* a margin note lights up when its footnote number is clicked */
+  --animate-lit: lit 1.4s ease-out;
+  @keyframes lit {
+    0%,
+    35% {
+      color: var(--color-ink);
+      border-right-color: var(--color-pen);
+    }
   }
 }
-:root[data-theme='light'] {
-  --bg: #ffffff;
-  --ink: #171717;
-  --body: #404040;
-  --quiet: #737373;
-  --leader: #e5e5e5;
-  --ring: #e5e5e5;
-  --pen: #2f4fd8;
-  --hl: rgb(47 79 216 / 0.17);
-  --jasmine: #5a5440;
-  --heart: #8a9a3a;
-  --thread: #3f8048;
-  --cord: #a67c1e;
-  --rose: #c9435f;
-  --spark: #c08a12;
-  --go-bg: #171717;
-  color-scheme: light;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    @variant light {
+      color-scheme: light;
+      --color-page: #ffffff;
+      --color-ink: #171717;
+      --color-body: #404040;
+      --color-quiet: #737373;
+      --color-leader: #e5e5e5;
+      --color-ring: #e5e5e5;
+      --color-pen: #2f4fd8;
+      --color-hl: rgb(47 79 216 / 0.17);
+      --color-go-tile: #171717;
+      --color-jasmine: #5a5440;
+      --color-heart: #8a9a3a;
+      --color-thread: #3f8048;
+      --color-cord: #a67c1e;
+      --color-rose: #c9435f;
+      --color-spark: #c08a12;
+      --color-edel: #5b6459;
+      --color-water: #4c7488;
+      --color-lily-tip: #d9637f;
+    }
+  }
+  * {
+    box-sizing: border-box;
+    border: 0 solid; /* so a border utility draws only the sides it names */
+  }
+  a,
+  button {
+    color: inherit;
+    font: inherit;
+  }
+  a {
+    text-decoration: none;
+  }
+  p,
+  h1,
+  h2 {
+    margin: 0;
+    font-weight: 400;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-quiet);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  /* Lists of rows: the items you are not pointing at step back.
+     Bullet lists inside a post are reading text and stay as they are. */
+  li {
+    transition: opacity 0.3s ease;
+    @variant motion-reduce {
+      transition: none;
+    }
+  }
+  @variant fine {
+    ul:not(.prose ul):hover > li:not(:hover) {
+      opacity: 0.35;
+    }
+  }
 }
 
-* {
-  box-sizing: border-box;
-}
-html {
-  background: var(--bg);
-}
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font: 400 16px/1.75 var(--sans);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-  transition:
-    background-color 0.25s,
-    color 0.25s;
-}
-a,
-button {
-  color: inherit;
-  font: inherit;
-}
-a {
-  text-decoration: none;
-}
-p,
-h1,
-h2 {
-  margin: 0;
-  font-weight: 400;
-}
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-:focus-visible {
-  outline: 2px solid var(--quiet);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-.skip {
-  position: absolute;
-  left: 16px;
-  top: -100px;
-  z-index: 40;
-  padding: 6px 10px;
-  background: var(--bg);
-  color: var(--ink);
-  font-size: 14px;
-}
-.skip:focus {
-  top: 8px;
-}
-
-.wrap {
-  max-width: 704px; /* 672px of text + 16px gutters */
-  margin: 0 auto;
+/* Side gutters of the column: 16px, or the notch if it is wider. */
+@utility px-safe {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 32px 0;
 }
-
-/* header */
-.top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 44px;
+/* Text link: ink on a hairline that darkens on hover. */
+@utility link {
+  @apply border-b border-leader font-medium text-ink transition-colors hover:border-ink;
 }
-.home-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  margin-left: -12px;
-  color: var(--quiet);
-  transition: color 0.15s;
-}
-.home-link:hover {
-  color: var(--ink);
-}
-.toggles {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--quiet);
-}
-.toggles > * {
-  display: inline-flex;
-  align-items: center;
-  background: none;
-  border: 0;
-  padding: 10px 0;
-  cursor: pointer;
-  color: var(--quiet);
-  transition: color 0.15s;
-  min-height: 44px;
-}
-.toggles > :hover {
-  color: var(--ink);
-}
-.toggles .theme {
-  padding: 10px 8px;
-  margin-right: -8px;
-}
-/* The theme button names the theme you'd switch TO. Pure CSS so there is no flash. */
-.theme .to-dark {
-  display: none;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) .theme .to-dark {
-    display: inline;
-  }
-  :root:not([data-theme='dark']) .theme .to-light {
-    display: none;
-  }
-}
-:root[data-theme='light'] .theme .to-dark {
-  display: inline;
-}
-:root[data-theme='light'] .theme .to-light {
-  display: none;
-}
-
-main {
-  display: flex;
-  flex-direction: column;
-  gap: 64px;
-  padding-top: 40px;
-}
-
-/* intro */
-.who {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 28px;
-}
-.ava {
-  position: relative;
-  width: 56px;
-  height: 60px;
-  flex: none;
-  margin-block: -8px;
-}
-.ava svg {
-  display: block;
-  overflow: visible;
-}
-.ava .shadow {
-  fill: rgb(0 0 0 / 0.22);
-  transform-box: fill-box;
-  transform-origin: center;
-}
-/* eyes follow the pointer: scripts/avatar.ts sets --fx/--fy on .eyes and --px/--py on each .pupil */
-.ava .eyes {
-  transform: translate(var(--fx, 0px), var(--fy, 0px));
-}
-.ava .eye {
-  transform-box: fill-box;
-  transform-origin: center;
-  /* a blink every ~3.8s, the first one a third of a second after load */
-  animation: blink 3.8s -3.2s infinite;
-}
-.ava .eye + .eye {
-  animation-delay: -3.16s;
-}
-.ava .pupil {
-  transform-box: fill-box;
-  transform-origin: center;
-  transform: translate(var(--px, 0px), var(--py, 0px)) scale(var(--ps, 1));
-  transition: transform 0.15s;
-}
-/* mouth: a smile at rest; "o" when the pointer is close; open and happy on hover or click; chatter when idle */
-.ava .mouth-o,
-.ava .mouth-open {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: 50% 0;
-  transform: scaleY(0.3);
-  transition:
-    opacity 0.12s,
-    transform 0.16s;
-}
-.ava .smile {
-  transition: opacity 0.12s;
-}
-.ava .cheek {
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-.ava[data-mood='happy'] .cheek {
-  opacity: 1;
-}
-.ava[data-mood='surprised'] .smile,
-.ava[data-mood='happy'] .smile,
-.ava[data-mood='talk'] .smile {
-  opacity: 0;
-}
-.ava[data-mood='surprised'] .mouth-o {
-  opacity: 1;
-  transform: scaleY(1);
-}
-.ava[data-mood='surprised'] {
-  --ps: 1.3;
-}
-.ava[data-mood='happy'] .mouth-open {
-  opacity: 1;
-  transform: scaleY(1);
-}
-.ava[data-mood='talk'] .mouth-open {
-  opacity: 1;
-  animation: talk 0.26s ease-in-out infinite alternate;
-}
-/* life: breathing, swaying sprout, a hop when it gets excited */
-.ava .bob {
-  transform-origin: 70px 134px;
-  animation: breathe 4.2s ease-in-out infinite;
-}
-.ava .sprout {
-  transform-origin: 70px 30px;
-  animation: sway 3.6s ease-in-out infinite alternate;
-}
-.ava .hop {
-  transform-origin: 70px 134px;
-}
-.ava.is-hop .hop {
-  animation: hop 0.55s cubic-bezier(0.3, 0.7, 0.4, 1);
-}
-.ava.is-hop .shadow {
-  animation: shadow-hop 0.55s cubic-bezier(0.3, 0.7, 0.4, 1);
-}
-.ava[data-mood='happy'] .bob {
-  animation-duration: 1.6s;
-}
-@keyframes blink {
-  0%,
-  93%,
-  100% {
-    transform: scaleY(1);
-  }
-  95.5%,
-  96.5% {
-    transform: scaleY(0.06);
-  }
-}
-@keyframes breathe {
-  50% {
-    transform: scale(1.025, 0.975);
-  }
-}
-@keyframes sway {
-  from {
-    transform: rotate(-5deg);
-  }
-  to {
-    transform: rotate(5deg);
-  }
-}
-@keyframes talk {
-  from {
-    transform: scaleY(0.28);
-  }
-  to {
-    transform: scaleY(1);
-  }
-}
-@keyframes hop {
-  0% {
-    transform: translateY(0) scale(1.06, 0.92);
-  }
-  35% {
-    transform: translateY(-18px) scale(0.96, 1.05);
-  }
-  70% {
-    transform: translateY(0) scale(1.05, 0.94);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-  }
-}
-@keyframes shadow-hop {
-  35% {
-    transform: scale(0.7);
-    opacity: 0.6;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ava .eye,
-  .ava .bob,
-  .ava .sprout,
-  .ava .mouth-open {
-    animation: none !important;
-  }
-  .ava.is-hop .hop,
-  .ava.is-hop .shadow {
-    animation: none;
-  }
-  .ava .pupil,
-  .ava .mouth-o,
-  .ava .mouth-open {
-    transition: none;
-  }
-}
-.who h1 {
-  font-size: 16px;
-  line-height: 1.25;
-  color: var(--ink);
-}
-.who p {
-  font-size: 14px;
-  line-height: 1.4;
-  color: var(--quiet);
-}
-.role {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px 12px;
-}
-.loc {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.intro {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  color: var(--body);
-  max-width: 62ch;
-}
-.intro a,
-.intro .em {
-  color: var(--ink);
-  font-weight: 500;
-}
-.intro a {
-  border-bottom: 1px solid var(--leader);
-  transition: border-color 0.15s;
-}
-.intro a:hover {
-  border-bottom-color: var(--ink);
-}
-/* the pen loop already marks Icon Plus, so its link has no underline */
-.intro a.plain {
-  border-bottom: 0;
-}
-/* Inline brand icons (public/folio): TypeScript and Go from Simple Icons (CC0; Go is the wordmark on a square), Icon Plus cropped from the logo in /images/iconpln.png. */
-.ic {
-  display: inline-block;
-  height: 15px;
-  width: 15px;
-  margin-right: 5px;
-  vertical-align: -2px;
-}
-.ic.ts,
-.ic.go,
-.ic.ip {
-  border-radius: 3px;
-}
-svg.ic.go .tile {
-  fill: var(--go-bg);
-  transition: fill 0.25s;
-}
-.intro .pvl {
-  border-bottom: 1px dotted var(--quiet);
-  cursor: default;
-  transition: border-color 0.15s;
-}
-.intro .pvl:hover {
-  border-bottom-color: var(--ink);
-}
-
-/* pen marks drawn over the intro */
-.mk {
-  position: relative;
-  white-space: nowrap;
-  color: var(--ink);
-}
-.mk svg {
-  position: absolute;
-  pointer-events: none;
-  overflow: visible;
-}
-.mk.circle {
-  margin-inline: 14px 19px;
-}
-.mk.circle svg {
-  left: -15px;
-  top: -13px;
-  width: calc(100% + 30px);
-  height: calc(100% + 21px);
-}
-/* marker highlight: a thick swipe behind the text that draws itself left to right */
-.mk.hl {
-  isolation: isolate;
-  padding-inline: 5px;
-  margin-inline: 4px 3px;
-}
-.mk.hl svg {
-  z-index: -1;
-  left: 0;
-  width: 100%;
-  /* centred on the capital letters (cap top to baseline), not on the line box, whose empty descender space would push the marker up */
-  top: calc(50% - 2px);
-  height: 6px;
-}
-.mk.hl path {
-  stroke: var(--hl);
-  stroke-width: 22px;
-  stroke-linecap: butt;
-}
-.mk.under svg {
-  left: -2px;
-  bottom: -5px;
-  width: calc(100% + 4px);
-  height: 9px;
-}
-.mk path {
-  fill: none;
-  stroke: var(--pen);
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
-}
-.mk.draw path {
-  animation: ink 0.85s cubic-bezier(0.5, 0, 0.3, 1) both;
-}
-.mk.d1 path {
-  animation-delay: 0.35s;
-}
-.mk.d2 path {
-  animation-delay: 0.95s;
-}
-.mk.again path {
-  animation-delay: 0s;
-}
-@keyframes ink {
-  from {
-    stroke-dashoffset: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .mk.draw path {
-    animation: none;
-  }
-}
-
-/* lists */
-.label {
-  font-size: 14px;
-  color: var(--quiet);
-  margin-bottom: 6px;
-}
-.row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 4px 0;
-  font-size: 14px;
-  line-height: 1.7;
-}
-.row .k {
-  color: var(--body);
-  transition: color 0.15s;
-  min-width: 0;
-}
-.row .dots {
-  flex: 1;
-  min-width: 24px;
-  border-bottom: 1px dotted var(--leader);
-  transform: translateY(1px);
-}
-.row .v {
-  color: var(--quiet);
-  text-align: right;
-  max-width: 58%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.15s;
-}
-a.row:hover .k,
-a.row:focus-visible .k {
-  color: var(--ink);
-}
-a.row:hover .v,
-a.row:focus-visible .v {
-  color: var(--body);
-}
-a.row:hover .dots {
-  border-bottom-color: var(--quiet);
-}
-li {
-  transition: opacity 0.3s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  ul:hover > li:not(:hover) {
-    opacity: 0.35;
-  }
-}
-.empty {
-  font-size: 14px;
-  color: var(--quiet);
-}
-
-/* floating project preview: just the screenshot */
-.pv {
-  position: fixed;
-  z-index: 30;
-  left: 0;
-  top: 0;
-  width: 280px;
-  aspect-ratio: 16 / 9;
-  border-radius: 12px;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.86) rotate(-2deg);
+/* The hover card pops in with a little overshoot. */
+@utility transition-pop {
   transition:
     opacity 0.22s,
-    transform 0.38s cubic-bezier(0.32, 1.25, 0.4, 1);
-  overflow: hidden;
-  background: var(--ring);
-  box-shadow:
-    0 22px 44px -18px rgb(0 0 0 / 0.55),
-    0 0 0 1px rgb(128 128 128 / 0.25);
-}
-.pv.on {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1) rotate(0deg);
-}
-.pv img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top;
-}
-@media (prefers-reduced-motion: reduce) {
-  li,
-  .pv {
-    transition: none;
-  }
-  body {
-    transition: none;
-  }
-}
-@media (max-width: 640px) {
-  .row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    padding: 6px 0;
-  }
-  .row .dots {
-    display: none;
-  }
-  .row .v {
-    text-align: left;
-    max-width: 100%;
-    white-space: normal;
-  }
-}
-@media (hover: none), (pointer: coarse) {
-  .pv {
-    display: none;
-  }
-}
-
-/* garland */
-.garland {
-  margin-top: 72px;
-  display: flex;
-  justify-content: center;
-  overflow: hidden;
-  width: 100%;
-  user-select: none;
-}
-.garland pre {
-  flex: none;
-  margin: 0;
-  font: 700 6.6px/6.5px var(--mono);
-  color: var(--ink);
-  white-space: pre;
-  cursor: crosshair;
-}
-.garland .cj {
-  color: var(--jasmine);
-}
-.garland .cb {
-  color: var(--heart);
-}
-.garland .ct {
-  color: var(--thread);
-}
-.garland .cr {
-  color: var(--cord);
-}
-.garland .cp {
-  color: var(--rose);
-}
-.garland .cs {
-  color: var(--spark);
-}
-.foot {
-  max-width: 704px;
-  margin: 0 auto;
-  padding-inline: max(16px, env(safe-area-inset-left, 0px))
-    max(16px, env(safe-area-inset-right, 0px));
-  text-align: right;
-  font-size: 13px;
-  color: var(--quiet);
-  padding-block: 48px 28px;
-}
-.foot a:hover {
-  color: var(--ink);
+    scale 0.38s cubic-bezier(0.32, 1.25, 0.4, 1),
+    rotate 0.38s cubic-bezier(0.32, 1.25, 0.4, 1);
 }

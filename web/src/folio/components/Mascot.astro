@@ -1,0 +1,44 @@
+---
+// Face-only orangutan, based on mascot concept 6.
+// Keep the animated groups so scripts/avatar.ts can move its eyes and set its mood.
+import '../styles/mascot.css'
+---
+
+<span class="ava relative -my-2 h-15 w-14 flex-none" aria-hidden="true" data-mood="idle">
+  <svg viewBox="0 0 140 150" width="56" height="60" focusable="false">
+    <g class="hop">
+      <g class="bob">
+        <path d="M70 27C94 24 113 39 120 57Q133 67 133 80Q133 84 125 81Q137 98 130 108Q128 111 121 105Q125 124 115 127Q112 128 108 122Q105 139 94 137L86 132Q80 143 70 144Q60 143 54 132L46 137Q35 139 32 122Q28 128 25 127Q15 124 19 105Q12 111 10 108Q3 98 15 81Q7 84 7 80Q7 67 20 57C27 39 46 24 70 27Z" fill="#CE5218" />
+        <g class="sprout"><path d="M48 35Q58 26 44 18Q36 12 46 12Q65 13 76 28Q82 13 87 24L91 38Z" fill="#CE5218" /></g>
+        <path d="M22 70C11 67 11 88 23 91L28 88V73Z" fill="#F7C598" />
+        <path d="M118 70C129 67 129 88 117 91L112 88V73Z" fill="#F7C598" />
+        <path d="M70 52C49 30 29 49 30 71Q30 84 40 91C20 108 38 129 70 129C102 129 120 108 100 91Q110 84 110 71C111 49 91 30 70 52Z" fill="#F7C598" />
+        <ellipse class="cheek" cx="42" cy="98" rx="6" ry="3.5" fill="#EEA078" />
+        <ellipse class="cheek" cx="98" cy="98" rx="6" ry="3.5" fill="#EEA078" />
+        <g class="eyes">
+          <g class="eye">
+            <ellipse cx="49" cy="77" rx="7.5" ry="8" fill="#3B2418" />
+            <g class="pupil"><circle cx="47" cy="75" r="2" fill="#fff" /></g>
+          </g>
+          <g class="eye">
+            <ellipse cx="91" cy="77" rx="7.5" ry="8" fill="#3B2418" />
+            <g class="pupil"><circle cx="89" cy="75" r="2" fill="#fff" /></g>
+          </g>
+        </g>
+        <ellipse cx="64" cy="94" rx="2.2" ry="3.4" transform="rotate(-30 64 94)" fill="#A15830" />
+        <ellipse cx="76" cy="94" rx="2.2" ry="3.4" transform="rotate(30 76 94)" fill="#A15830" />
+        <path class="smile" d="M54 108Q70 123 86 108" fill="none" stroke="#61321D" stroke-width="4" stroke-linecap="round" />
+        <ellipse class="mouth-o" cx="70" cy="112" rx="4.5" ry="5.5" fill="#5B1F2E" />
+        <g class="mouth-open">
+          <path d="M55 106Q70 112 85 106Q83 122 70 122Q57 122 55 106Z" fill="#5B1F2E" />
+          <ellipse cx="70" cy="118" rx="7" ry="3" fill="#E8738C" />
+        </g>
+      </g>
+    </g>
+  </svg>
+</span>
+
+<script>
+  import { initAvatar } from '../scripts/avatar'
+  initAvatar()
+</script>

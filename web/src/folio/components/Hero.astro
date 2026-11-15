@@ -1,69 +1,40 @@
 ---
+import Mascot from './Mascot.astro'
+import '../styles/marks.css'
 import { copy, site, socials, type Lang } from '../data/content'
 
 const { lang } = Astro.props as { lang: Lang }
 const t = copy[lang]
+const em = 'font-medium text-ink'
+// Inline brand icons (public/folio): TypeScript and Go from Simple Icons (CC0; Go is the wordmark on a square), Icon Plus cropped from its logo.
+const icon = 'mr-1.25 inline-block size-3.75 rounded-[3px] align-[-2px]'
 ---
 
 <section>
-  <div class="who">
-    <span class="ava" aria-hidden="true" data-mood="idle">
-      <svg viewBox="0 0 140 150" width="56" height="60" focusable="false">
-        <ellipse class="shadow" cx="70" cy="144" rx="38" ry="3.5" />
-        <g class="hop">
-          <g class="bob">
-            <path d="M70 26A22.6 22.6 0 0 1 100.6 36.3A23.1 23.1 0 0 1 119.5 63.3A23.4 23.4 0 0 1 119.5 96.7A23.1 23.1 0 0 1 100.6 123.7A22.6 22.6 0 0 1 70 134A22.6 22.6 0 0 1 39.4 123.7A23.1 23.1 0 0 1 20.5 96.7A23.4 23.4 0 0 1 20.5 63.3A23.1 23.1 0 0 1 39.4 36.3A22.6 22.6 0 0 1 70 26Z" fill="#D8692C" />
-            <g class="sprout"><path d="M60 28C54 10 78 2 90 14C79 12 74 18 78 30Z" fill="#E8803A" /></g>
-            <ellipse cx="22" cy="86" rx="8" ry="10" fill="#F6D2A8" />
-            <ellipse cx="118" cy="86" rx="8" ry="10" fill="#F6D2A8" />
-            <path d="M70 48C92 44 108 58 108 80C108 102 92 122 70 122C48 122 32 102 32 80C32 58 48 44 70 48Z" fill="#F6D2A8" />
-            <ellipse cx="70" cy="102" rx="18" ry="13" fill="#FBE4C6" />
-            <ellipse class="cheek" cx="42" cy="98" rx="6.5" ry="4.2" fill="#F29A8A" />
-            <ellipse class="cheek" cx="98" cy="98" rx="6.5" ry="4.2" fill="#F29A8A" />
-            <g class="eyes">
-              <g class="eye">
-                <circle cx="54" cy="82" r="9" fill="#2A1A10" />
-                <g class="pupil"><circle cx="51" cy="78.6" r="3.2" fill="#fff" /><circle cx="57.4" cy="86" r="1.5" fill="#fff" /></g>
-              </g>
-              <g class="eye">
-                <circle cx="86" cy="82" r="9" fill="#2A1A10" />
-                <g class="pupil"><circle cx="83" cy="78.6" r="3.2" fill="#fff" /><circle cx="89.4" cy="86" r="1.5" fill="#fff" /></g>
-              </g>
-            </g>
-            <ellipse cx="66.5" cy="98" rx="1.6" ry="1.3" fill="#8A5A3A" />
-            <ellipse cx="73.5" cy="98" rx="1.6" ry="1.3" fill="#8A5A3A" />
-            <path class="smile" d="M63 106Q70 112.5 77 106" fill="none" stroke="#5A2A1A" stroke-width="2.6" stroke-linecap="round" />
-            <ellipse class="mouth-o" cx="70" cy="108" rx="3.2" ry="3.8" fill="#5B1F2E" />
-            <g class="mouth-open">
-              <path d="M61.5 104Q70 105.5 78.5 104Q77.5 116 70 116Q62.5 116 61.5 104Z" fill="#5B1F2E" />
-              <ellipse cx="70" cy="112" rx="4" ry="2.2" fill="#E8738C" />
-            </g>
-          </g>
-        </g>
-      </svg>
-    </span>
+  <div class="mb-7 flex items-center gap-3">
+    <Mascot />
     <div>
-      <h1>{site.name}</h1>
-      <p class="role">
+      <h1 class="text-[16px] leading-tight text-ink">{site.name}</h1>
+      <p class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[14px] leading-[1.4] text-quiet">
         <span>{t.role}</span>
-        <span class="loc"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="9.5" r="2.6" /></svg>{site.location}</span>
+        <span class="inline-flex items-center gap-1"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="9.5" r="2.6" /></svg>{site.location}</span>
       </p>
     </div>
   </div>
-  <div class="intro">
+  <div class="flex max-w-[62ch] flex-col gap-5.5 text-body" data-intro>
     <p>
       {
         t.intro.map((s) =>
           typeof s === 'string' ? (
             s
           ) : s.k === 'ts' ? (
-            <span class="em"><img class="ic ts" src="/folio/typescript.svg" alt="" width="15" height="15" />TypeScript</span>
+            <span class={em}><img class={icon} src="/folio/typescript.svg" alt="" width="15" height="15" />TypeScript</span>
           ) : s.k === 'go' ? (
-            <span class="em"><svg class="ic go" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect class="tile" width="24" height="24" rx="3.5" /><path fill="#00ADD8" transform="translate(1.92 1.92) scale(0.84)" d="M1.811 10.231c-.047 0-.058-.023-.035-.059l.246-.315c.023-.035.081-.058.128-.058h4.172c.046 0 .058.035.035.07l-.199.303c-.023.036-.082.07-.117.07zM.047 11.306c-.047 0-.059-.023-.035-.058l.245-.316c.023-.035.082-.058.129-.058h5.328c.047 0 .07.035.058.07l-.093.28c-.012.047-.058.07-.105.07zm2.828 1.075c-.047 0-.059-.035-.035-.07l.163-.292c.023-.035.07-.07.117-.07h2.337c.047 0 .07.035.07.082l-.023.28c0 .047-.047.082-.082.082zm12.129-2.36c-.736.187-1.239.327-1.963.514-.176.046-.187.058-.34-.117-.174-.199-.303-.327-.548-.444-.737-.362-1.45-.257-2.115.175-.795.514-1.204 1.274-1.192 2.22.011.935.654 1.706 1.577 1.835.795.105 1.46-.175 1.987-.77.105-.13.198-.27.315-.434H10.47c-.245 0-.304-.152-.222-.35.152-.362.432-.97.596-1.274a.315.315 0 01.292-.187h4.253c-.023.316-.023.631-.07.947a4.983 4.983 0 01-.958 2.29c-.841 1.11-1.94 1.8-3.33 1.986-1.145.152-2.209-.07-3.143-.77-.865-.655-1.356-1.52-1.484-2.595-.152-1.274.222-2.419.993-3.424.83-1.086 1.928-1.776 3.272-2.02 1.098-.2 2.15-.07 3.096.571.62.41 1.063.97 1.356 1.648.07.105.023.164-.117.2m3.868 6.461c-1.064-.024-2.034-.328-2.852-1.029a3.665 3.665 0 01-1.262-2.255c-.21-1.32.152-2.489.947-3.529.853-1.122 1.881-1.706 3.272-1.95 1.192-.21 2.314-.095 3.33.595.923.63 1.496 1.484 1.648 2.605.198 1.578-.257 2.863-1.344 3.962-.771.783-1.718 1.273-2.805 1.495-.315.06-.63.07-.934.106zm2.78-4.72c-.011-.153-.011-.27-.034-.387-.21-1.157-1.274-1.81-2.384-1.554-1.087.245-1.788.935-2.045 2.033-.21.912.234 1.835 1.075 2.21.643.28 1.285.244 1.905-.07.923-.48 1.425-1.228 1.484-2.233z" /></svg>Go</span>
+            <span class={em}><svg class={icon} viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect class="fill-go-tile transition-[fill] duration-250" width="24" height="24" rx="3.5" /><path fill="#00ADD8" transform="translate(1.92 1.92) scale(0.84)" d="M1.811 10.231c-.047 0-.058-.023-.035-.059l.246-.315c.023-.035.081-.058.128-.058h4.172c.046 0 .058.035.035.07l-.199.303c-.023.036-.082.07-.117.07zM.047 11.306c-.047 0-.059-.023-.035-.058l.245-.316c.023-.035.082-.058.129-.058h5.328c.047 0 .07.035.058.07l-.093.28c-.012.047-.058.07-.105.07zm2.828 1.075c-.047 0-.059-.035-.035-.07l.163-.292c.023-.035.07-.07.117-.07h2.337c.047 0 .07.035.07.082l-.023.28c0 .047-.047.082-.082.082zm12.129-2.36c-.736.187-1.239.327-1.963.514-.176.046-.187.058-.34-.117-.174-.199-.303-.327-.548-.444-.737-.362-1.45-.257-2.115.175-.795.514-1.204 1.274-1.192 2.22.011.935.654 1.706 1.577 1.835.795.105 1.46-.175 1.987-.77.105-.13.198-.27.315-.434H10.47c-.245 0-.304-.152-.222-.35.152-.362.432-.97.596-1.274a.315.315 0 01.292-.187h4.253c-.023.316-.023.631-.07.947a4.983 4.983 0 01-.958 2.29c-.841 1.11-1.94 1.8-3.33 1.986-1.145.152-2.209-.07-3.143-.77-.865-.655-1.356-1.52-1.484-2.595-.152-1.274.222-2.419.993-3.424.83-1.086 1.928-1.776 3.272-2.02 1.098-.2 2.15-.07 3.096.571.62.41 1.063.97 1.356 1.648.07.105.023.164-.117.2m3.868 6.461c-1.064-.024-2.034-.328-2.852-1.029a3.665 3.665 0 01-1.262-2.255c-.21-1.32.152-2.489.947-3.529.853-1.122 1.881-1.706 3.272-1.95 1.192-.21 2.314-.095 3.33.595.923.63 1.496 1.484 1.648 2.605.198 1.578-.257 2.863-1.344 3.962-.771.783-1.718 1.273-2.805 1.495-.315.06-.63.07-.934.106zm2.78-4.72c-.011-.153-.011-.27-.034-.387-.21-1.157-1.274-1.81-2.384-1.554-1.087.245-1.788.935-2.045 2.033-.21.912.234 1.835 1.075 2.21.643.28 1.285.244 1.905-.07.923-.48 1.425-1.228 1.484-2.233z" /></svg>Go</span>
           ) : s.k === 'ip' ? (
-            <a class="em plain" href={site.iconPlusUrl} target="_blank" rel="noopener"><span class="mk hl draw d1"><img class="ic ip" src="/folio/iconplus.png" alt="" width="15" height="15" />Icon Plus<svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 7 C 40 4, 80 8, 120 5 S 180 6, 200 5" /></svg></span></a>
+            <a class={em} href={site.iconPlusUrl} target="_blank" rel="noopener"><span class="mk hl draw d1"><img class={icon} src="/folio/iconplus.png" alt="" width="15" height="15" />Icon Plus<svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 7 C 40 4, 80 8, 120 5 S 180 6, 200 5" /></svg></span></a>
           ) : s.k === 'pv' ? (
-            <span class="em pvl" data-pv={s.name}>{s.name}</span>
+            <span class:list={[em, 'cursor-default border-b border-dotted border-quiet transition-colors hover:border-ink']} data-pv={s.name} data-pv-below>{s.name}</span>
           ) : s.k === 'ring' ? (
             <span class="mk under draw d2">{s.text}<svg viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 7 C 30 3, 62 10, 96 6 S 150 3, 172 8 C 182 10, 192 6, 198 5" /></svg></span>
           ) : null,
@@ -76,9 +47,9 @@ const t = copy[lang]
           typeof s === 'string' ? (
             s
           ) : s.k === 'link' ? (
-            <a href={socials[s.id].href} target="_blank" rel="noopener">{socials[s.id].label}</a>
+            <a class="link" href={socials[s.id].href} target="_blank" rel="noopener">{socials[s.id].label}</a>
           ) : (
-            <a href={`mailto:${site.email}`}>{site.email}</a>
+            <a class="link" href={`mailto:${site.email}`}>{site.email}</a>
           ),
         )
       }
@@ -87,8 +58,6 @@ const t = copy[lang]
 </section>
 
 <script>
-  import { initMarks } from "../scripts/marks"
-  import { initAvatar } from "../scripts/avatar"
-  initMarks(document.querySelector(".intro"))
-  initAvatar()
+  import { initMarks } from '../scripts/marks'
+  initMarks(document.querySelector('[data-intro]'))
 </script>

@@ -4,4 +4,6 @@ import { copyright, homePath, type Lang } from '../data/content'
 const { lang } = Astro.props as { lang: Lang }
 ---
 
-<footer class="foot"><a href={homePath[lang]}>{copyright()}</a></footer>
+<footer class="mx-auto max-w-176 px-safe pt-12 pb-7 text-right text-[13px] text-quiet">
+  <a class="hover:text-ink" href={homePath[lang]}>{copyright()}</a>
+</footer>

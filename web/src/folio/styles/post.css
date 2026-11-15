@@ -1,0 +1,185 @@
+/* The body of a post: HTML from the shared markdown renderer, which carries its own
+   class names, so it is styled from the outside. Rules stay outside any layer: the
+   renderer also emits a few utility names (underline, rounded-sm) that must not win here. */
+@reference './folio.css';
+
+/* contents links glide to their heading */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.prose {
+  @apply mt-8 break-words text-body;
+}
+.prose > * + * {
+  @apply mt-[1.1em];
+}
+.prose :is(h2, h3, h4) {
+  @apply scroll-mt-6 leading-[1.4] font-medium tracking-[-0.01em] text-ink;
+}
+.prose h2 {
+  @apply mt-[2.2em] text-[20px];
+}
+.prose h3 {
+  @apply mt-[1.8em] text-[17px];
+}
+.prose h4 {
+  @apply mt-[1.6em] text-[16px];
+}
+.prose :is(h2, h3, h4) + * {
+  @apply mt-[0.6em];
+}
+.prose .heading-anchor {
+  @apply hidden;
+}
+.prose a {
+  @apply link;
+}
+/* the renderer tags its links with utility names of its own: keep them inert */
+:is(.prose, [data-sidenote]) a {
+  @apply no-underline;
+}
+.prose strong {
+  @apply font-medium text-ink;
+}
+.prose :is(ul, ol) {
+  @apply pl-[1.3em];
+  list-style: revert;
+}
+.prose li + li {
+  @apply mt-[0.4em];
+}
+.prose li::marker {
+  @apply text-quiet;
+}
+.prose hr {
+  @apply my-[2em] border-t border-dotted border-leader;
+}
+.prose blockquote {
+  @apply mx-0 border-l-2 border-leader pl-4 text-quiet;
+}
+/* no italics anywhere in the article */
+.prose :is(em, i, cite) {
+  @apply text-ink not-italic;
+}
+
+/* code */
+.prose :not(pre) > code {
+  @apply rounded-[4px] bg-raised px-[0.35em] py-[0.1em] font-mono text-[0.85em] leading-[normal] font-normal [overflow-wrap:anywhere] text-ink;
+}
+.prose .code-block {
+  @apply relative my-[1.6em] overflow-hidden rounded-[10px] border border-ring bg-raised;
+}
+.prose pre {
+  @apply m-0 overflow-x-auto bg-transparent! px-4 py-3.5 font-mono text-[13px] leading-[1.65] font-normal text-body;
+}
+.prose pre code {
+  font: inherit;
+}
+.prose .code-lang {
+  @apply absolute top-1.5 left-4 font-mono text-[11px] leading-none font-normal text-quiet;
+}
+.prose .code-lang + pre {
+  @apply pt-7;
+}
+.prose .hl-comment {
+  @apply text-quiet;
+}
+.prose :is(.hl-string, .hl-value) {
+  @apply text-thread;
+}
+.prose :is(.hl-keyword, .hl-tag) {
+  @apply text-rose;
+}
+.prose .hl-number {
+  @apply text-cord;
+}
+.prose .hl-function {
+  @apply text-pen;
+}
+.prose :is(.hl-type, .hl-attr, .hl-builtin, .hl-property) {
+  @apply text-heart;
+}
+.prose :is(.hl-operator, .hl-variable, .hl-punctuation) {
+  @apply text-body;
+}
+
+/* tables and pictures */
+.prose table {
+  @apply block w-full border-collapse overflow-x-auto text-[14px];
+}
+.prose :is(th, td) {
+  @apply border-b border-dotted border-leader py-1.5 pr-3 pl-0 text-left align-top;
+}
+.prose th {
+  @apply font-medium whitespace-nowrap text-ink;
+}
+.prose figure {
+  @apply mx-0 my-[1.6em];
+}
+.prose img {
+  @apply block h-auto max-w-full cursor-zoom-in rounded-[8px];
+}
+.prose figcaption {
+  @apply mt-2 text-[13px] text-quiet;
+}
+
+/* callouts: the accent colours the left rule and the label; no icon in the header */
+.prose .admonition {
+  --accent: var(--color-quiet);
+  @apply rounded-[6px] border border-l-2 border-ring border-l-(color:--accent) bg-raised px-4 py-3 text-[15px];
+}
+.prose .admonition-header {
+  @apply mb-1.5 flex items-center gap-2 text-[12px] tracking-[0.06em] text-(color:--accent) uppercase;
+}
+.prose .admonition-icon {
+  @apply hidden;
+}
+.prose .admonition-label {
+  @apply flex-1;
+}
+.prose .admonition-copy-btn {
+  @apply cursor-pointer rounded-full border border-leader bg-transparent px-2.5 py-0.5 font-sans text-[11px] leading-[normal] font-normal text-quiet hover:border-quiet hover:text-ink;
+}
+.prose .admonition-body > * + * {
+  @apply mt-[0.7em];
+}
+/* the Ask AI prompt: same sans as the rest, line breaks kept */
+.prose .admonition-body-mono {
+  @apply leading-[1.6] whitespace-pre-wrap;
+}
+.prose .admonition-tip {
+  --accent: var(--color-thread);
+}
+.prose :is(.admonition-warning, .admonition-tldr) {
+  --accent: var(--color-cord);
+}
+.prose .admonition-danger {
+  --accent: var(--color-rose);
+}
+.prose :is(.admonition-info, .admonition-note, .admonition-ai) {
+  --accent: var(--color-pen);
+}
+
+/* footnotes, glossary and citation numbers */
+.prose .footnote-def {
+  @apply scroll-mt-6 text-[14px] text-quiet;
+}
+.prose :is(.footnote-def, [id^='fnref-']):target {
+  @apply text-ink;
+}
+.prose sup {
+  @apply text-[0.7em] leading-[0];
+}
+.prose :is(.footnote-ref, .gloss-ref, .cite-ref) a {
+  @apply cursor-pointer border-b-0 font-normal text-pen;
+}
+.prose .gloss-ref a {
+  @apply border-b border-dotted border-pen;
+}
+/* wide screens show footnotes in the margin instead (scripts/post.ts sets data-side) */
+[data-side] .prose .footnote-def {
+  @apply hidden;
+}

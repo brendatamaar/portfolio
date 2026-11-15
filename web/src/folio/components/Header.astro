@@ -1,26 +1,27 @@
 ---
-import { blogPath, copy, homePath, type Lang } from '../data/content'
+import { blogPath, copy, homePath, site, type Lang } from '../data/content'
 
 const { lang } = Astro.props as { lang: Lang }
 const t = copy[lang]
 ---
 
-<header class="top">
-  <a class="home-link" href={homePath[lang]} aria-label={t.homeLabel}>
+<header class="flex min-h-11 items-center justify-between">
+  <a class="-ml-3 inline-flex min-h-11 min-w-11 items-center justify-center text-quiet transition-colors hover:text-ink" href={homePath[lang]} aria-label={t.homeLabel}>
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 10v9.5h13V10" /><path d="M10 19.5v-5h4v5" /></svg>
   </a>
-  <nav class="toggles" aria-label="Site">
-    <a href={blogPath(lang)}>{t.writing}</a>
+  <nav class="flex items-center gap-2 text-[14px] text-quiet" aria-label="Site">
+    <a class="inline-flex min-h-11 items-center py-2.5 transition-colors hover:text-ink" href={blogPath(lang)}>{t.writing}</a>
+    <a class="ml-2 inline-flex min-h-11 items-center py-2.5 transition-colors hover:text-ink" href={encodeURI(site.resume)} download>{t.resume}</a>
     <button
       type="button"
       id="theme"
-      class="theme"
+      class="-mr-2 inline-flex min-h-11 cursor-pointer items-center bg-transparent px-2 py-2.5 text-quiet transition-colors hover:text-ink"
       aria-label={t.themeLabel('light')}
       data-labels={JSON.stringify({ light: t.themeLabel('light'), dark: t.themeLabel('dark') })}
     >
-      <!-- Shows the theme you'd switch TO: a sun while dark, a moon while light. CSS picks one, so there is no flash. -->
-      <svg class="to-light" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" /></svg>
-      <svg class="to-dark" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8 8 0 1 1 9.8 4a6.4 6.4 0 0 0 10.2 10.2z" /></svg>
+      <!-- Shows the theme you'd switch TO: a sun while dark, a moon while light. The light: variant picks one, so there is no flash. -->
+      <svg class="light:hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" /></svg>
+      <svg class="hidden light:block" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8 8 0 1 1 9.8 4a6.4 6.4 0 0 0 10.2 10.2z" /></svg>
     </button>
   </nav>
 </header>

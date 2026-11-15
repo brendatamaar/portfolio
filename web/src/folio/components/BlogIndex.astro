@@ -17,13 +17,13 @@ const posts = await loadPosts(lang, 100)
   alternates={{ en: blogPath('en'), id: blogPath('id') }}
 >
   <section aria-labelledby="h-blog">
-    <h1 class="label" id="h-blog">{t.title}</h1>
-    <p class="lede">{t.lede}</p>
+    <h1 class="mb-1.5 text-[14px] text-quiet" id="h-blog">{t.title}</h1>
+    <p class="mb-2.5 text-[14px] leading-[1.7] text-quiet">{t.lede}</p>
     {
       posts.length > 0 ? (
         <Rows rows={posts.map((p) => ({ k: p.title, v: monthYear(p.date, lang), href: postPath(lang, p.slug) }))} />
       ) : (
-        <p class="empty">{t.empty}</p>
+        <p class="text-[14px] text-quiet">{t.empty}</p>
       )
     }
   </section>
