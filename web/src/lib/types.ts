@@ -18,8 +18,6 @@ export interface PostSummary {
   coverImageUrl: string | null
   publishedAt: string | null
   createdAt: string
-  language: string
-  translationOfId: number | null
   tags: PostTag[]
 }
 

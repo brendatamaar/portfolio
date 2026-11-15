@@ -1,13 +1,4 @@
 import type { PostsResponse, PostDetail, ResumeData } from './types'
-export type {
-  PostSummary,
-  PostTag,
-  PostDetail,
-  ResumeData,
-  ResumeProfile,
-  ResumeWorkItem,
-  ResumeProjectItem,
-} from './types'
 
 // SSR must not hang on a stalled API — pages fall back to empty/redirect states
 const TIMEOUT_MS = 5000
