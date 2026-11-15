@@ -9,18 +9,6 @@ export type AdmonitionType =
   | 'ai'
   | 'see-also'
 
-export type BlockTokenType =
-  | 'heading'
-  | 'paragraph'
-  | 'code'
-  | 'blockquote'
-  | 'list'
-  | 'list_item'
-  | 'hr'
-  | 'table'
-  | 'admonition'
-  | 'footnote_def'
-
 export interface HeadingToken {
   type: 'heading'
   level: 1 | 2 | 3 | 4 | 5 | 6
