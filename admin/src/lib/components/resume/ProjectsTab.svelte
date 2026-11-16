@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Loader, Plus, Pencil, Trash2, Check, Upload, Star, X, ExternalLink } from 'lucide-svelte'
+  import { Loader, Plus, Pencil, Trash2, Check, Upload, Star, X, ExternalLink, GripVertical, ChevronUp, ChevronDown, ArrowDownAZ } from 'lucide-svelte'
   import type { Lang, ResumeProjectItem, ProjectDraft } from '$lib/types'
   import { api } from '$lib/api'
   import { inputCls, textareaCls, selectCls, btnPrimary, btnGhost, labelCls } from './formStyles'
@@ -29,8 +29,33 @@
       : '',
   )
   const canSave = $derived(!titleError && !hrefError && !saving)
-  const techChips = $derived(draft.techStack.split(',').map((s) => s.trim()).filter(Boolean))
   const imgSrc = $derived(draft.img ? (draft.img.startsWith('/') ? API_ORIGIN + draft.img : draft.img) : '')
+
+  // Tech stack is stored server-side as JSON ('["Go","React"]'); never show
+  // that raw. Everywhere in this tab it is a string[] of pills.
+  function parseTech(raw: string): string[] {
+    try {
+      const v: unknown = JSON.parse(raw)
+      if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string').map((s) => s.trim()).filter(Boolean)
+    } catch { /* not JSON: fall through to comma list */ }
+    return raw.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  const techChips = $derived(parseTech(draft.techStack))
+  let techInput = $state('')
+  const techSuggestions = $derived(
+    [...new Set(items.flatMap((i) => parseTech(i.techStack)))]
+      .filter((t) => !techChips.some((c) => c.toLowerCase() === t.toLowerCase()))
+      .slice(0, 8),
+  )
+  function setTech(chips: string[]) { setField('techStack', chips.join(', ')) }
+  function addTech(raw: string) {
+    const parts = raw.split(',').map((s) => s.trim()).filter(Boolean)
+    if (!parts.length) return
+    const next = [...techChips]
+    for (const p of parts) if (!next.some((c) => c.toLowerCase() === p.toLowerCase())) next.push(p)
+    setTech(next); techInput = ''
+  }
+  function removeTech(chip: string) { setTech(techChips.filter((c) => c !== chip)) }
 
   async function load(l: Lang) {
     loading = true
@@ -44,8 +69,43 @@
   }
   function startAdd() { openDraft({ ...EMPTY, locale, sortOrder: items.length }, 'new') }
   function startEdit(item: ResumeProjectItem) {
-    openDraft({ locale: item.locale, title: item.title, type: item.type, company: item.company, techStack: item.techStack, description: item.description, linkLabel: item.linkLabel, linkHref: item.linkHref, img: item.img, isFeatured: item.isFeatured, sortOrder: item.sortOrder }, item.id)
+    techInput = ''
+    openDraft({ locale: item.locale, title: item.title, type: item.type, company: item.company, techStack: parseTech(item.techStack).join(', '), description: item.description, linkLabel: item.linkLabel, linkHref: item.linkHref, img: item.img, isFeatured: item.isFeatured, sortOrder: item.sortOrder }, item.id)
   }
+
+  // --- Ordering: drag-and-drop / arrows / A-Z, persisted via /projects/reorder.
+  // sortOrder is always rewritten to the row position (0..n-1) automatically.
+  let dragId = $state<number | null>(null)
+  let overId = $state<number | null>(null)
+  let reordering = $state(false)
+
+  async function persistOrder(next: ResumeProjectItem[]) {
+    const prev = items
+    items = next.map((i, idx) => ({ ...i, sortOrder: idx }))
+    reordering = true; error = ''
+    try {
+      items = await api.reorderResumeProjects(locale, items.map((i) => i.id))
+    } catch (err) {
+      items = prev
+      error = `Reorder failed: ${err instanceof Error ? err.message : String(err)}`
+    } finally { reordering = false }
+  }
+  function moveItem(id: number, dir: -1 | 1) {
+    const idx = items.findIndex((i) => i.id === id)
+    const to = idx + dir
+    if (idx < 0 || to < 0 || to >= items.length) return
+    const next = [...items]; [next[idx], next[to]] = [next[to], next[idx]]
+    void persistOrder(next)
+  }
+  function dropOn(targetId: number) {
+    if (dragId === null || dragId === targetId) return
+    const from = items.findIndex((i) => i.id === dragId)
+    const to = items.findIndex((i) => i.id === targetId)
+    if (from < 0 || to < 0) return
+    const next = [...items]; const [moved] = next.splice(from, 1); next.splice(to, 0, moved)
+    void persistOrder(next)
+  }
+  function sortAZ() { void persistOrder([...items].sort((a, b) => a.title.localeCompare(b.title))) }
   function setField<K extends keyof ProjectDraft>(key: K, value: ProjectDraft[K]) { draft = { ...draft, [key]: value } }
   function cancel() {
     if (isDirty && !confirm('Discard unsaved changes?')) return
@@ -63,6 +123,7 @@
   }
 
   async function handleSave() {
+    if (techInput.trim()) addTech(techInput)
     if (!canSave) { error = titleError || hrefError; return }
     saving = true; error = ''
     try {
@@ -78,7 +139,12 @@
 
   async function handleDelete(id: number, label: string) {
     if (!confirm(`Delete "${label}"?`)) return
-    try { await api.deleteResumeProject(id); items = items.filter((i) => i.id !== id) }
+    try {
+      await api.deleteResumeProject(id)
+      const rest = items.filter((i) => i.id !== id)
+      if (rest.length) void persistOrder(rest)
+      else items = rest
+    }
     catch (err) { error = `Delete failed: ${err instanceof Error ? err.message : String(err)}` }
   }
 
@@ -99,7 +165,8 @@
         <button type="button" role="tab" aria-selected={locale === l} onclick={() => { if (isDirty && !confirm('Discard unsaved changes?')) return; locale = l as Lang; editingId = null }} class={['px-2.5 py-1 text-[12px] font-medium transition-colors', locale === l ? 'bg-ink text-page' : 'text-quiet hover:text-ink/30 dark:hover:text-ink'].join(' ')}>{l.toUpperCase()}</button>
       {/each}
     </div>
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-2">
+      <button onclick={sortAZ} disabled={reordering || items.length < 2} class={btnGhost} title="Sort all projects A–Z and save that order"><ArrowDownAZ size={13} class="mr-1 inline" />Sort A–Z</button>
       <button onclick={handleCopy} disabled={copying} class={btnGhost}>{#if copying}<Loader size={12} class="mr-1 inline animate-spin" />{/if}Copy from {locale === 'id' ? 'EN' : 'ID'}</button>
       <button onclick={startAdd} disabled={editingId === 'new'} class={btnPrimary}><Plus size={12} /> Add project</button>
     </div>
@@ -111,21 +178,36 @@
   {#if loading}
     <div class="space-y-2" aria-label="Loading projects">{#each [1, 2, 3] as i (i)}<div class="h-14 animate-pulse border border-ring bg-raised dark:border-white/10 dark:bg-white/5"></div>{/each}</div>
   {:else}
+    {#if items.length > 1}<p class="text-[12px] text-quiet">Drag the handle (or use ↑ ↓) to reorder — order saves automatically and numbers renumber themselves.{#if reordering} <span class="text-ink">Saving order…</span>{/if}</p>{/if}
     <div class="divide-y divide-black/10 border border-ring dark:divide-white/10 dark:border-white/10">
       {#if editingId === 'new'}{@render editForm()}{/if}
-      {#each items as item (item.id)}
+      {#each items as item, idx (item.id)}
         {#if editingId === item.id}{@render editForm()}
         {:else}
-          <div class="flex items-center gap-3 px-4 py-3 hover:bg-raised">
+          <div
+            class="flex items-center gap-2 px-3 py-3 transition-colors hover:bg-raised sm:gap-3 sm:px-4 {overId === item.id && dragId !== null && dragId !== item.id ? 'bg-hl' : ''} {dragId === item.id ? 'opacity-40' : ''}"
+            ondragover={(e) => { e.preventDefault(); overId = item.id }}
+            ondragleave={() => { if (overId === item.id) overId = null }}
+            ondrop={(e) => { e.preventDefault(); dropOn(item.id); dragId = null; overId = null }}
+          >
+            <button type="button" draggable="true" ondragstart={(e) => { dragId = item.id; e.dataTransfer?.setData('text/plain', String(item.id)); if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move' }} ondragend={() => { dragId = null; overId = null }} aria-label={`Drag to reorder ${item.title}`} title="Drag to reorder" class="shrink-0 cursor-grab touch-none p-1 text-quiet hover:text-ink active:cursor-grabbing"><GripVertical size={15} /></button>
+            <span class="w-5 shrink-0 text-center font-mono text-[11px] text-quiet" title="Position (automatic)">{idx + 1}</span>
             {#if item.img}<img src={item.img.startsWith('/') ? API_ORIGIN + item.img : item.img} alt="" loading="lazy" decoding="async" class="h-11 w-16 shrink-0 border border-ring object-cover object-top dark:border-white/10" />{/if}
             <div class="min-w-0 flex-1">
               <p class="flex flex-wrap items-center gap-2 text-sm font-bold">{item.title}
                 <span class="px-1.5 py-0.5 text-[11px] font-medium {item.type === 'work' ? 'bg-ink text-page' : 'bg-raised text-quiet dark:bg-white/10 dark:text-white/50'}">{item.type === 'side_project' ? 'Side project' : 'Work'}</span>
                 {#if item.isFeatured}<span class="flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400"><Star size={10} fill="currentColor" /> Featured</span>{/if}
               </p>
-              <p class="truncate font-mono text-xs text-quiet">{item.techStack || '—'}{item.company ? ` · ${item.company}` : ''}</p>
+              <div class="mt-1 flex flex-wrap items-center gap-1">
+                {#each parseTech(item.techStack).slice(0, 5) as tech (tech)}<span class="rounded-full border border-ring px-1.5 py-px font-mono text-[10px] text-quiet">{tech}</span>{/each}
+                {#if parseTech(item.techStack).length > 5}<span class="font-mono text-[10px] text-quiet">+{parseTech(item.techStack).length - 5}</span>{/if}
+                {#if item.company}<span class="font-mono text-[10px] text-quiet">· {item.company}</span>{/if}
+              </div>
             </div>
-            <span class="hidden font-mono text-[11px] text-quiet sm:block dark:text-white/25">#{item.sortOrder}</span>
+            <div class="flex shrink-0 flex-col">
+              <button onclick={() => moveItem(item.id, -1)} disabled={idx === 0 || reordering} aria-label={`Move ${item.title} up`} class="p-0.5 text-quiet hover:text-ink disabled:opacity-25"><ChevronUp size={13} /></button>
+              <button onclick={() => moveItem(item.id, 1)} disabled={idx === items.length - 1 || reordering} aria-label={`Move ${item.title} down`} class="p-0.5 text-quiet hover:text-ink disabled:opacity-25"><ChevronDown size={13} /></button>
+            </div>
             <button onclick={() => startEdit(item)} aria-label={`Edit ${item.title}`} class="p-1.5 text-quiet hover:text-ink/30 dark:hover:text-ink"><Pencil size={13} /></button>
             <button onclick={() => handleDelete(item.id, item.title)} aria-label={`Delete ${item.title}`} class="p-1.5 text-quiet hover:bg-red-500 hover:text-white dark:text-quiet"><Trash2 size={13} /></button>
           </div>
@@ -161,8 +243,30 @@
       <div class="flex flex-col gap-1"><label class={labelCls} for="proj-company">Company <span class="normal-case opacity-60">(work only)</span></label><input id="proj-company" class={inputCls} value={draft.company ?? ''} placeholder="Company name" oninput={(e) => setField('company', (e.target as HTMLInputElement).value || null)} /></div>
       <div class="flex flex-col gap-1 sm:col-span-2">
         <label class={labelCls} for="proj-stack">Tech stack</label>
-        <input id="proj-stack" class={inputCls} value={draft.techStack} placeholder="SvelteKit, TypeScript, SQLite" oninput={(e) => setField('techStack', (e.target as HTMLInputElement).value)} />
-        {#if techChips.length}<div class="flex flex-wrap gap-1 pt-0.5">{#each techChips as chip (chip)}<span class="border border-ring px-1.5 py-0.5 font-mono text-[11px] dark:border-white/15">{chip}</span>{/each}</div>{/if}
+        <div class="flex flex-wrap items-center gap-1.5 rounded-lg border border-ring bg-transparent px-2 py-1.5 transition-colors focus-within:border-quiet">
+          {#each techChips as chip (chip)}
+            <span class="flex items-center gap-1 rounded-full bg-raised py-0.5 pr-1 pl-2.5 text-[12px] text-ink">{chip}<button type="button" onclick={() => removeTech(chip)} aria-label={`Remove ${chip}`} class="p-0.5 text-quiet hover:text-rose"><X size={11} /></button></span>
+          {/each}
+          <input
+            id="proj-stack"
+            bind:value={techInput}
+            placeholder={techChips.length ? 'Add another…' : 'Type a tech and press Enter'}
+            class="min-w-36 flex-1 bg-transparent px-1 py-0.5 text-sm text-ink outline-none placeholder:text-quiet/60"
+            onkeydown={(e) => {
+              if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTech(techInput) }
+              else if (e.key === 'Backspace' && !techInput && techChips.length) removeTech(techChips[techChips.length - 1])
+            }}
+            onpaste={(e) => { const t = e.clipboardData?.getData('text') ?? ''; if (t.includes(',')) { e.preventDefault(); addTech(t) } }}
+            onblur={() => { if (techInput.trim()) addTech(techInput) }}
+          />
+        </div>
+        <span class="text-[11px] text-quiet">Enter or comma adds a pill · paste a comma list to add many · Backspace removes the last.</span>
+        {#if techSuggestions.length}
+          <div class="flex flex-wrap items-center gap-1 pt-0.5">
+            <span class="text-[11px] text-quiet">Used before:</span>
+            {#each techSuggestions as s (s)}<button type="button" onclick={() => addTech(s)} class="rounded-full border border-dotted border-leader px-2 py-px text-[11px] text-quiet transition-colors hover:border-quiet hover:text-ink">+ {s}</button>{/each}
+          </div>
+        {/if}
       </div>
       <div class="flex flex-col gap-1"><label class={labelCls} for="proj-linklabel">Link label</label><input id="proj-linklabel" class={inputCls} value={draft.linkLabel ?? ''} placeholder="View live" oninput={(e) => setField('linkLabel', (e.target as HTMLInputElement).value || null)} /></div>
       <div class="flex flex-col gap-1">
@@ -188,7 +292,10 @@
         </div>
         {#if imgSrc}<img src={imgSrc} alt="Project preview" loading="lazy" class="mt-1 aspect-video w-full max-w-sm border border-ring object-cover object-top dark:border-white/10" />{/if}
       </div>
-      <div class="flex flex-col gap-1"><label class={labelCls} for="proj-sort">Sort order</label><input id="proj-sort" type="number" class="{inputCls} sm:w-24" value={draft.sortOrder} oninput={(e) => setField('sortOrder', Number((e.target as HTMLInputElement).value))} /></div>
+      <div class="flex flex-col gap-1">
+        <span class={labelCls}>Position</span>
+        <p class="flex h-full items-center text-[13px] text-quiet">{editingId === 'new' ? `Last — #${items.length + 1} of ${items.length + 1}` : `#${items.findIndex((i) => i.id === editingId) + 1} of ${items.length}`} <span class="ml-1 hidden sm:inline">(automatic — drag rows to change)</span></p>
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-3 border-t border-ring pt-3 dark:border-white/10">

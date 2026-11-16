@@ -206,4 +206,9 @@ export const api = {
       `/admin/resume/projects/copy?from=${from}&to=${to}`,
       { method: 'POST' },
     ),
+  reorderResumeProjects: (locale: Lang, ids: number[]) =>
+    apiFetch<ResumeProjectItem[]>('/admin/resume/projects/reorder', {
+      method: 'POST',
+      body: JSON.stringify({ locale, ids }),
+    }),
 }
