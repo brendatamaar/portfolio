@@ -142,6 +142,34 @@ export function parseInline(text: string, ctx?: InlineContext): string {
       }
     }
 
+    // Italic _text_ (only at word boundaries so snake_case_identifiers stay intact)
+    if (
+      text[i] === '_' &&
+      (i === 0 || !/\w/.test(text[i - 1])) &&
+      i + 1 < len &&
+      text[i + 1] !== ' '
+    ) {
+      let end = text.indexOf('_', i + 1)
+      while (end !== -1 && end + 1 < len && /\w/.test(text[end + 1])) {
+        end = text.indexOf('_', end + 1)
+      }
+      if (end !== -1 && text[end - 1] !== ' ') {
+        result += `<em>${parseInline(text.slice(i + 1, end), ctx)}</em>`
+        i = end + 1
+        continue
+      }
+    }
+
+    // Underline <u>text</u> (inserted by the admin editor toolbar)
+    if (text.startsWith('<u>', i)) {
+      const end = text.indexOf('</u>', i + 3)
+      if (end !== -1) {
+        result += `<u>${parseInline(text.slice(i + 3, end), ctx)}</u>`
+        i = end + 4
+        continue
+      }
+    }
+
     // Strikethrough ~~text~~
     if (text.startsWith('~~', i)) {
       const end = text.indexOf('~~', i + 2)
