@@ -2,12 +2,8 @@
   import { Loader, Plus, Pencil, Trash2, Check, X } from 'lucide-svelte'
   import type { Lang, ResumeWorkItem, WorkDraft } from '$lib/types'
   import { api } from '$lib/api'
+  import { inputCls, textareaCls, btnPrimary, btnGhost, labelCls } from './formStyles'
 
-  const inputCls = 'w-full border border-black/20 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-black dark:border-white/20 dark:focus:border-white'
-  const textareaCls = 'w-full resize-y border border-black/20 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-black dark:border-white/20 dark:focus:border-white'
-  const btnPrimary = 'flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/80'
-  const btnGhost = 'px-3 py-1.5 font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white'
-  const labelCls = 'font-mono text-[10px] font-bold tracking-widest text-black/50 uppercase dark:text-white/50'
 
   const EMPTY: WorkDraft = { locale: 'en', company: '', link: '', badge: '', title: '', start: '', end: '', description: '', sortOrder: 0 }
 
@@ -91,7 +87,7 @@
         <button
           type="button"
           onclick={() => { locale = l as Lang; editingId = null }}
-          class={['px-2.5 py-1 font-mono text-[10px] font-bold tracking-widest uppercase transition-colors', locale === l ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-black/30 hover:text-black dark:text-white/30 dark:hover:text-white'].join(' ')}
+          class={['px-2.5 py-1 text-[12px] font-medium transition-colors', locale === l ? 'bg-ink text-page' : 'text-quiet hover:text-ink/30 dark:hover:text-ink'].join(' ')}
         >{l.toUpperCase()}</button>
       {/each}
     </div>
@@ -105,11 +101,11 @@
   </div>
 
   {#if loading}
-    <p class="font-mono text-xs tracking-widest text-black/40 uppercase dark:text-white/40">Loading...</p>
+    <p class="text-[13px] text-quiet dark:text-quiet">Loading...</p>
   {:else}
-    <div class="divide-y divide-black/10 border border-black/10 dark:divide-white/10 dark:border-white/10">
+    <div class="divide-y divide-black/10 border border-ring dark:divide-white/10 dark:border-white/10">
       {#if editingId === 'new'}
-        <div class="space-y-3 bg-black/5 p-4 dark:bg-white/5">
+        <div class="space-y-3 bg-raised p-4 dark:bg-white/5">
           <div class="grid grid-cols-2 gap-3">
             <div class="flex flex-col gap-1"><label class={labelCls}>Company</label><input class={inputCls} value={draft.company} oninput={(e) => setField('company', (e.target as HTMLInputElement).value)} /></div>
             <div class="flex flex-col gap-1"><label class={labelCls}>Title</label><input class={inputCls} value={draft.title} oninput={(e) => setField('title', (e.target as HTMLInputElement).value)} /></div>
@@ -128,7 +124,7 @@
 
       {#each items as item (item.id)}
         {#if editingId === item.id}
-          <div class="space-y-3 bg-black/5 p-4 dark:bg-white/5">
+          <div class="space-y-3 bg-raised p-4 dark:bg-white/5">
             <div class="grid grid-cols-2 gap-3">
               <div class="flex flex-col gap-1"><label class={labelCls}>Company</label><input class={inputCls} value={draft.company} oninput={(e) => setField('company', (e.target as HTMLInputElement).value)} /></div>
               <div class="flex flex-col gap-1"><label class={labelCls}>Title</label><input class={inputCls} value={draft.title} oninput={(e) => setField('title', (e.target as HTMLInputElement).value)} /></div>
@@ -144,19 +140,19 @@
             </div>
           </div>
         {:else}
-          <div class="flex items-center gap-3 px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5">
+          <div class="flex items-center gap-3 px-4 py-3 hover:bg-raised">
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-bold">{item.company} <span class="font-normal text-black/50 dark:text-white/50">— {item.title}</span></p>
-              <p class="font-mono text-xs text-black/40 dark:text-white/40">{item.start}–{item.end}</p>
+              <p class="text-sm font-bold">{item.company} <span class="font-normal text-quiet">— {item.title}</span></p>
+              <p class="font-mono text-xs text-quiet">{item.start}–{item.end}</p>
             </div>
-            <button onclick={() => startEdit(item)} class="p-1.5 text-black/30 hover:text-black dark:text-white/30 dark:hover:text-white"><Pencil size={13} /></button>
-            <button onclick={() => handleDelete(item.id, item.company)} class="p-1.5 text-black/30 hover:bg-red-500 hover:text-white dark:text-white/30"><Trash2 size={13} /></button>
+            <button onclick={() => startEdit(item)} class="p-1.5 text-quiet hover:text-ink/30 dark:hover:text-ink"><Pencil size={13} /></button>
+            <button onclick={() => handleDelete(item.id, item.company)} class="p-1.5 text-quiet hover:bg-red-500 hover:text-white dark:text-quiet"><Trash2 size={13} /></button>
           </div>
         {/if}
       {/each}
 
       {#if items.length === 0 && editingId !== 'new'}
-        <div class="px-4 py-6 text-center font-mono text-xs tracking-widest text-black/30 uppercase dark:text-white/30">No entries yet.</div>
+        <div class="px-4 py-6 text-center text-[13px] text-quiet dark:text-quiet">No entries yet.</div>
       {/if}
     </div>
   {/if}

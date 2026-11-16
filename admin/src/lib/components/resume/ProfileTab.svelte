@@ -2,11 +2,8 @@
   import { Check, Loader } from 'lucide-svelte'
   import type { Lang, ResumeProfile } from '$lib/types'
   import { api } from '$lib/api'
+  import { inputCls, textareaCls, btnPrimary, labelCls } from './formStyles'
 
-  const inputCls = 'w-full border border-black/20 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-black dark:border-white/20 dark:focus:border-white'
-  const textareaCls = 'w-full resize-y border border-black/20 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-black dark:border-white/20 dark:focus:border-white'
-  const btnPrimary = 'flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/80'
-  const labelCls = 'font-mono text-[10px] font-bold tracking-widest text-black/50 uppercase dark:text-white/50'
 
   let locale = $state<Lang>('en')
   let form = $state<Partial<ResumeProfile>>({})
@@ -49,7 +46,7 @@
 </script>
 
 {#if loading}
-  <p class="font-mono text-xs tracking-widest text-black/40 uppercase dark:text-white/40">Loading...</p>
+  <p class="text-[13px] text-quiet dark:text-quiet">Loading...</p>
 {:else}
   <form onsubmit={handleSave} class="space-y-4">
     <div class="flex items-center justify-between">
@@ -59,10 +56,10 @@
             type="button"
             onclick={() => { locale = l as Lang; saved = false }}
             class={[
-              'px-2.5 py-1 font-mono text-[10px] font-bold tracking-widest uppercase transition-colors',
+              'px-2.5 py-1 text-[12px] font-medium transition-colors',
               locale === l
-                ? 'bg-black text-white dark:bg-white dark:text-black'
-                : 'text-black/30 hover:text-black dark:text-white/30 dark:hover:text-white',
+                ? 'bg-ink text-page'
+                : 'text-quiet hover:text-ink/30 dark:hover:text-ink',
             ].join(' ')}
           >
             {l.toUpperCase()}
