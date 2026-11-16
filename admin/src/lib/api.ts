@@ -39,19 +39,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  // Auth
-  login: (username: string, password: string) =>
-    apiFetch<{ ok: boolean }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    }),
-
-  logout: () => apiFetch<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
-
   // Posts
-  getPosts: () =>
-    apiFetch<{ data: AdminPostSummary[]; total: number }>('/admin/posts'),
-
   getPost: (id: number) => apiFetch<AdminPost>(`/admin/posts/${id}`),
 
   createPost: (payload: PostPayload) =>
@@ -66,12 +54,7 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  deletePost: (id: number) =>
-    apiFetch<{ ok: boolean }>(`/admin/posts/${id}`, { method: 'DELETE' }),
-
   // Tags
-  getTags: () => apiFetch<PostTag[]>('/admin/tags'),
-
   createTag: (name: string) =>
     apiFetch<PostTag>('/admin/tags', {
       method: 'POST',
@@ -98,7 +81,6 @@ export const api = {
     apiFetch<{ ok: boolean }>(`/admin/images/${id}`, { method: 'DELETE' }),
 
   // Books
-  getBooks: () => apiFetch<BookItem[]>('/admin/books'),
   searchBooks: (q: string) =>
     apiFetch<BookSearchResult[]>(
       `/admin/books/search?q=${encodeURIComponent(q)}`,
@@ -120,7 +102,6 @@ export const api = {
     apiFetch<BookItem>(`/admin/books/${id}/feature`, { method: 'PATCH' }),
 
   // Albums
-  getAlbums: () => apiFetch<AlbumItem[]>('/admin/albums'),
   searchAlbums: (q: string) =>
     apiFetch<AlbumSearchResult[]>(
       `/admin/albums/search?q=${encodeURIComponent(q)}`,

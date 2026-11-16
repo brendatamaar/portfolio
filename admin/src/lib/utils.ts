@@ -1,9 +1,10 @@
 import type { GlossaryEntry, BibliographyEntry } from './types'
 
+const needsQuotes = (s: string) => s.includes('|') || s.startsWith('"')
+
 export function glossaryToMarkdown(entries: GlossaryEntry[]): string {
   return entries
     .map((e) => {
-      const needsQuotes = (s: string) => s.includes('|') || s.startsWith('"')
       const term = needsQuotes(e.term) ? `"${e.term}"` : e.term
       const definition = e.definition.includes('\n')
         ? `"""\n${e.definition}\n"""`
@@ -18,7 +19,6 @@ export function glossaryToMarkdown(entries: GlossaryEntry[]): string {
 export function bibliographyToMarkdown(entries: BibliographyEntry[]): string {
   return entries
     .map((e) => {
-      const needsQuotes = (s: string) => s.includes('|') || s.startsWith('"')
       const text = e.text.includes('\n')
         ? `"""\n${e.text}\n"""`
         : needsQuotes(e.text)
@@ -37,5 +37,10 @@ export function fmtSize(bytes: number): string {
 
 export function fmtDate(date: string | null, label: string): string {
   if (!date) return ''
-  return `${label} ${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`
+  const d = new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+  return label ? `${label} ${d}` : d
 }
