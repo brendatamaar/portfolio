@@ -73,39 +73,95 @@
     openDraft({ locale: item.locale, title: item.title, type: item.type, company: item.company, techStack: parseTech(item.techStack).join(', '), description: item.description, linkLabel: item.linkLabel, linkHref: item.linkHref, img: item.img, isFeatured: item.isFeatured, sortOrder: item.sortOrder }, item.id)
   }
 
-  // --- Ordering: drag-and-drop / arrows / A-Z, persisted via /projects/reorder.
+  // --- Ordering: pointer drag-and-drop / arrows / A-Z.
   // sortOrder is always rewritten to the row position (0..n-1) automatically.
+  let listEl = $state<HTMLDivElement | null>(null)
   let dragId = $state<number | null>(null)
-  let overId = $state<number | null>(null)
   let reordering = $state(false)
 
-  async function persistOrder(next: ResumeProjectItem[]) {
-    const prev = items
-    items = next.map((i, idx) => ({ ...i, sortOrder: idx }))
+  async function persistOrder(next: ResumeProjectItem[], fallbackPrev: ResumeProjectItem[] = items) {
+    const normalized = next.map((i, idx) => ({ ...i, sortOrder: idx }))
+    items = normalized
     reordering = true; error = ''
     try {
-      items = await api.reorderResumeProjects(locale, items.map((i) => i.id))
-    } catch (err) {
-      items = prev
-      error = `Reorder failed: ${err instanceof Error ? err.message : String(err)}`
+      items = await api.reorderResumeProjects(locale, normalized.map((i) => i.id))
+    } catch {
+      try {
+        items = await Promise.all(
+          normalized.map((item, idx) => api.updateResumeProject(item.id, { sortOrder: idx })),
+        )
+      } catch (err) {
+        items = fallbackPrev
+        error = `Reorder failed: ${err instanceof Error ? err.message : String(err)}`
+      }
     } finally { reordering = false }
   }
   function moveItem(id: number, dir: -1 | 1) {
     const idx = items.findIndex((i) => i.id === id)
     const to = idx + dir
     if (idx < 0 || to < 0 || to >= items.length) return
+    const prev = items
     const next = [...items]; [next[idx], next[to]] = [next[to], next[idx]]
-    void persistOrder(next)
+    void persistOrder(next, prev)
   }
-  function dropOn(targetId: number) {
-    if (dragId === null || dragId === targetId) return
-    const from = items.findIndex((i) => i.id === dragId)
-    const to = items.findIndex((i) => i.id === targetId)
-    if (from < 0 || to < 0) return
-    const next = [...items]; const [moved] = next.splice(from, 1); next.splice(to, 0, moved)
-    void persistOrder(next)
+  function startPointerDrag(e: PointerEvent, id: number) {
+    if (e.button !== 0 || reordering || items.length < 2 || editingId !== null) return
+    const target = e.target as HTMLElement | null
+    if (target?.closest('button, a, input, select, textarea')) return
+    if (e.pointerType === 'touch' && !target?.closest('[data-grip]')) return
+    e.preventDefault()
+
+    const startY = e.clientY
+    const beforeItems = [...items]
+    const beforeSig = beforeItems.map((i) => i.id).join(',')
+    let started = false
+
+    function onMove(ev: PointerEvent) {
+      if (!started) {
+        if (Math.abs(ev.clientY - startY) < 3) return
+        started = true
+        dragId = id
+      }
+      ev.preventDefault()
+      if (!listEl) return
+      const rows = listEl.querySelectorAll<HTMLElement>('[data-project-id]')
+      for (const row of rows) {
+        const targetId = Number(row.dataset.projectId)
+        if (!targetId || targetId === id) continue
+        const rect = row.getBoundingClientRect()
+        if (ev.clientY < rect.top || ev.clientY > rect.bottom) continue
+        const from = items.findIndex((i) => i.id === id)
+        const to = items.findIndex((i) => i.id === targetId)
+        if (from < 0 || to < 0 || from === to) break
+        const threshold = from < to ? rect.top + rect.height * 0.35 : rect.bottom - rect.height * 0.35
+        if ((from < to && ev.clientY >= threshold) || (from > to && ev.clientY <= threshold)) {
+          const next = [...items]
+          const [moved] = next.splice(from, 1)
+          next.splice(to, 0, moved)
+          items = next.map((it, idx) => ({ ...it, sortOrder: idx }))
+        }
+        break
+      }
+    }
+
+    function onEnd() {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onEnd)
+      window.removeEventListener('pointercancel', onEnd)
+      if (!started) return
+      dragId = null
+      const afterSig = items.map((i) => i.id).join(',')
+      if (afterSig !== beforeSig) void persistOrder(items, beforeItems)
+    }
+
+    window.addEventListener('pointermove', onMove, { passive: false })
+    window.addEventListener('pointerup', onEnd)
+    window.addEventListener('pointercancel', onEnd)
   }
-  function sortAZ() { void persistOrder([...items].sort((a, b) => a.title.localeCompare(b.title))) }
+  function sortAZ() {
+    const prev = items
+    void persistOrder([...items].sort((a, b) => a.title.localeCompare(b.title)), prev)
+  }
   function setField<K extends keyof ProjectDraft>(key: K, value: ProjectDraft[K]) { draft = { ...draft, [key]: value } }
   function cancel() {
     if (isDirty && !confirm('Discard unsaved changes?')) return
@@ -178,21 +234,20 @@
   {#if loading}
     <div class="space-y-2" aria-label="Loading projects">{#each [1, 2, 3] as i (i)}<div class="h-14 animate-pulse border border-ring bg-raised dark:border-white/10 dark:bg-white/5"></div>{/each}</div>
   {:else}
-    {#if items.length > 1}<p class="text-[12px] text-quiet">Drag the handle (or use ↑ ↓) to reorder — order saves automatically and numbers renumber themselves.{#if reordering} <span class="text-ink">Saving order…</span>{/if}</p>{/if}
-    <div class="divide-y divide-black/10 border border-ring dark:divide-white/10 dark:border-white/10">
+    {#if items.length > 1}<p class="text-[12px] text-quiet">Drag any row (or use ↑ ↓) to reorder — order saves automatically and numbers renumber themselves.{#if reordering} <span class="text-ink">Saving order…</span>{/if}</p>{/if}
+    <div bind:this={listEl} class="divide-y divide-black/10 border border-ring dark:divide-white/10 dark:border-white/10">
       {#if editingId === 'new'}{@render editForm()}{/if}
       {#each items as item, idx (item.id)}
         {#if editingId === item.id}{@render editForm()}
         {:else}
           <div
-            class="flex items-center gap-2 px-3 py-3 transition-colors hover:bg-raised sm:gap-3 sm:px-4 {overId === item.id && dragId !== null && dragId !== item.id ? 'bg-hl' : ''} {dragId === item.id ? 'opacity-40' : ''}"
-            ondragover={(e) => { e.preventDefault(); overId = item.id }}
-            ondragleave={() => { if (overId === item.id) overId = null }}
-            ondrop={(e) => { e.preventDefault(); dropOn(item.id); dragId = null; overId = null }}
+            data-project-id={item.id}
+            onpointerdown={(e) => startPointerDrag(e, item.id)}
+            class="flex items-center gap-2 px-3 py-3 select-none transition-colors hover:bg-raised sm:gap-3 sm:px-4 {items.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''} {dragId === item.id ? 'bg-hl ring-1 ring-pen/40' : ''}"
           >
-            <button type="button" draggable="true" ondragstart={(e) => { dragId = item.id; e.dataTransfer?.setData('text/plain', String(item.id)); if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move' }} ondragend={() => { dragId = null; overId = null }} aria-label={`Drag to reorder ${item.title}`} title="Drag to reorder" class="shrink-0 cursor-grab touch-none p-1 text-quiet hover:text-ink active:cursor-grabbing"><GripVertical size={15} /></button>
+            <div data-grip title="Drag to reorder" aria-hidden="true" class="shrink-0 touch-none p-1 text-quiet hover:text-ink"><GripVertical size={15} /></div>
             <span class="w-5 shrink-0 text-center font-mono text-[11px] text-quiet" title="Position (automatic)">{idx + 1}</span>
-            {#if item.img}<img src={item.img.startsWith('/') ? API_ORIGIN + item.img : item.img} alt="" loading="lazy" decoding="async" class="h-11 w-16 shrink-0 border border-ring object-cover object-top dark:border-white/10" />{/if}
+            {#if item.img}<img src={item.img.startsWith('/') ? API_ORIGIN + item.img : item.img} alt="" draggable="false" loading="lazy" decoding="async" class="h-11 w-16 shrink-0 border border-ring object-cover object-top dark:border-white/10" />{/if}
             <div class="min-w-0 flex-1">
               <p class="flex flex-wrap items-center gap-2 text-sm font-bold">{item.title}
                 <span class="px-1.5 py-0.5 text-[11px] font-medium {item.type === 'work' ? 'bg-ink text-page' : 'bg-raised text-quiet dark:bg-white/10 dark:text-white/50'}">{item.type === 'side_project' ? 'Side project' : 'Work'}</span>
