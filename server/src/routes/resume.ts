@@ -452,6 +452,46 @@ resumeAdmin.get('/projects', (c) => {
   return c.json(rows)
 })
 
+const reorderSchema = z.object({
+  locale: localeField,
+  ids: z.array(z.number().int().positive()).min(1),
+})
+
+/** Drag-and-drop ordering: ids in their new order; sortOrder is rewritten 0..n-1. */
+resumeAdmin.post('/projects/reorder', async (c) => {
+  const body = await readBody(c, reorderSchema)
+  if ('error' in body) return body.error
+  const { locale, ids } = body.data
+  if (new Set(ids).size !== ids.length)
+    return c.json({ error: 'Duplicate ids' }, 422)
+  const existing = db
+    .select({ id: resumeProjects.id })
+    .from(resumeProjects)
+    .where(eq(resumeProjects.locale, locale))
+    .all()
+    .map((r) => r.id)
+  if (
+    existing.length !== ids.length ||
+    !existing.every((id) => ids.includes(id))
+  )
+    return c.json({ error: 'Ids must match the projects of this locale' }, 422)
+  db.transaction((tx) => {
+    ids.forEach((id, index) => {
+      tx.update(resumeProjects)
+        .set({ sortOrder: index })
+        .where(eq(resumeProjects.id, id))
+        .run()
+    })
+  })
+  const rows = db
+    .select()
+    .from(resumeProjects)
+    .where(eq(resumeProjects.locale, locale))
+    .orderBy(asc(resumeProjects.sortOrder))
+    .all()
+  return c.json(rows)
+})
+
 resumeAdmin.post('/projects', async (c) => {
   const body = await readBody(c, projectSchema)
   if ('error' in body) return body.error
