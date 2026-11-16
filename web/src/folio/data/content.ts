@@ -65,22 +65,20 @@ export const copy: Record<Lang, Copy> = {
   en: {
     title: 'Brendatama Akbar Ramadan',
     description:
-      'Brendatama Akbar Ramadan is a software engineer building products with TypeScript and Go at Icon Plus, and tools for AI agents on the side.',
+      'Brendatama Akbar Ramadan is a software engineer building things with TypeScript, currently at Icon Plus developing Airtax and cheSKP, and making stuff around AI agents on the side.',
     role: 'Software Engineer',
     intro: [
-      'I develop products with ',
+      'I build things with ',
       { k: 'ts' },
-      ' and ',
-      { k: 'go' },
-      ' at ',
+      '. Currently at ',
       { k: 'ip' },
-      '. I maintain ',
+      ' developing ',
       { k: 'pv', name: 'Airtax' },
       ' and ',
       { k: 'pv', name: 'cheSKP' },
-      ', and on the side I build stuff around ',
+      '. I make stuff around ',
       { k: 'ring', text: 'AI agents' },
-      ': sandboxes, verification and guardrails.',
+      ' too: sandboxes, verification, and guardrails.',
     ],
     reach: [
       'I’m always open to interesting conversations, collaborations, and opportunities. You can reach me on ',
