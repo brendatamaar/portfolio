@@ -39,8 +39,9 @@
     loading = true
     try {
       const res = await api.getImages()
-      images = res.data
+      images = Array.isArray(res) ? res : ((res as { data?: AdminImage[] })?.data ?? [])
     } catch (e) {
+      images = []
       uploadError = String(e)
     } finally {
       loading = false
@@ -76,7 +77,7 @@
     try {
       for (const file of Array.from(files)) {
         const img = await api.uploadImage(file)
-        images = [img, ...images]
+        images = [img, ...(images ?? [])]
         if (enableInsertDetails) {
           selectedImage = img
           altText = defaultAltFor(file.name)
@@ -96,7 +97,7 @@
     if (!confirm(`Delete "${img.filename}"?`)) return
     try {
       await api.deleteImage(img.id)
-      images = images.filter((x) => x.id !== img.id)
+      images = (images ?? []).filter((x) => x.id !== img.id)
       if (selectedImage?.id === img.id) {
         selectedImage = null
         altText = ''

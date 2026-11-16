@@ -79,7 +79,7 @@ export const api = {
     }),
 
   // Images
-  getImages: () => apiFetch<{ data: AdminImage[] }>('/admin/images'),
+  getImages: () => apiFetch<AdminImage[]>('/admin/images'),
 
   uploadImage: (file: File) => {
     const form = new FormData()
