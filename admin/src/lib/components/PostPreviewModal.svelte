@@ -252,7 +252,7 @@
   aria-modal="true"
   aria-label="Post preview"
   tabindex="-1"
-  class="fixed inset-0 z-50 flex items-stretch justify-center bg-black/70 p-4 backdrop-blur-sm"
+  class="fixed inset-0 z-50 flex items-stretch justify-center bg-ink/70 p-4 backdrop-blur-sm"
   onmousedown={(e) => {
     if (e.target === e.currentTarget) onclose()
   }}
@@ -265,18 +265,18 @@
   }}
 >
   <div
-    class="flex w-full max-w-5xl flex-col overflow-hidden border border-black/15 bg-white text-black shadow-2xl dark:border-white/15 dark:bg-[#0a0a0a] dark:text-white"
+    class="flex w-full max-w-5xl flex-col overflow-hidden rounded-[12px] border border-ring bg-page text-ink shadow-popup"
   >
     <!-- Header bar -->
-    <div class="flex h-12 shrink-0 items-center justify-between border-b border-black/10 px-4 dark:border-white/10">
-      <span class="font-mono text-[10px] tracking-widest text-black/40 uppercase dark:text-white/40">
+    <div class="flex h-12 shrink-0 items-center justify-between border-b border-ring px-4 dark:border-white/10">
+      <span class="text-[12px] text-quiet dark:text-quiet">
         {lang.toUpperCase()} Preview
       </span>
       <button
         type="button"
         onclick={onclose}
         aria-label="Close preview"
-        class="p-1.5 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+        class="p-1.5 text-quiet transition-colors hover:text-ink/40 dark:hover:text-ink"
       >
         <X size={16} />
       </button>
@@ -285,7 +285,7 @@
     <!-- Scrollable body -->
     <div class="min-h-0 flex-1 overflow-y-auto">
       {#if coverImageUrl}
-        <div class="max-h-[360px] overflow-hidden border-b border-black/10 dark:border-white/10">
+        <div class="max-h-[360px] overflow-hidden border-b border-ring">
           <img src={coverImageUrl} alt="" class="h-full max-h-[360px] w-full object-cover" />
         </div>
       {/if}
@@ -295,24 +295,24 @@
         {#if tags.length > 0}
           <div class="mb-5 flex flex-wrap gap-1.5">
             {#each tags as tag (tag.id)}
-              <span class="border border-black/20 px-2 py-0.5 font-mono text-[10px] font-bold tracking-wide text-black/50 uppercase dark:border-white/20 dark:text-white/50">
+              <span class="border border-leader px-2 py-0.5 font-mono text-[11px] font-bold text-quiet dark:border-white/20 dark:text-white/50">
                 #{tag.name}
               </span>
             {/each}
           </div>
         {/if}
 
-        <h1 class="mb-4 text-5xl leading-[0.9] font-black tracking-tight text-black uppercase dark:text-white">
+        <h1 class="mb-4 text-[32px] leading-[1.15] font-medium tracking-[-0.01em] text-ink">
           {title || 'Untitled'}
         </h1>
 
         {#if description}
-          <p class="mb-6 text-xl leading-relaxed text-black/60 dark:text-white/60">
+          <p class="mb-6 text-xl leading-relaxed text-body">
             {description}
           </p>
         {/if}
 
-        <div class="flex items-center gap-3 border-b border-black/10 pb-8 font-mono text-[11px] tracking-widest text-black/30 uppercase dark:border-white/10 dark:text-white/30">
+        <div class="flex items-center gap-3 border-b border-ring pb-8 text-[13px] text-quiet dark:border-white/10 dark:text-quiet">
           {#if dateLabel}<span>{dateLabel}</span>{/if}
           <span>{status}</span>
         </div>
@@ -327,7 +327,7 @@
               {#each parsed.sidenotes as note (note.id)}
                 <aside
                   data-sidenote={note.id}
-                  class="absolute right-0 left-0 border-l-2 border-black/20 pl-3 text-[11px] leading-relaxed text-black/50 dark:border-white/20 dark:text-white/50"
+                  class="absolute right-0 left-0 border-l-2 border-leader pl-3 text-[11px] leading-relaxed text-quiet dark:border-white/20 dark:text-white/50"
                 >
                   <sup class="mr-1 font-bold">[{note.id}]</sup>
                   {@html note.html}
@@ -338,7 +338,7 @@
 
           <!-- Main content + reading time -->
           <div class="min-w-0 flex-1">
-            <div class="mb-8 border-b border-black/10 pb-4 font-mono text-[11px] tracking-widest text-black/30 uppercase dark:border-white/10 dark:text-white/30">
+            <div class="mb-8 border-b border-ring pb-4 text-[13px] text-quiet dark:border-white/10 dark:text-quiet">
               {readingTimeMinutes} min read
             </div>
             <div
@@ -354,7 +354,7 @@
           <!-- TOC (right, sticky) -->
           {#if parsed.toc.length > 0}
             <nav class="sticky top-8 hidden w-48 shrink-0 lg:block" aria-label="Table of contents">
-              <p class="mb-3 font-mono text-[10px] font-bold tracking-widest text-black/30 uppercase dark:text-white/30">
+              <p class="mb-3 text-[12px] font-medium text-quiet dark:text-quiet">
                 Contents
               </p>
               <ul class="space-y-1.5">
@@ -362,7 +362,7 @@
                   <li>
                     <a
                       href={`#${item.id}`}
-                      class="block text-[12px] leading-snug text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
+                      class="block text-[12px] leading-snug text-quiet transition-colors hover:text-ink/40 dark:hover:text-ink"
                     >
                       {item.text}
                     </a>
@@ -377,27 +377,27 @@
       <!-- Glossary / Bibliography sections -->
       <div class="mx-auto max-w-3xl space-y-4 px-6 pb-12">
         {#if numberedGlossary.length > 0}
-          <section class="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+          <section class="border border-ring bg-page shadow-card dark:border-white dark:bg-ink dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
             <button
               type="button"
               onclick={() => (glossaryOpen = !glossaryOpen)}
               aria-expanded={glossaryOpen}
-              class="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[#FFE600]/10"
+              class="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-pen/10"
             >
               <span class="flex items-center gap-3">
-                <span class="font-mono text-[11px] font-black tracking-widest text-black uppercase dark:text-white">Glossary</span>
-                <span class="inline-flex items-center border-2 border-black bg-[#FFE600] px-2 py-0.5 font-mono text-[10px] font-bold text-black">
+                <span class="font-mono text-[11px] font-medium text-ink dark:text-white">Glossary</span>
+                <span class="inline-flex items-center border border-ring bg-pen px-2 py-0.5 font-mono text-[11px] font-bold text-ink">
                   {numberedGlossary.length}
                 </span>
               </span>
-              <span class="font-mono text-sm font-black text-black dark:text-white">{glossaryOpen ? '-' : '+'}</span>
+              <span class="font-mono text-sm font-medium text-ink">{glossaryOpen ? '-' : '+'}</span>
             </button>
             {#if glossaryOpen}
-              <div class="border-t-2 border-black px-5 py-4 dark:border-white">
+              <div class="border-t border-ring px-5 py-4 dark:border-white">
                 <dl class="m-0 space-y-3 p-0">
                   {#each numberedGlossary as entry (entry.key)}
                     <div
-                      class="cursor-pointer border-l-3 border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-[#FFE600]/5"
+                      class="cursor-pointer border-l-3 border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-pen/5"
                       role="button"
                       tabindex="0"
                       onclick={() =>
@@ -409,13 +409,13 @@
                         }
                       }}
                     >
-                      <dt class="mb-1 flex items-baseline gap-2 font-mono text-[13px] font-bold text-black dark:text-white">
-                        <span class="inline-flex items-center bg-black px-1.5 py-0.5 font-mono text-[10px] font-black text-white dark:bg-white dark:text-black">
+                      <dt class="mb-1 flex items-baseline gap-2 font-mono text-[13px] font-bold text-ink">
+                        <span class="inline-flex items-center bg-ink px-1.5 py-0.5 font-mono text-[11px] font-medium text-white dark:bg-ink dark:text-page">
                           {entry.num}
                         </span>
                         {entry.term}
                       </dt>
-                      <dd class="m-0 pl-0 text-[14px] leading-relaxed text-black/70 dark:text-white/70">
+                      <dd class="m-0 pl-0 text-[14px] leading-relaxed text-body">
                         {entry.definition}
                       </dd>
                     </div>
@@ -427,28 +427,28 @@
         {/if}
 
         {#if numberedBibliography.length > 0}
-          <section class="border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+          <section class="border border-ring bg-page shadow-card dark:border-white dark:bg-ink dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
             <button
               type="button"
               onclick={() => (bibliographyOpen = !bibliographyOpen)}
               aria-expanded={bibliographyOpen}
-              class="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[#FFE600]/10"
+              class="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-pen/10"
             >
               <span class="flex items-center gap-3">
-                <span class="font-mono text-[11px] font-black tracking-widest text-black uppercase dark:text-white">Bibliography</span>
-                <span class="inline-flex items-center border-2 border-black bg-[#FFE600] px-2 py-0.5 font-mono text-[10px] font-bold text-black">
+                <span class="font-mono text-[11px] font-medium text-ink dark:text-white">Bibliography</span>
+                <span class="inline-flex items-center border border-ring bg-pen px-2 py-0.5 font-mono text-[11px] font-bold text-ink">
                   {numberedBibliography.length}
                 </span>
               </span>
-              <span class="font-mono text-sm font-black text-black dark:text-white">{bibliographyOpen ? '-' : '+'}</span>
+              <span class="font-mono text-sm font-medium text-ink">{bibliographyOpen ? '-' : '+'}</span>
             </button>
             {#if bibliographyOpen}
-              <div class="border-t-2 border-black px-5 py-4 dark:border-white">
+              <div class="border-t border-ring px-5 py-4 dark:border-white">
                 <ol class="m-0 list-none space-y-3 p-0">
                   {#each numberedBibliography as entry (entry.key)}
                     <li>
                       <div
-                        class="flex cursor-pointer items-baseline gap-3 border-l-3 border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-[#FFE600]/5"
+                        class="flex cursor-pointer items-baseline gap-3 border-l-3 border-[#FFE600] py-1 pl-4 transition-all hover:border-l-4 hover:bg-pen/5"
                         role="button"
                         tabindex="0"
                         onclick={(e) => {
@@ -462,10 +462,10 @@
                           }
                         }}
                       >
-                        <span class="inline-flex shrink-0 items-center border-[1.5px] border-black bg-[#FFE600] px-1.5 py-0.5 font-mono text-[10px] font-bold text-black">
+                        <span class="inline-flex shrink-0 items-center border border-ring bg-pen px-1.5 py-0.5 font-mono text-[11px] font-bold text-ink">
                           {entry.num}
                         </span>
-                        <span class="text-[14px] leading-relaxed text-black/70 dark:text-white/70">
+                        <span class="text-[14px] leading-relaxed text-body">
                           {@html formatCitation(entry.text)}
                         </span>
                       </div>
@@ -484,7 +484,7 @@
   {#if popupGloss && popupPos}
     <div class="post-preview-popup gloss-popup" style={popupStyle}>
       <div class="flex items-start justify-between gap-3">
-        <div class="font-mono text-[0.8rem] font-bold tracking-wide uppercase">
+        <div class="font-mono text-[0.8rem] font-bold">
           {popupGloss.term}
         </div>
         <button type="button" onclick={closePopup} aria-label="Close glossary popup">x</button>
@@ -496,7 +496,7 @@
   {#if popupCite && popupPos}
     <div class="post-preview-popup bib-popup" style={popupStyle}>
       <button type="button" class="float-right" onclick={closePopup} aria-label="Close bibliography popup">x</button>
-      <div class="mb-2 border-l-3 border-[#FFE600] pl-2 font-mono text-[0.65rem] font-black tracking-widest uppercase">
+      <div class="mb-2 border-l-3 border-[#FFE600] pl-2 font-mono text-[0.65rem] font-medium">
         {popupCite.sourceType}
       </div>
       <div>{@html formatCitation(popupCite.text)}</div>

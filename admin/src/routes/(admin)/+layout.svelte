@@ -1,15 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { page } from '$app/state'
-  import { Sun, Moon, LogOut, Plus } from 'lucide-svelte'
+  import { Sun, Moon, LogOut, Plus, House } from 'lucide-svelte'
   import type { Snippet } from 'svelte'
   import type { LayoutData } from './$types'
 
   let { children, data }: { children: Snippet; data: LayoutData } = $props()
-  let dark = $state(false)
+  let dark = $state(true)
 
   onMount(() => {
-    dark = localStorage.getItem('admin_theme') === 'dark'
+    const stored = localStorage.getItem('admin_theme')
+    dark = stored ? stored === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches
     document.documentElement.classList.toggle('dark', dark)
   })
 
@@ -19,68 +20,35 @@
     localStorage.setItem('admin_theme', dark ? 'dark' : 'light')
   }
 
-  let isCollectionOrResume = $derived(
-    page.url.pathname.startsWith('/collection') || page.url.pathname.startsWith('/resume'),
-  )
+  const NAV = [
+    { href: '/', label: 'Posts', match: (p: string) => p === '/' || p.startsWith('/posts') },
+    { href: '/collection', label: 'Collection', match: (p: string) => p.startsWith('/collection') },
+    { href: '/resume', label: 'Resume', match: (p: string) => p.startsWith('/resume') },
+    { href: '/images', label: 'Images', match: (p: string) => p.startsWith('/images') },
+  ]
+  let path = $derived(page.url.pathname)
+  let isEditor = $derived(path.startsWith('/posts/'))
 </script>
 
-<div class="flex min-h-screen flex-col dark:bg-[#0a0a0a]">
-  <header class="flex h-14 items-center justify-between border-b border-black/10 px-6 dark:border-white/10">
-    <span class="text-sm font-black tracking-tight uppercase dark:text-white">Portfolio CMS</span>
-
-    {#if isCollectionOrResume}
-      <a
-        href="/"
-        class="font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-      >
-        ← Posts
-      </a>
-    {:else}
-      <nav class="flex items-center gap-3">
-        <a
-          href="/collection"
-          class="font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-        >
-          Collection
-        </a>
-        <a
-          href="/resume"
-          class="font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-        >
-          Resume
-        </a>
-        <a
-          href="/posts/new"
-          class="flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
-        >
-          <Plus size={13} />
-          New post
-        </a>
-        <button
-          onclick={toggleTheme}
-          class="p-1.5 text-black/40 transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-          title="Toggle theme"
-        >
-          {#if dark}
-            <Sun size={15} />
-          {:else}
-            <Moon size={15} />
-          {/if}
-        </button>
-        <form method="POST" action="/logout">
-          <button
-            type="submit"
-            class="flex items-center gap-1.5 font-mono text-xs tracking-widest text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-          >
-            <LogOut size={13} />
-            Logout
-          </button>
-        </form>
-      </nav>
-    {/if}
+<div class="flex min-h-screen flex-col bg-page text-ink">
+  <header class="flex min-h-11 items-center justify-between px-4 pt-2 sm:px-6">
+    <a href="/" aria-label="Posts home" class="-ml-2 inline-flex min-h-11 min-w-11 items-center justify-center text-quiet transition-colors hover:text-ink">
+      <House size={20} strokeWidth={1.7} />
+    </a>
+    <nav class="flex items-center gap-1 text-[14px] sm:gap-2" aria-label="Admin">
+      {#each NAV as item (item.href)}
+        <a href={item.href} aria-current={item.match(path) ? 'page' : undefined} class="inline-flex min-h-11 items-center px-1.5 py-2.5 transition-colors {item.match(path) ? 'font-medium text-ink' : 'text-quiet hover:text-ink'}">{item.label}</a>
+      {/each}
+      {#if !isEditor}
+        <a href="/posts/new" class="ml-1 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-ink px-3.5 text-[13px] font-medium text-page transition-opacity hover:opacity-80"><Plus size={13} /> New post</a>
+      {/if}
+      <button onclick={toggleTheme} class="-mr-1 inline-flex min-h-11 items-center px-2 text-quiet transition-colors hover:text-ink" title={dark ? 'Switch to light' : 'Switch to dark'} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}>
+        {#if dark}<Sun size={20} strokeWidth={1.7} />{:else}<Moon size={20} strokeWidth={1.7} />{/if}
+      </button>
+      <form method="POST" action="/logout" class="flex">
+        <button type="submit" class="inline-flex min-h-11 items-center gap-1.5 px-1.5 text-quiet transition-colors hover:text-ink" title="Log out"><LogOut size={15} /><span class="hidden sm:inline">Logout</span></button>
+      </form>
+    </nav>
   </header>
-
-  <main class="flex-1">
-    {@render children()}
-  </main>
+  <main class="flex-1">{@render children()}</main>
 </div>

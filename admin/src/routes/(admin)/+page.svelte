@@ -9,10 +9,10 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
 
+  // Keyed by server data identity only via untrack init; local optimistic
+  // updates (toggle/delete) own the list after mount. SvelteKit remounts
+  // on navigation, so a sync $effect is unnecessary and would clobber them.
   let posts = $state<AdminPostSummary[]>(untrack(() => data.posts ?? []))
-  $effect(() => {
-    posts = data.posts ?? []
-  })
   let filterStatus = $state<'all' | 'draft' | 'published'>('all')
 
   let filtered = $derived(
@@ -80,78 +80,39 @@
   <title>Posts — Admin</title>
 </svelte:head>
 
-<div class="min-h-screen bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
-  <main class="mx-auto max-w-4xl px-6 py-8">
-    <h1 class="mb-6 text-3xl font-black tracking-tighter uppercase">Posts</h1>
+<div class="mx-auto w-full max-w-176 px-4 pt-8 pb-16 sm:px-0">
+  <h1 class="text-[16px] text-ink">Posts</h1>
+  <p class="mt-1 text-[14px] text-quiet">{posts.length} {posts.length === 1 ? 'post' : 'posts'} · {counts.published} published · {counts.draft} draft</p>
 
     {#if form?.error}
-      <div class="mb-4 border border-red-500 p-2 font-mono text-xs text-red-500">
-        {form.error}
-      </div>
+      <div class="mt-4 rounded-lg border border-rose/40 bg-rose/10 px-3 py-2 text-[13px] text-rose" role="alert">{form.error}</div>
     {/if}
 
-    <!-- Filter tabs -->
     {#if posts.length > 0}
-      <div class="mb-4 flex items-center gap-1 border-b border-black/10 pb-0 dark:border-white/10">
+      <div class="mt-8 mb-2 flex items-center gap-4 text-[14px]" role="tablist" aria-label="Filter posts">
         {#each tabs as tab}
-          <button
-            onclick={() => (filterStatus = tab.key)}
-            class={[
-              '-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 font-mono text-[10px] tracking-widest uppercase transition-colors',
-              filterStatus === tab.key
-                ? 'border-black text-black dark:border-white dark:text-white'
-                : 'border-transparent text-black/30 hover:text-black/60 dark:text-white/30 dark:hover:text-white/60',
-            ].join(' ')}
-          >
-            {tab.label}
-            <span
-              class={[
-                'px-1 py-px text-[9px]',
-                filterStatus === tab.key ? 'bg-black/15 dark:bg-white/15' : 'bg-black/5 dark:bg-white/5',
-              ].join(' ')}
-            >
-              {tab.count}
-            </span>
+          <button role="tab" aria-selected={filterStatus === tab.key} onclick={() => (filterStatus = tab.key)} class="transition-colors {filterStatus === tab.key ? 'font-medium text-ink' : 'text-quiet hover:text-ink'}">
+            {tab.label} <span class="text-quiet">{tab.count}</span>
           </button>
         {/each}
       </div>
     {/if}
 
     {#if filtered.length === 0}
-      <p class="font-mono text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+      <p class="pt-6 text-[14px] text-quiet">
         {posts.length === 0 ? 'No posts yet.' : `No ${filterStatus} posts.`}
+        {#if posts.length === 0}<a href="/posts/new" class="border-b border-leader font-medium text-ink hover:border-ink">Write your first post</a>{/if}
       </p>
     {:else}
-      <div class="divide-y divide-black/10 border border-black/10 dark:divide-white/10 dark:border-white/10">
+      <ul class="rows-dim">
         {#each filtered as post (post.id)}
-          <div class="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
-            <div class="min-w-0 flex-1">
-              <div class="mb-0.5 flex items-center gap-2">
-                <span
-                  class={[
-                    'px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-widest uppercase',
-                    post.status === 'published'
-                      ? 'border border-green-500/30 bg-green-500/20 text-green-600 dark:text-green-400'
-                      : 'border border-black/20 bg-black/10 text-black/40 dark:border-white/20 dark:bg-white/10 dark:text-white/40',
-                  ].join(' ')}
-                >
-                  {post.status}
-                </span>
-                <span class="font-mono text-[10px] text-black/30 dark:text-white/30">
-                  {post.status === 'published' && post.publishedAt
-                    ? fmtDate(post.publishedAt, 'Published')
-                    : fmtDate(post.updatedAt, 'Updated')}
-                </span>
-              </div>
-              <p class="truncate text-sm font-bold">{post.title}</p>
-              {#if post.description}
-                <p class="mt-0.5 truncate text-xs text-black/40 dark:text-white/40">
-                  {post.description}
-                </p>
-              {/if}
-            </div>
+          <li class="group flex items-center gap-3 py-1.5 text-[14px] leading-[1.7]">
+            <a href="/posts/{post.id}" class="min-w-0 truncate text-body transition-colors group-hover:text-ink" title={post.description || post.title}>{post.title}</a>
+            <span class="min-w-6 flex-1 -translate-y-px border-b border-dotted border-leader transition-colors group-hover:border-quiet" aria-hidden="true"></span>
+            <span class="hidden shrink-0 text-quiet sm:block {post.status === 'published' ? '' : 'text-cord'}">{post.status === 'published' ? (post.publishedAt ? fmtDate(post.publishedAt, '') : 'Published') : 'Draft'}</span>
+            <span class="hidden shrink-0 text-quiet md:block">{fmtDate(post.updatedAt, '')}</span>
 
-            <div class="flex shrink-0 items-center gap-1">
+            <div class="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity focus-within:opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
               <!-- Publish / Unpublish -->
               <button
                 onclick={() => toggleStatus(post)}
@@ -160,8 +121,8 @@
                 class={[
                   'p-1.5 transition-all disabled:opacity-40',
                   post.status === 'published'
-                    ? 'text-green-600/50 hover:bg-black/10 hover:text-black dark:text-green-400/50 dark:hover:bg-white/10 dark:hover:text-white'
-                    : 'text-black/25 hover:bg-[#FFE600] hover:text-black dark:text-white/25 dark:hover:bg-[#FFE600] dark:hover:text-black',
+                    ? 'text-green-600/50 hover:bg-raised hover:text-ink dark:text-green-400/50 dark:hover:bg-white/10 dark:hover:text-ink'
+                    : 'text-quiet hover:bg-pen hover:text-ink/25 dark:hover:bg-pen dark:hover:text-ink',
                 ].join(' ')}
               >
                 {#if post.status === 'published'}
@@ -175,7 +136,7 @@
               <button
                 onclick={() => downloadPost(post)}
                 disabled={downloadingId === post.id}
-                class="p-1.5 text-black/30 transition-all hover:bg-black hover:text-white disabled:opacity-40 dark:text-white/30 dark:hover:bg-white dark:hover:text-black"
+                class="p-1.5 text-quiet transition-all hover:bg-ink hover:text-white disabled:opacity-40 dark:text-quiet dark:hover:bg-page dark:hover:text-ink"
                 title="Download as Markdown"
               >
                 <Download size={14} />
@@ -184,7 +145,7 @@
               <!-- Edit -->
               <a
                 href="/posts/{post.id}"
-                class="p-1.5 text-black/30 transition-all hover:bg-black hover:text-white dark:text-white/30 dark:hover:bg-white dark:hover:text-black"
+                class="p-1.5 text-quiet transition-all hover:bg-ink hover:text-white dark:text-quiet dark:hover:bg-page dark:hover:text-ink"
                 title="Edit"
               >
                 <Pencil size={14} />
@@ -210,16 +171,15 @@
                   onclick={(e) => {
                     if (!confirm(`Delete "${post.title}"?`)) e.preventDefault()
                   }}
-                  class="p-1.5 text-black/30 transition-all hover:bg-red-500 hover:text-white dark:text-white/30 dark:hover:bg-red-500 dark:hover:text-white disabled:opacity-40"
+                  class="p-1.5 text-quiet transition-all hover:bg-red-500 hover:text-white dark:text-quiet dark:hover:bg-red-500 dark:hover:text-ink disabled:opacity-40"
                   title="Delete"
                 >
                   <Trash2 size={14} />
                 </button>
               </form>
             </div>
-          </div>
+          </li>
         {/each}
-      </div>
+      </ul>
     {/if}
-  </main>
 </div>

@@ -17,23 +17,13 @@
   <title>Collection — Admin</title>
 </svelte:head>
 
-<div class="min-h-screen bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
-  <main class="mx-auto max-w-4xl px-6 py-8">
-    <h1 class="mb-6 text-3xl font-black tracking-tighter uppercase">Collection</h1>
+<div class="bg-page text-ink">
+  <main class="mx-auto w-full max-w-176 px-4 pt-8 pb-16 sm:px-0">
+    <h1 class="text-[16px] text-ink">Collection</h1><p class="mt-1 mb-8 text-[14px] text-quiet">Books and albums shown on the site.</p>
 
-    <div class="mb-6 flex items-center gap-1 border-b border-black/10 pb-0 dark:border-white/10">
-      {#each tabs as t}
-        <button
-          onclick={() => (tab = t.key)}
-          class={[
-            '-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 font-mono text-[10px] tracking-widest uppercase transition-colors',
-            tab === t.key
-              ? 'border-black text-black dark:border-white dark:text-white'
-              : 'border-transparent text-black/30 hover:text-black/60 dark:text-white/30 dark:hover:text-white/60',
-          ].join(' ')}
-        >
-          {t.label}
-        </button>
+    <div class="mb-8 flex items-center gap-4 text-[14px]" role="tablist" aria-label="Collection">
+      {#each tabs as t (t.key)}
+        <button role="tab" aria-selected={tab === t.key} onclick={() => (tab = t.key)} class="transition-colors {tab === t.key ? 'font-medium text-ink' : 'text-quiet hover:text-ink'}">{t.label}</button>
       {/each}
     </div>
 

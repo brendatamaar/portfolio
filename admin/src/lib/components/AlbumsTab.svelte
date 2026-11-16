@@ -41,14 +41,14 @@
 >
   {#snippet extraFormFields()}
     <div class="flex flex-col gap-1">
-      <label class="font-mono text-[10px] tracking-widest text-black/40 uppercase dark:text-white/40">
+      <label class="text-[12px] text-quiet dark:text-quiet">
         Artist
       </label>
       <input
         value={artist}
         oninput={(e) => (artist = (e.target as HTMLInputElement).value)}
         placeholder="Artist name"
-        class="border border-black/20 bg-transparent px-3 py-1.5 text-sm focus:border-black focus:outline-none dark:border-white/20 dark:focus:border-white"
+        class="border border-leader bg-transparent px-3 py-1.5 text-sm focus:border-quiet focus:outline-none dark:border-white/20 dark:focus:border-quiet"
       />
     </div>
   {/snippet}

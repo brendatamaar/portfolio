@@ -21,23 +21,13 @@
   <title>Resume — Admin</title>
 </svelte:head>
 
-<div class="min-h-screen bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
-  <main class="mx-auto max-w-4xl px-6 py-8">
-    <h1 class="mb-6 text-3xl font-black tracking-tighter uppercase">Resume</h1>
+<div class="bg-page text-ink">
+  <main class="mx-auto w-full max-w-176 px-4 pt-8 pb-16 sm:px-0">
+    <h1 class="text-[16px] text-ink">Resume</h1><p class="mt-1 mb-8 text-[14px] text-quiet">Profile, work, education, skills and projects.</p>
 
-    <div class="mb-6 flex items-center gap-1 border-b border-black/10 pb-0 dark:border-white/10">
-      {#each SECTIONS as s}
-        <button
-          onclick={() => (section = s.key)}
-          class={[
-            '-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 font-mono text-[10px] tracking-widest uppercase transition-colors',
-            section === s.key
-              ? 'border-black text-black dark:border-white dark:text-white'
-              : 'border-transparent text-black/30 hover:text-black/60 dark:text-white/30 dark:hover:text-white/60',
-          ].join(' ')}
-        >
-          {s.label}
-        </button>
+    <div class="mb-8 flex flex-wrap items-center gap-4 text-[14px]" role="tablist" aria-label="Resume sections">
+      {#each SECTIONS as s (s.key)}
+        <button role="tab" aria-selected={section === s.key} onclick={() => (section = s.key)} class="transition-colors {section === s.key ? 'font-medium text-ink' : 'text-quiet hover:text-ink'}">{s.label}</button>
       {/each}
     </div>
 

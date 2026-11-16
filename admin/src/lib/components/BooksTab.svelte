@@ -49,24 +49,24 @@
 >
   {#snippet extraFormFields()}
     <div class="flex flex-col gap-1">
-      <label class="font-mono text-[10px] tracking-widest text-black/40 uppercase dark:text-white/40">
+      <label class="text-[12px] text-quiet dark:text-quiet">
         Author
       </label>
       <input
         value={author}
         oninput={(e) => (author = (e.target as HTMLInputElement).value)}
         placeholder="Author name"
-        class="border border-black/20 bg-transparent px-3 py-1.5 text-sm focus:border-black focus:outline-none dark:border-white/20 dark:focus:border-white"
+        class="border border-leader bg-transparent px-3 py-1.5 text-sm focus:border-quiet focus:outline-none dark:border-white/20 dark:focus:border-quiet"
       />
     </div>
     <div class="flex flex-col gap-1">
-      <label class="font-mono text-[10px] tracking-widest text-black/40 uppercase dark:text-white/40">
+      <label class="text-[12px] text-quiet dark:text-quiet">
         Status
       </label>
       <select
         value={status}
         onchange={(e) => (status = (e.target as HTMLSelectElement).value as typeof status)}
-        class="border border-black/20 bg-transparent px-3 py-1.5 text-sm focus:border-black focus:outline-none dark:border-white/20 dark:focus:border-white"
+        class="border border-leader bg-transparent px-3 py-1.5 text-sm focus:border-quiet focus:outline-none dark:border-white/20 dark:focus:border-quiet"
       >
         {#each STATUS_OPTIONS as opt}
           <option value={opt.value}>{opt.label}</option>
@@ -85,12 +85,12 @@
 
   {#snippet itemBadge(item: BookItem)}
     <span class={[
-      'shrink-0 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-widest uppercase',
+      'shrink-0 px-1.5 py-0.5 text-[11px] font-medium',
       item.status === 'reading'
         ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
         : item.status === 'finished'
-          ? 'bg-[#FFE600]/30 text-black/60 dark:text-white/60'
-          : 'bg-black/10 text-black/40 dark:bg-white/10 dark:text-white/40',
+          ? 'bg-pen/30 text-body'
+          : 'bg-raised text-quiet dark:bg-white/10 dark:text-quiet',
     ].join(' ')}>
       {item.status === 'finished' ? 'read' : item.status}
     </span>

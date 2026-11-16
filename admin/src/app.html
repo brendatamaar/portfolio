@@ -10,10 +10,17 @@
     <link rel="manifest" href="%sveltekit.assets%/images/favicon/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
-    <script>if(localStorage.getItem('admin-theme')==='dark')document.documentElement.classList.add('dark')</script>
+    <script>
+      // Dark-first like the homepage: saved choice, else OS, else dark.
+      try {
+        var th = localStorage.getItem('admin_theme')
+        if (th ? th === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches)
+          document.documentElement.classList.add('dark')
+      } catch (e) { document.documentElement.classList.add('dark') }
+    </script>
     %sveltekit.head%
   </head>
-  <body class="min-h-screen bg-white font-ui text-[#0a0a0a] dark:bg-[#0a0a0a] dark:text-[#f0f0f0]" data-sveltekit-preload-data="hover">
+  <body class="min-h-screen bg-page font-sans text-ink" data-sveltekit-preload-data="hover">
     <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>

@@ -1,11 +1,40 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Design tokens ported from web/src/folio/styles/folio.css — the admin is the
+   same site, backstage: one sans, quiet grey hierarchy, pen-blue accent,
+   dotted leaders and hairline rings instead of hard black boxes.
+   Light values are the default; html.dark carries the homepage's dark set. */
 @theme {
-  --font-ui: 'Inter', system-ui, sans-serif;
-  --font-code: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans:
+    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-ui:
+    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    monospace;
+  --font-code:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    monospace;
 
-  /* yellow flash on a reference when its glossary/bibliography entry is clicked */
+  --color-page: #ffffff;
+  --color-ink: #171717;
+  --color-body: #404040;
+  --color-quiet: #737373;
+  --color-leader: #e5e5e5;
+  --color-ring: #e5e5e5;
+  --color-raised: #f7f7f7;
+  --color-pen: #2f4fd8;
+  --color-hl: rgb(47 79 216 / 0.17);
+  --color-thread: #3f8048;
+  --color-cord: #a67c1e;
+  --color-rose: #c9435f;
+  --color-heart: #8a9a3a;
+
+  --shadow-card:
+    0 22px 44px -18px rgb(0 0 0 / 0.28), 0 0 0 1px rgb(128 128 128 / 0.18);
+  --shadow-popup: 0 18px 40px -16px rgb(0 0 0 / 0.35);
+
   --animate-ref-flash: ref-flash 1.2s ease forwards;
   @keyframes ref-flash {
     0%,
@@ -14,74 +43,103 @@
     }
     20%,
     70% {
-      background-color: #ffe600;
+      background-color: var(--color-hl);
     }
   }
 }
 
 @layer base {
+  html.dark {
+    --color-page: #131313;
+    --color-ink: #f5f5f5;
+    --color-body: #d4d4d4;
+    --color-quiet: #a1a1a1;
+    --color-leader: #404040;
+    --color-ring: #2a2a2a;
+    --color-raised: #1c1c1c;
+    --color-pen: #8ea2ff;
+    --color-hl: rgb(142 162 255 / 0.3);
+    --color-thread: #6fa073;
+    --color-cord: #d6ae58;
+    --color-rose: #e8738c;
+    --color-heart: #e3e9b4;
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-page font-sans text-ink antialiased;
+  }
   button {
     cursor: pointer;
   }
-
-  /* Scrollbar (no utilities for these pseudo-elements) */
+  ::selection {
+    background: var(--color-hl);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-quiet);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #e5e5e5;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #000;
-  }
-  html.dark ::-webkit-scrollbar-track {
-    background: #222;
-  }
-  html.dark ::-webkit-scrollbar-thumb {
-    background: #555;
+    background: var(--color-leader);
+    border-radius: 3px;
   }
 }
 
-/* The markdown textarea: the post editor and the raw glossary/bibliography panes */
+/* Homepage row behaviour: siblings step back while one row is hovered. */
+@utility rows-dim {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover > :not(:hover) {
+      opacity: 0.35;
+    }
+  }
+  & > * {
+    transition: opacity 0.3s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > * {
+      transition: none;
+    }
+  }
+}
+
 @utility editor-textarea {
-  @apply h-full w-full resize-none border-0 bg-[#fafafa] p-5 font-code text-[0.875rem] leading-[1.7] text-[#1a1a1a] outline-none dark:bg-[#0d0d0d] dark:text-[#e0e0e0];
+  @apply h-full w-full resize-none border-0 bg-page p-5 font-code text-[0.875rem] leading-[1.7] text-body outline-none;
 }
 
-/* ============================================================
-   Rendered markdown. The HTML comes from shared/markdown with its own class
-   names, so it is styled from the outside. These rules stay outside any layer:
-   the renderer also emits a few utility names (underline, rounded-sm) and the
-   rules here must keep winning over them.
-   ============================================================ */
-
-/* The editor's split/full-pane preview */
+/* Rendered markdown (shared renderer class names), restyled to web post.css. */
 .preview-content {
-  @apply px-8 py-5 text-[1rem] leading-[1.75] text-[#1a1a1a] dark:text-[#e0e0e0];
+  @apply px-8 py-5 text-[1rem] leading-[1.75] text-body;
 }
 .preview-content :is(h1, h2, h3, h4, h5, h6) {
-  @apply mt-8 mb-3 font-black tracking-[-0.03em] text-black uppercase dark:text-white;
+  @apply mt-8 mb-3 leading-[1.4] font-medium tracking-[-0.01em] text-ink;
 }
 .preview-content h1 {
-  @apply text-[2rem];
-}
-.preview-content h2 {
   @apply text-[1.5rem];
 }
-.preview-content h3 {
+.preview-content h2 {
   @apply text-[1.25rem];
+}
+.preview-content h3 {
+  @apply text-[1.0625rem];
 }
 .preview-content p {
   @apply mb-4;
 }
 .preview-content a {
-  @apply text-[#7c3aed] underline dark:text-[#a78bfa];
+  @apply border-b border-leader font-medium text-ink no-underline transition-colors hover:border-ink;
 }
 .preview-content strong {
-  @apply font-extrabold;
+  @apply font-medium text-ink;
 }
 .preview-content blockquote {
-  @apply my-4 border-l-3 border-[#aaa] pl-4 text-[#555] italic dark:border-[#555] dark:text-[#aaa];
+  @apply my-4 border-l-2 border-leader pl-4 text-quiet;
 }
 .preview-content ul {
   @apply mb-4 list-disc pl-6;
@@ -89,99 +147,90 @@
 .preview-content ol {
   @apply mb-4 list-decimal pl-6;
 }
+.preview-content li::marker {
+  @apply text-quiet;
+}
 .preview-content hr {
-  @apply my-6 border-0 border-t border-[#ddd] dark:border-[#333];
+  @apply my-6 border-0 border-t border-dotted border-leader;
 }
 .preview-content table {
-  @apply mb-4 w-full border-collapse;
+  @apply mb-4 w-full border-collapse text-[0.875rem];
 }
 .preview-content th {
-  @apply border border-[#ccc] bg-[#f5f5f5] px-[0.6rem] py-[0.4rem] font-bold dark:border-[#444] dark:bg-[#1a1a1a];
+  @apply border-b border-dotted border-leader px-2 py-1.5 text-left font-medium text-ink;
 }
 .preview-content td {
-  @apply border border-[#ccc] px-[0.6rem] py-[0.4rem] dark:border-[#444];
+  @apply border-b border-dotted border-leader px-2 py-1.5;
 }
 
-/* Code */
 .inline-code {
-  @apply rounded-[2px] border border-[#ddd] bg-[#f0f0f0] px-[0.4em] py-[0.15em] font-code text-[0.85em] dark:border-[#333] dark:bg-[#1e1e1e];
+  @apply rounded-[4px] bg-raised px-[0.35em] py-[0.1em] font-code text-[0.85em] text-ink;
 }
 .code-block {
-  @apply mb-4 border border-[#ddd] bg-[#f8f8f8] dark:border-[#333] dark:bg-[#0d0d0d];
+  @apply relative mb-4 overflow-hidden rounded-[10px] border border-ring bg-raised;
 }
 .code-lang {
-  @apply block px-3 pt-[0.3rem] font-code text-[0.7rem] font-bold text-[#999] uppercase dark:text-[#666];
+  @apply absolute top-1.5 left-4 font-code text-[0.7rem] text-quiet;
 }
 .code-block pre {
-  @apply m-0 overflow-x-auto px-4 py-3;
+  @apply m-0 overflow-x-auto px-4 py-3.5;
 }
 .code-block code {
-  @apply font-code text-[0.85rem] leading-[1.6] text-[#1a1a1a] dark:text-[#e0e0e0];
+  @apply font-code text-[0.85rem] leading-[1.65] text-body;
 }
-
-/* Highlight tokens */
 .hl-comment {
-  @apply text-[#6a9955];
+  @apply text-quiet;
 }
-.hl-string {
-  @apply text-[#ce9178];
+.hl-string,
+.hl-value {
+  @apply text-thread;
 }
-.hl-keyword {
-  @apply text-[#569cd6];
+.hl-keyword,
+.hl-tag {
+  @apply text-rose;
 }
 .hl-number {
-  @apply text-[#b5cea8];
+  @apply text-cord;
 }
 .hl-operator {
-  @apply text-[#555] dark:text-[#d4d4d4];
+  @apply text-body;
 }
 .hl-function {
-  @apply text-[#795e26] dark:text-[#dcdcaa];
+  @apply text-pen;
 }
-.hl-type {
-  @apply text-[#267f99] dark:text-[#4ec9b0];
-}
-.hl-builtin {
-  @apply text-[#0070c1] dark:text-[#9cdcfe];
-}
-.hl-tag {
-  @apply text-[#800000] dark:text-[#569cd6];
-}
-.hl-attr {
-  @apply text-[#e50000] dark:text-[#9cdcfe];
-}
-.hl-value {
-  @apply text-[#0000ff] dark:text-[#ce9178];
-}
+.hl-type,
+.hl-attr,
+.hl-builtin,
 .hl-property,
 .hl-variable {
-  @apply text-[#001080] dark:text-[#9cdcfe];
+  @apply text-heart;
 }
 .hl-punctuation {
-  @apply text-[#333] dark:text-[#808080];
+  @apply text-quiet;
 }
 
-/* Admonitions: --tone is the border, --head/--on-head the header bar */
 .admonition {
-  --tone: currentColor;
-  --head: var(--tone);
-  --on-head: #fff;
-  @apply mb-4 border border-(color:--tone);
+  --tone: var(--color-quiet);
+  --head: transparent;
+  --on-head: var(--tone);
+  @apply mb-4 rounded-[6px] border border-ring bg-raised px-4 py-3;
+  border-left: 2px solid var(--tone);
 }
 .admonition-header {
-  @apply flex items-center gap-2 bg-(--head) px-[0.6rem] py-[0.4rem] text-[0.7rem] font-bold tracking-[0.08em] text-(color:--on-head) uppercase;
+  @apply mb-1.5 flex items-center gap-2 text-[0.7rem] font-medium tracking-[0.06em] uppercase;
+  color: var(--tone);
 }
 .admonition-icon {
-  @apply text-[0.85rem];
+  @apply hidden;
 }
 .admonition-label {
   @apply flex-1;
 }
 .admonition-copy-btn {
-  @apply cursor-pointer border border-current bg-transparent px-[0.4rem] py-[0.15rem] text-[0.65rem] font-bold text-inherit uppercase;
+  @apply cursor-pointer rounded-full border border-leader bg-transparent px-2.5 py-0.5 text-[0.65rem] text-quiet hover:border-quiet hover:text-ink;
 }
 .admonition-body {
-  @apply p-[0.6rem] text-[0.875rem];
+  @apply text-[0.875rem];
 }
 .admonition-body p:last-child {
   @apply mb-0;
@@ -189,54 +238,43 @@
 .admonition-body-mono {
   @apply font-code text-[0.8rem] whitespace-pre-wrap;
 }
-.admonition-note {
-  --tone: #2563eb;
+.admonition-note,
+.admonition-info,
+.admonition-ai,
+.admonition-see-also {
+  --tone: var(--color-pen);
 }
-.admonition-warning {
-  --tone: #d97706;
+.admonition-warning,
+.admonition-tldr {
+  --tone: var(--color-cord);
 }
 .admonition-danger {
-  --tone: #dc2626;
+  --tone: var(--color-rose);
 }
 .admonition-tip {
-  --tone: #16a34a;
-}
-.admonition-info {
-  --tone: #4338ca;
-}
-.admonition-tldr {
-  --tone: #ca8a04;
-  --head: #ffe600;
-  --on-head: #000;
+  --tone: var(--color-thread);
 }
 .admonition-update {
-  --tone: #6b7280;
-}
-.admonition-ai {
-  --tone: #7c3aed;
-}
-.admonition-see-also {
-  --tone: #0ea5e9;
+  --tone: var(--color-quiet);
 }
 
-/* The post preview modal: the article as readers see it */
 .post-preview-content {
-  @apply text-[1rem] leading-[1.75] text-[#111] dark:text-[#f5f5f5];
+  @apply text-[1rem] leading-[1.75] text-body;
 }
 .post-preview-content :is(h1, h2, h3, h4, h5, h6) {
-  @apply mt-10 mb-4 leading-none font-black tracking-normal text-black uppercase dark:text-white;
+  @apply mt-10 mb-4 leading-[1.4] font-medium tracking-[-0.01em] text-ink;
 }
 .post-preview-content h1 {
-  @apply text-[2.5rem];
-}
-.post-preview-content h2 {
   @apply text-[1.875rem];
 }
-.post-preview-content h3 {
+.post-preview-content h2 {
   @apply text-[1.5rem];
 }
-.post-preview-content h4 {
+.post-preview-content h3 {
   @apply text-[1.25rem];
+}
+.post-preview-content h4 {
+  @apply text-[1.125rem];
 }
 .post-preview-content p,
 .post-preview-content ul,
@@ -254,58 +292,44 @@
   @apply list-decimal pl-6;
 }
 .post-preview-content a {
-  @apply underline underline-offset-[3px];
+  @apply border-b border-leader font-medium text-ink no-underline hover:border-ink;
 }
 .post-preview-content blockquote {
-  @apply ml-0 border-l-4 border-black pl-4 text-[#555] italic dark:border-white dark:text-[#aaa];
+  @apply ml-0 border-l-2 border-leader pl-4 text-quiet;
 }
 .post-preview-content table {
-  @apply w-full border-collapse;
+  @apply w-full border-collapse text-[0.875rem];
 }
 .post-preview-content th {
-  @apply border-2 border-black bg-black px-3 py-2 text-left font-extrabold text-white dark:border-white dark:bg-white dark:text-black;
+  @apply border-b border-dotted border-leader px-2 py-1.5 text-left font-medium text-ink;
 }
 .post-preview-content td {
-  @apply border-2 border-black px-3 py-2 dark:border-white;
+  @apply border-b border-dotted border-leader px-2 py-1.5;
 }
 .post-preview-content figure {
-  @apply mx-0 my-8 text-center;
+  @apply mx-0 my-8;
 }
 .post-preview-content figure img,
 .post-preview-content p img {
-  @apply mx-auto my-0 block max-w-full border-2 border-black dark:border-white;
+  @apply block h-auto max-w-full rounded-[8px];
 }
 .post-preview-content figcaption {
-  @apply mt-2 font-code text-[0.8rem] text-[#666] italic;
+  @apply mt-2 text-[0.8rem] text-quiet;
 }
 
-/* Footnotes, glossary and citation numbers */
 .footnote-def {
-  @apply mt-2 border-l-2 border-[#ccc] pl-4 text-[0.8rem] text-[#666];
+  @apply mt-2 text-[0.8rem] text-quiet;
 }
 .footnote-ref a {
-  @apply inline-block bg-black px-[0.3em] py-[0.1em] font-code text-[0.6em] leading-[1.4] font-bold text-white no-underline dark:bg-white dark:text-black;
+  @apply font-normal text-pen no-underline;
 }
 .gloss-ref a,
 .cite-ref.bib-ref a {
-  @apply inline-block border-2 border-black px-[0.4em] py-[0.1em] align-super font-code text-[0.65em] leading-[1.2] font-black text-black no-underline shadow-[2px_2px_0_#000];
-  transition: all 150ms;
+  @apply border-b border-dotted border-pen font-normal text-pen no-underline;
 }
-.gloss-ref a {
-  @apply bg-white dark:border-white dark:bg-black dark:text-white dark:shadow-[2px_2px_0_#fff];
-}
-.cite-ref.bib-ref a {
-  @apply bg-[#ffe600] dark:border-[#ffe600];
-}
-.gloss-ref a:hover,
-.cite-ref.bib-ref a:hover {
-  @apply -translate-px bg-black text-[#ffe600];
-}
-
-/* Popup shown when a glossary/citation number is clicked in the modal */
 .post-preview-popup {
-  @apply fixed z-60 max-w-80 border-2 border-black bg-white px-4 py-3 text-[0.85rem] leading-[1.5] shadow-[4px_4px_0_#000] dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0_#fff];
+  @apply fixed z-60 max-w-80 rounded-[10px] border border-ring bg-page px-4 py-3 text-[0.85rem] leading-[1.5] text-body shadow-popup;
 }
 .post-preview-popup a {
-  @apply font-bold underline decoration-[#ffe600] decoration-2 underline-offset-[3px];
+  @apply border-b border-leader font-medium text-ink no-underline;
 }

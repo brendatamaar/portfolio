@@ -8,9 +8,11 @@
     "dev": "vite dev --port 4322",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node --test scripts/check-theme.test.mjs",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
+    "@fontsource/plus-jakarta-sans": "^5.3.0",
     "@sveltejs/adapter-node": "^5.2.0",
     "@sveltejs/kit": "^2.0.0",
     "lucide-svelte": "^1.0.1",

@@ -125,11 +125,11 @@
 
 <form
   onsubmit={handleSubmit}
-  class="mb-6 flex flex-wrap items-end gap-2 border border-black/10 p-4 dark:border-white/10"
+  class="mb-6 flex flex-wrap items-end gap-2 border border-ring p-4 dark:border-white/10"
 >
   <!-- Search with autocomplete -->
   <div class="relative flex flex-col gap-1" data-autocomplete>
-    <label class="font-mono text-[10px] tracking-widest text-black/40 uppercase dark:text-white/40">
+    <label class="text-[12px] text-quiet dark:text-quiet">
       Title
     </label>
     <div class="relative flex items-center">
@@ -139,9 +139,9 @@
         onfocus={() => results.length > 0 && (dropdownOpen = true)}
         placeholder={searchPlaceholder}
         autocomplete="off"
-        class="w-64 border border-black/20 bg-transparent py-1.5 pr-8 pl-3 text-sm focus:border-black focus:outline-none dark:border-white/20 dark:focus:border-white"
+        class="w-64 border border-leader bg-transparent py-1.5 pr-8 pl-3 text-sm focus:border-quiet focus:outline-none dark:border-white/20 dark:focus:border-quiet"
       />
-      <span class="pointer-events-none absolute right-2.5 text-black/30 dark:text-white/30">
+      <span class="pointer-events-none absolute right-2.5 text-quiet">
         {#if searching}
           <Loader size={12} class="animate-spin" />
         {:else}
@@ -151,30 +151,30 @@
     </div>
 
     {#if showDropdown}
-      <div class="absolute top-full left-0 z-50 mt-1 w-80 border border-black/20 bg-white shadow-[4px_4px_0px_rgba(0,0,0,0.15)] dark:border-white/20 dark:bg-[#0a0a0a]">
+      <div class="absolute top-full left-0 z-50 mt-1 w-80 border border-leader bg-page shadow-popup dark:border-white/20 dark:bg-page">
         {#if searching && results.length === 0}
-          <div class="px-3 py-2 font-mono text-[10px] text-black/40 dark:text-white/40">Searching...</div>
+          <div class="px-3 py-2 font-mono text-[11px] text-quiet">Searching...</div>
         {:else if results.length === 0}
-          <div class="px-3 py-2 font-mono text-[10px] text-black/40 dark:text-white/40">No results.</div>
+          <div class="px-3 py-2 font-mono text-[11px] text-quiet">No results.</div>
         {:else}
           {#each results as r}
             <button
               type="button"
               onclick={() => selectResult(r)}
-              class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+              class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-raised"
             >
-              <div class="{coverClass} shrink-0 overflow-hidden border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/5">
+              <div class="{coverClass} shrink-0 overflow-hidden border border-ring bg-raised dark:border-white/10 dark:bg-white/5">
                 {#if r.coverUrl}
-                  <img src={r.coverUrl} alt="" class="h-full w-full object-cover" />
+                  <img src={r.coverUrl} alt="" loading="lazy" decoding="async" class="h-full w-full object-cover" />
                 {:else}
                   <div class="flex h-full w-full items-center justify-center">
-                    <span class="font-mono text-[8px] text-black/20">?</span>
+                    <span class="font-mono text-[8px] text-quiet">?</span>
                   </div>
                 {/if}
               </div>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-bold">{r.title}</p>
-                <p class="truncate font-mono text-xs text-black/40 dark:text-white/40">
+                <p class="truncate font-mono text-xs text-quiet">
                   {@render dropdownMeta(r)}
                   {#if r.year}<span class="ml-1.5">{r.year}</span>{/if}
                 </p>
@@ -189,15 +189,15 @@
   {@render extraFormFields?.()}
 
   {#if selectedCover}
-    <div class="{coverClass} shrink-0 overflow-hidden border border-black/20 dark:border-white/20">
-      <img src={selectedCover} alt="" class="h-full w-full object-cover" />
+    <div class="{coverClass} shrink-0 overflow-hidden border border-leader">
+      <img src={selectedCover} alt="" loading="lazy" decoding="async" class="h-full w-full object-cover" />
     </div>
   {/if}
 
   <button
     type="submit"
     disabled={adding || !query.trim() || !canSubmit}
-    class="flex items-center gap-1.5 bg-black px-3 py-1.5 text-xs font-bold tracking-wide text-white uppercase transition-colors hover:bg-black/80 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/80"
+    class="flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-1.5 text-[13px] font-medium text-page transition-opacity hover:opacity-80 disabled:opacity-40"
   >
     {#if adding}
       <Loader size={12} class="animate-spin" />
@@ -209,25 +209,25 @@
 </form>
 
 {#if items.length === 0}
-  <p class="font-mono text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+  <p class="text-[13px] text-quiet dark:text-quiet">
     {emptyText}
   </p>
 {:else}
-  <div class="divide-y divide-black/10 border border-black/10 dark:divide-white/10 dark:border-white/10">
+  <div class="divide-y divide-black/10 border border-ring dark:divide-white/10 dark:border-white/10">
     {#each items as item (item.id)}
-      <div class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
-        <div class="{coverClass} shrink-0 overflow-hidden border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/5">
+      <div class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-raised">
+        <div class="{coverClass} shrink-0 overflow-hidden border border-ring bg-raised dark:border-white/10 dark:bg-white/5">
           {#if item.coverUrl}
-            <img src={item.coverUrl} alt={item.title} class="h-full w-full object-cover" />
+            <img src={item.coverUrl} alt={item.title} loading="lazy" decoding="async" class="h-full w-full object-cover" />
           {:else}
             <div class="flex h-full w-full items-center justify-center">
-              <span class="font-mono text-[8px] text-black/30 dark:text-white/30">N/A</span>
+              <span class="font-mono text-[8px] text-quiet">N/A</span>
             </div>
           {/if}
         </div>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-bold">{item.title}</p>
-          <p class="truncate font-mono text-xs text-black/40 dark:text-white/40">
+          <p class="truncate font-mono text-xs text-quiet">
             {@render itemMeta(item)}
             {#if item.year}<span class="ml-1.5">{item.year}</span>{/if}
           </p>
@@ -235,14 +235,14 @@
         {@render itemBadge?.(item)}
         <button
           onclick={() => handleFeature(item.id)}
-          class="p-1.5 transition-all {item.featured ? 'text-[#FFE600]' : 'text-black/20 hover:text-[#FFE600] dark:text-white/20'}"
+          class="p-1.5 transition-all {item.featured ? 'text-pen' : 'text-quiet hover:text-pen dark:text-white/20'}"
           title={item.featured ? 'Featured' : 'Set as featured'}
         >
           <Star size={14} fill={item.featured ? 'currentColor' : 'none'} />
         </button>
         <button
           onclick={() => handleDelete(item.id, item.title)}
-          class="p-1.5 text-black/30 transition-all hover:bg-red-500 hover:text-white dark:text-white/30"
+          class="p-1.5 text-quiet transition-all hover:bg-red-500 hover:text-white dark:text-quiet"
           title="Delete"
         >
           <Trash2 size={14} />
