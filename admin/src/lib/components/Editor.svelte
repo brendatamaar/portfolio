@@ -10,14 +10,27 @@
     PostPayload,
   } from '$lib/types'
   import { parse } from '@portfolio/shared/markdown/parser'
-  import ImageGallery from './ImageGallery.svelte'
   import Toast from './Toast.svelte'
   import Toolbar from './Toolbar.svelte'
   import EditorHeader from './EditorHeader.svelte'
   import GlossaryPane from './GlossaryPane.svelte'
   import BibliographyPane from './BibliographyPane.svelte'
   import MetaSidebar from './MetaSidebar.svelte'
-  import PostPreviewModal from './PostPreviewModal.svelte'
+
+  // Heavy overlays are code-split: loaded only when first opened, not on
+  // every editor page load (PostPreviewModal alone pulls the full renderer).
+  type ImageGalleryComp = typeof import('./ImageGallery.svelte').default
+  type PostPreviewComp = typeof import('./PostPreviewModal.svelte').default
+  let ImageGallery = $state<ImageGalleryComp | null>(null)
+  let PostPreviewModal = $state<PostPreviewComp | null>(null)
+  $effect(() => {
+    if ((showGallery || showCoverGallery) && !ImageGallery)
+      void import('./ImageGallery.svelte').then((m) => (ImageGallery = m.default))
+  })
+  $effect(() => {
+    if (showPostPreview && !PostPreviewModal)
+      void import('./PostPreviewModal.svelte').then((m) => (PostPreviewModal = m.default))
+  })
 
   interface Props {
     post: AdminPost | null
@@ -40,7 +53,9 @@
   let showGallery = $state(false)
   let showCoverGallery = $state(false)
   let showPostPreview = $state(false)
-  let showMeta = $state(false)
+  // New (draft) posts open Settings by default so slug, cover, tags and
+  // description are discoverable without hunting for the panel toggle.
+  let showMeta = $state(untrack(() => !post))
 
   let title = $state(untrack(() => post?.title ?? ''))
   let slug = $state(untrack(() => post?.slug ?? ''))
@@ -80,14 +95,58 @@
 
   let slugTouched = false
 
-  // --- Mount: tick interval ---
-  onMount(() => {
-    const tickId = setInterval(() => {
-      nowTick++
-    }, 1000)
-
+  // Tick only while a "Saved Xs ago" label is on screen (was: a 1s interval
+  // for the whole session, re-rendering even before the first save).
+  $effect(() => {
+    if (!lastSavedAt) return
+    const tickId = setInterval(() => nowTick++, 5000)
     return () => clearInterval(tickId)
   })
+
+  // --- Unsaved-changes tracking + local draft autosave (new posts) ---
+  const DRAFT_KEY = 'admin_new_post_draft_v1'
+  let draftRestored = $state(false)
+  const snapshotOf = () =>
+    JSON.stringify({ title, slug, description, content, titleId, descriptionId, contentId, status, coverImageUrl, publishedAt, selectedTagIds, glossaryEn, glossaryId, bibliographyEn, bibliographyId })
+  let savedSnapshot = $state(untrack(() => snapshotOf()))
+  let isDirty = $derived(snapshotOf() !== savedSnapshot)
+
+  onMount(() => {
+    if (postId) return
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY)
+      if (!raw) return
+      const d = JSON.parse(raw)
+      if (!d.title && !d.content && !d.contentId) return
+      title = d.title ?? ''; slug = d.slug ?? ''; description = d.description ?? ''
+      content = d.content ?? ''; titleId = d.titleId ?? ''; descriptionId = d.descriptionId ?? ''
+      contentId = d.contentId ?? ''; coverImageUrl = d.coverImageUrl ?? ''
+      if (Array.isArray(d.selectedTagIds)) selectedTagIds = d.selectedTagIds
+      draftRestored = true
+    } catch { /* corrupted draft: ignore */ }
+  })
+
+  $effect(() => {
+    if (postId || !isDirty) return
+    const raw = snapshotOf()
+    const t = setTimeout(() => { try { localStorage.setItem(DRAFT_KEY, raw) } catch {} }, 800)
+    return () => clearTimeout(t)
+  })
+
+  $effect(() => {
+    if (!isDirty) return
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  })
+
+  function discardLocalDraft() {
+    try { localStorage.removeItem(DRAFT_KEY) } catch {}
+    title = ''; slug = ''; description = ''; content = ''; titleId = ''; descriptionId = ''; contentId = ''
+    coverImageUrl = ''; selectedTagIds = []; glossaryEn = []; glossaryId = []; bibliographyEn = []; bibliographyId = []
+    draftRestored = false
+    savedSnapshot = snapshotOf()
+  }
 
   // --- Auto-slug from title (new posts, untouched slug) ---
   $effect(() => {
@@ -136,6 +195,9 @@
       }
       if (toStatus) status = toStatus
       lastSavedAt = new Date()
+      savedSnapshot = snapshotOf()
+      draftRestored = false
+      try { localStorage.removeItem(DRAFT_KEY) } catch {}
     } catch (e) {
       saveMsg = 'Save failed'
       toastRef?.show(`Save failed: ${e}`, 'error')
@@ -520,22 +582,24 @@
 <svelte:window onkeydown={handleKeydown} />
 <Toast bind:this={toastRef} />
 
-<ImageGallery
-  open={showGallery}
-  enableInsertDetails
-  onselect={handleGallerySelect}
-  onclose={() => (showGallery = false)}
-/>
-<ImageGallery
-  open={showCoverGallery}
-  onselect={(url) => {
-    coverImageUrl = url
-    showCoverGallery = false
-  }}
-  onclose={() => (showCoverGallery = false)}
-/>
+{#if ImageGallery}
+  <ImageGallery
+    open={showGallery}
+    enableInsertDetails
+    onselect={handleGallerySelect}
+    onclose={() => (showGallery = false)}
+  />
+  <ImageGallery
+    open={showCoverGallery}
+    onselect={(url) => {
+      coverImageUrl = url
+      showCoverGallery = false
+    }}
+    onclose={() => (showCoverGallery = false)}
+  />
+{/if}
 
-{#if showPostPreview}
+{#if showPostPreview && PostPreviewModal}
   <PostPreviewModal
     onclose={() => (showPostPreview = false)}
     title={langTab === 'id' ? titleId || title : title}
@@ -551,7 +615,7 @@
   />
 {/if}
 
-<div class="flex h-screen flex-col overflow-hidden bg-white text-black dark:bg-[#0a0a0a] dark:text-white">
+<div class="flex h-screen flex-col overflow-hidden bg-page text-ink dark:bg-page dark:text-white">
   <EditorHeader
     {langTab}
     {title}
@@ -569,18 +633,31 @@
     onSave={() => save()}
     onPublish={() => save('published')}
     onUnpublish={() => save('draft')}
+    {isDirty}
+    canSave={!!title.trim()}
   />
 
+  {#if draftRestored}
+    <div class="flex shrink-0 flex-wrap items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs">
+      <span><strong>Draft restored</strong> from this browser — not saved to the server yet. Autosaves locally as you type.</span>
+      <button type="button" onclick={discardLocalDraft} class="text-[12px] font-medium underline underline-offset-2">Discard draft</button>
+    </div>
+  {:else if !postId}
+    <div class="shrink-0 border-b border-ring px-4 py-1.5 text-[12px] text-quiet dark:border-white/10 dark:text-white/35">
+      New draft — autosaved to this browser until you Save. Settings panel (right) holds slug, cover &amp; tags.
+    </div>
+  {/if}
+
   <!-- Content tabs (filled-pill, matching old React PostEditor) -->
-  <div class="flex border-b border-black/10 dark:border-white/10">
+  <div class="flex border-b border-ring">
     {#each ['content', 'glossary', 'bibliography'] as const as tab}
       <button
         onclick={() => (activeTab = tab)}
         class={[
-          'px-4 py-2 font-mono text-[11px] tracking-widest uppercase transition-colors',
+          'px-4 py-2 text-[13px] transition-colors',
           activeTab === tab
-            ? 'bg-black text-white dark:bg-white dark:text-black'
-            : 'text-black/40 hover:bg-black/5 hover:text-black dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white',
+            ? 'bg-ink text-page'
+            : 'text-quiet hover:bg-raised hover:text-ink/40 dark:hover:bg-white/5 dark:hover:text-ink',
         ].join(' ')}
       >
         {tab === 'content'
@@ -608,7 +685,7 @@
   />
 
   <div class="flex min-h-0 flex-1">
-    <div class="flex min-h-0 flex-1 divide-x divide-black/10 dark:divide-white/10">
+    <div class="flex min-h-0 flex-1 divide-x divide-ring">
       {#if activeTab === 'content'}
         {#if mode !== 'preview'}
           <div class={mode === 'split' ? 'flex min-h-0 w-1/2 flex-col' : 'flex min-h-0 w-full flex-col'}>
@@ -694,9 +771,9 @@
   </div>
 
   {#if !showMeta}
-    <div class="flex h-7 shrink-0 items-center gap-4 border-t border-black/10 bg-[#f5f5f5] px-4 dark:border-white/10 dark:bg-[#0d0d0d]">
-      <span class="font-mono text-[10px] tracking-widest text-black/30 uppercase dark:text-white/30">{wordCount} words</span>
-      <span class="font-mono text-[10px] tracking-widest text-black/20 uppercase dark:text-white/20">{charCount} chars</span>
+    <div class="flex h-7 shrink-0 items-center gap-4 border-t border-ring bg-raised px-4 dark:border-white/10 dark:bg-raised">
+      <span class="text-[12px] text-quiet dark:text-quiet">{wordCount} words</span>
+      <span class="text-[12px] text-quiet dark:text-white/20">{charCount} chars</span>
     </div>
   {/if}
 </div>

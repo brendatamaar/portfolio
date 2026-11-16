@@ -64,7 +64,7 @@
   let admonitionOpen = $state(false)
 
   const base = 'flex items-center justify-center w-7 h-7 rounded transition-colors'
-  const active = 'bg-black/20 dark:bg-white/20 text-black dark:text-white'
+  const active = 'bg-raised text-ink'
   const inactive =
     'text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10'
   const labelBase =
@@ -72,7 +72,7 @@
 </script>
 
 <div
-  class="relative flex h-10 items-center gap-0.5 overflow-x-auto border-b border-black/10 bg-[#f0f0f0] px-3 dark:border-white/10 dark:bg-[#111]"
+  class="relative flex h-10 items-center gap-0.5 overflow-x-auto border-b border-ring bg-page px-3"
 >
   <!-- Inline formatting -->
   <button type="button" title="Bold (Ctrl+B)" onclick={() => onFormat('**', '**', 'bold')} class="{base} {inactive}">
