@@ -8,7 +8,7 @@ import Meadow from './Meadow.astro'
 import Footer from './Footer.astro'
 import { copy, homePath, postPath, type Lang } from '../data/content'
 import { loadPosts, monthYear } from '../data/posts'
-import { loadProjects, previewMap } from '../data/projects'
+import { loadProjects, previewMap, cardSrc } from '../data/projects'
 
 const { lang } = Astro.props as { lang: Lang }
 const t = copy[lang]
@@ -28,7 +28,13 @@ const [posts, projects] = await Promise.all([loadPosts(lang), loadProjects(lang)
             <Rows
               id="projects"
               preview
-              rows={projects.map((p) => ({ k: p.name, v: p.description, href: p.href, external: true }))}
+              rows={projects.map((p) => ({
+                k: p.name,
+                v: p.description,
+                href: p.href,
+                external: true,
+                img: p.img ? cardSrc(p.img) : undefined,
+              }))}
             />
           ) : (
             <p class="text-[14px] text-quiet">{t.noProjects}</p>

@@ -5,6 +5,7 @@ export interface Row {
   v: string
   href?: string
   external?: boolean
+  img?: string
 }
 interface Props {
   rows: Row[]
@@ -36,6 +37,17 @@ const row = 'flex items-center gap-4 py-1 text-[14px] leading-[1.7] narrow:flex-
           >
             {r.v}
           </span>
+          {r.img && (
+            <div class="mt-2.5 mb-1 hidden aspect-video w-full overflow-hidden rounded-[10px] bg-ring shadow-card narrow:block">
+              <img
+                src={r.img}
+                alt=""
+                class="block size-full object-cover object-top"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          )}
         </Fragment>
       )
       return (
