@@ -13,6 +13,12 @@
 .prose {
   @apply mt-8 break-words text-body;
 }
+/* Reading paragraphs run justified, like a printed column. Headings, lists,
+   quotes and captions keep their own alignment below. */
+.prose p {
+  @apply text-justify;
+  hyphens: auto;
+}
 .prose > * + * {
   @apply mt-[1.1em];
 }
@@ -60,9 +66,10 @@
 .prose blockquote {
   @apply mx-0 border-l-2 border-leader pl-4 text-quiet;
 }
-/* no italics anywhere in the article */
+/* Italics the author wrote in the draft (*word* -> <em> from the shared
+   parser) render as italics, in ink so emphasis reads by shape + colour. */
 .prose :is(em, i, cite) {
-  @apply text-ink not-italic;
+  @apply text-ink italic;
 }
 
 /* code */

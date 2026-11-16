@@ -130,13 +130,17 @@
   @apply text-[1.0625rem];
 }
 .preview-content p {
-  @apply mb-4;
+  @apply mb-4 text-justify;
+  hyphens: auto;
 }
 .preview-content a {
   @apply border-b border-leader font-medium text-ink no-underline transition-colors hover:border-ink;
 }
 .preview-content strong {
   @apply font-medium text-ink;
+}
+.preview-content :is(em, i, cite) {
+  @apply text-ink italic;
 }
 .preview-content blockquote {
   @apply my-4 border-l-2 border-leader pl-4 text-quiet;
@@ -284,6 +288,16 @@
 .post-preview-content .code-block,
 .post-preview-content .admonition {
   @apply mb-5;
+}
+.post-preview-content p {
+  @apply text-justify;
+  hyphens: auto;
+}
+.post-preview-content strong {
+  @apply font-medium text-ink;
+}
+.post-preview-content :is(em, i, cite) {
+  @apply text-ink italic;
 }
 .post-preview-content ul {
   @apply list-disc pl-6;
