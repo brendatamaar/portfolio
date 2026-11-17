@@ -27,6 +27,23 @@ async function resize(key: string, source: Response, width: number) {
   return out
 }
 
+async function loopingGif(key: string, source: Response) {
+  let out = resized.get(key)
+  if (!out) {
+    const original = Buffer.from(await source.arrayBuffer())
+    const image = sharp(original, { animated: true })
+    const metadata = await image.metadata()
+    // Already looping GIFs and still images need no re-encoding.
+    out =
+      (metadata.pages ?? 1) > 1 && metadata.loop !== 0
+        ? await image.gif({ loop: 0 }).toBuffer()
+        : original
+    if (resized.size >= CACHE_MAX) resized.delete(resized.keys().next().value!)
+    resized.set(key, out)
+  }
+  return out
+}
+
 export const GET: APIRoute = async ({ params, url }) => {
   const path = params.path ?? ''
   if (!path || path.split('/').includes('..')) {
@@ -41,6 +58,19 @@ export const GET: APIRoute = async ({ params, url }) => {
     })
     if (!res.ok) return new Response(null, { status: res.status })
     const type = res.headers.get('content-type') ?? 'application/octet-stream'
+    if (
+      url.searchParams.get('loop') === '1' &&
+      /^image\/gif(?:;|$)/i.test(type)
+    ) {
+      const body = await loopingGif(`${path}@loop`, res)
+      return new Response(new Uint8Array(body), {
+        headers: {
+          'content-type': 'image/gif',
+          'cache-control':
+            'public, max-age=604800, stale-while-revalidate=86400',
+        },
+      })
+    }
     if (width && /^image\/(png|jpe?g|webp)$/.test(type)) {
       try {
         const body = await resize(`${path}@${width}`, res, width)

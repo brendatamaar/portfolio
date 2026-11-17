@@ -44,14 +44,17 @@ export async function loadProjects(lang: Lang): Promise<ProjectRow[]> {
     .map(toRow)
 }
 
-// Keep GIFs at their original URL so animation is preserved. For other uploads,
-// the 280px card requests a 640px webp instead of the full-size screenshot.
-export const cardSrc = (img: string) =>
-  img.startsWith('/uploads/') &&
-  !img.includes('?') &&
-  !/\.gif(?:[?#]|$)/i.test(img)
-    ? `${img}?w=640`
-    : img
+// Request continuous GIF playback, even when the source only plays once.
+// Other uploads use a 640px webp instead of the full-size screenshot.
+export function cardSrc(img: string): string {
+  if (!img.startsWith('/uploads/')) return img
+  if (/\.gif(?:[?#]|$)/i.test(img)) {
+    const url = new URL(img, 'http://portfolio.local')
+    url.searchParams.set('loop', '1')
+    return url.pathname + url.search + url.hash
+  }
+  return img.includes('?') ? img : `${img}?w=640`
+}
 
 /** Hover-card images by name: Airtax and cheSKP (intro text) plus every project that has a screenshot. */
 export function previewMap(rows: ProjectRow[]): Record<string, string> {
