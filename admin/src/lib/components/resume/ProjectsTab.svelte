@@ -28,7 +28,7 @@
       ? 'Use a full https:// URL or a /relative path.'
       : '',
   )
-  const canSave = $derived(!titleError && !hrefError && !saving)
+  const canSave = $derived(!titleError && !hrefError && !saving && !uploading)
   const imgSrc = $derived(draft.img ? (draft.img.startsWith('/') ? API_ORIGIN + draft.img : draft.img) : '')
 
   // Tech stack is stored server-side as JSON ('["Go","React"]'); never show
@@ -339,12 +339,13 @@
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
       <div class="flex flex-col gap-1">
-        <span class={labelCls}>Cover image</span>
+        <span class={labelCls}>Cover image or GIF</span>
         <div class="flex gap-2">
           <input class={inputCls} value={draft.img} placeholder="Paste URL or upload →" aria-label="Image URL" oninput={(e) => setField('img', (e.target as HTMLInputElement).value)} />
-          <label class="{btnPrimary} shrink-0 cursor-pointer">{#if uploading}<Loader size={12} class="animate-spin" />{:else}<Upload size={12} />{/if}<span class="hidden sm:inline">Upload</span><input type="file" accept="image/*" class="hidden" disabled={uploading} onchange={handleUpload} /></label>
+          <label class="{btnPrimary} shrink-0 cursor-pointer">{#if uploading}<Loader size={12} class="animate-spin" />{:else}<Upload size={12} />{/if}<span class="hidden sm:inline">Upload</span><input type="file" accept="image/jpeg,image/png,image/gif,image/webp,.gif" aria-label="Upload project image or GIF" class="hidden" disabled={uploading} onchange={handleUpload} /></label>
           {#if draft.img}<button type="button" onclick={() => setField('img', '')} aria-label="Remove image" class="shrink-0 p-1.5 text-quiet hover:text-red-500 dark:text-quiet"><X size={14} /></button>{/if}
         </div>
+        <span class="text-[11px] text-quiet">JPEG, PNG, WebP, or GIF up to 10 MB. Animated GIFs play in the project preview.</span>
         {#if imgSrc}<img src={imgSrc} alt="Project preview" loading="lazy" class="mt-1 aspect-video w-full max-w-sm border border-ring object-cover object-top dark:border-white/10" />{/if}
       </div>
       <div class="flex flex-col gap-1">
