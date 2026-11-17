@@ -11,13 +11,14 @@
   overflow: visible;
 }
 .mk.circle {
-  margin-inline: 14px 19px;
+  margin-inline: 4px;
+  padding-inline: 5px;
 }
 .mk.circle svg {
-  left: -15px;
-  top: -13px;
-  width: calc(100% + 30px);
-  height: calc(100% + 21px);
+  left: -10px;
+  top: -9px;
+  width: calc(100% + 20px);
+  height: calc(100% + 17px);
 }
 /* marker highlight: a thick swipe behind the text that draws itself left to right */
 .mk.hl {

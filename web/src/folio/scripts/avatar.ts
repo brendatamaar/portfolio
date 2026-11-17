@@ -1,141 +1,159 @@
-// The mascot: eyes follow the pointer and the mouth changes with its mood.
-//   idle      smile
-//   surprised pointer is close: small "o", wider pupils
-//   happy     pointer is over it, or it was clicked (also hops): big open smile
-//   talk      nothing has moved for a while: it glances around and chatters
-// Reduced motion: it stays put with a smile.
+import { initial, moods, step, type Input } from './avatar-state'
 
-type Mood = 'idle' | 'surprised' | 'happy' | 'talk'
-
-const FACE = 4 // user units both eyes shift toward the pointer (viewBox is 140 wide)
-const PUPIL_X = 3.4 // extra shift of the eye sparkles, which sells the gaze
-const PUPIL_Y = 3.4
-const REACH = 240 // px from the mascot at which the look is at full strength
-const NEAR = 90 // px: closer than this is "surprised"
+// The cloud stays anchored; only a gentle breath and the eyes animate.
+let dispose: (() => void) | undefined
 
 export function initAvatar() {
-  const ava = document.querySelector<HTMLElement>('.ava')
-  const eyes = ava?.querySelector<SVGGElement>('.eyes')
-  if (!ava || !eyes || matchMedia('(prefers-reduced-motion: reduce)').matches)
-    return
-  const pupils = Array.from(ava.querySelectorAll<SVGGElement>('.pupil'))
-
-  // --- eyes ---------------------------------------------------------------
-  // look direction, -1..1 on each axis; `cur` eases toward `goal`
+  dispose?.()
+  const ava = document.querySelector<HTMLButtonElement>('.ava')
+  const face = ava?.querySelector<HTMLElement>('.face')
+  if (!ava || !face) return
+  const controller = new AbortController()
+  const options = { signal: controller.signal }
+  const motion = matchMedia('(prefers-reduced-motion: reduce)')
+  let state = initial
+  let frame = 0
+  let resetTimer = 0
+  let lastPointer = performance.now()
   let goal = { x: 0, y: 0 }
-  const cur = { x: 0, y: 0 }
-  let raf = 0
-  const apply = () => {
-    eyes.style.setProperty('--fx', `${(cur.x * FACE).toFixed(2)}px`)
-    eyes.style.setProperty('--fy', `${(cur.y * FACE).toFixed(2)}px`)
-    for (const p of pupils) {
-      p.style.setProperty('--px', `${(cur.x * PUPIL_X).toFixed(2)}px`)
-      p.style.setProperty('--py', `${(cur.y * PUPIL_Y).toFixed(2)}px`)
+  const current = { x: 0, y: 0 }
+  const dispatch = (input: Input) => {
+    const [next, commands] = step(state, input)
+    state = next
+    for (const command of commands) {
+      switch (command.tag) {
+        case 'schedule-reset':
+          window.clearTimeout(resetTimer)
+          resetTimer = window.setTimeout(() => {
+            dispatch({ tag: 'expired', generation: command.generation })
+          }, command.after)
+          break
+        case 'cancel-reset':
+          window.clearTimeout(resetTimer)
+          resetGaze()
+          break
+        case 'render':
+          ava.dataset.mood = command.mood
+          ava.setAttribute(
+            'aria-label',
+            `Cloud mascot: ${command.mood}. Activate to change expression.`,
+          )
+          break
+      }
     }
   }
   const tick = () => {
-    cur.x += (goal.x - cur.x) * 0.22
-    cur.y += (goal.y - cur.y) * 0.22
-    apply()
-    raf =
-      Math.hypot(goal.x - cur.x, goal.y - cur.y) < 0.01
-        ? 0
-        : requestAnimationFrame(tick)
+    current.x += (goal.x - current.x) * 0.18
+    current.y += (goal.y - current.y) * 0.18
+    face.style.setProperty('--gx', `${current.x.toFixed(2)}px`)
+    face.style.setProperty('--gy', `${current.y.toFixed(2)}px`)
+    frame =
+      Math.hypot(goal.x - current.x, goal.y - current.y) > 0.01
+        ? requestAnimationFrame(tick)
+        : 0
   }
   const look = (x: number, y: number) => {
     goal = { x, y }
-    if (!raf) raf = requestAnimationFrame(tick)
+    if (!frame) frame = requestAnimationFrame(tick)
   }
-
-  // --- mood: the highest-priority reason wins -------------------------------
-  let hovering = false
-  let near = false
-  let excited = 0 // timer: click
-  let chatter = 0 // timer: idle talk
-  const setMood = () => {
-    const m: Mood =
-      excited || hovering
-        ? 'happy'
-        : near
-          ? 'surprised'
-          : chatter
-            ? 'talk'
-            : 'idle'
-    if (ava.dataset.mood !== m) ava.dataset.mood = m
+  const resetGaze = () => {
+    cancelAnimationFrame(frame)
+    frame = 0
+    goal = { x: 0, y: 0 }
+    current.x = current.y = 0
+    face.style.removeProperty('--gx')
+    face.style.removeProperty('--gy')
+    delete ava.dataset.motion
   }
-  const hop = () => {
-    ava.classList.remove('is-hop')
-    void ava.getBoundingClientRect()
-    ava.classList.add('is-hop')
+  const syncMotion = () => {
+    ava.toggleAttribute('data-paused', document.hidden || motion.matches)
+    if (document.hidden || motion.matches) {
+      resetGaze()
+      dispatch({ tag: 'reset' })
+    }
   }
-  ava.addEventListener('animationend', (e) => {
-    if ((e.target as Element).closest('.hop')) ava.classList.remove('is-hop')
-  })
-
-  let lastPointer = 0
+  ava.dataset.mood = initial.mood
+  ava.setAttribute(
+    'aria-label',
+    'Cloud mascot: neutral. Activate to change expression.',
+  )
+  syncMotion()
   document.addEventListener(
     'pointermove',
-    (e) => {
+    (event) => {
+      if (motion.matches || document.hidden) return
       lastPointer = performance.now()
-      const r = ava.getBoundingClientRect()
-      const dx = e.clientX - (r.left + r.width / 2)
-      const dy = e.clientY - (r.top + r.height / 2)
-      const d = Math.hypot(dx, dy) || 1
-      const k = Math.min(1, d / REACH)
-      look((dx / d) * k, (dy / d) * k)
-      near = d < NEAR
-      setMood()
+      delete ava.dataset.motion
+      const rect = ava.getBoundingClientRect()
+      const dx = event.clientX - (rect.left + rect.width / 2)
+      const dy = event.clientY - (rect.top + rect.height / 2)
+      const distance = Math.hypot(dx, dy) || 1
+      const strength = Math.min(1, distance / 240)
+      dispatch({ tag: 'attention', near: distance < 90 })
+      look((dx / distance) * strength * 4, (dy / distance) * strength * 3)
     },
-    { passive: true },
+    { ...options, passive: true },
   )
-  // pointer left the window: look back at the front
-  document.documentElement.addEventListener('pointerleave', () => {
-    near = false
-    hovering = false
-    look(0, 0)
-    setMood()
-  })
-  ava.addEventListener('pointerenter', () => {
-    hovering = true
-    setMood()
-  })
-  ava.addEventListener('pointerleave', () => {
-    hovering = false
-    setMood()
-  })
-  ava.addEventListener('click', () => {
-    hop()
-    clearTimeout(excited)
-    excited = window.setTimeout(() => {
-      excited = 0
-      setMood()
-    }, 1100)
-    setMood()
-  })
-
-  // --- idle: glance around and chatter ------------------------------------------
-  const idle = () => {
+  ava.addEventListener(
+    'pointerenter',
+    () => dispatch({ tag: 'hover' }),
+    options,
+  )
+  ava.addEventListener(
+    'pointerleave',
+    () => dispatch({ tag: 'leave' }),
+    options,
+  )
+  ava.addEventListener(
+    'click',
+    () => {
+      lastPointer = performance.now()
+      resetGaze()
+      dispatch({ tag: 'select' })
+    },
+    options,
+  )
+  document.documentElement.addEventListener(
+    'pointerleave',
+    () => {
+      resetGaze()
+      dispatch({ tag: 'leave' })
+    },
+    options,
+  )
+  document.addEventListener('visibilitychange', syncMotion, options)
+  motion.addEventListener('change', syncMotion, options)
+  ava.addEventListener(
+    'animationend',
+    (event) => {
+      if (event.animationName === 'eyes-turn') delete ava.dataset.motion
+    },
+    options,
+  )
+  const idle = window.setInterval(() => {
     if (
-      performance.now() - lastPointer > 4000 &&
-      !document.hidden &&
-      !hovering
-    ) {
-      const a = Math.random() * Math.PI * 2
-      look(Math.cos(a) * 0.9, Math.sin(a) * 0.6)
-      setTimeout(() => look(0, 0), 900 + Math.random() * 700)
-      if (Math.random() < 0.6) {
-        chatter = window.setTimeout(
-          () => {
-            chatter = 0
-            setMood()
-          },
-          1200 + Math.random() * 900,
-        )
-        setMood()
-        if (Math.random() < 0.5) hop()
-      }
-    }
-    setTimeout(idle, 3500 + Math.random() * 4000)
+      document.hidden ||
+      motion.matches ||
+      state.tag === 'temporary' ||
+      ava.matches(':hover, :focus-visible') ||
+      performance.now() - lastPointer < 5000
+    )
+      return
+    resetGaze()
+    dispatch({
+      tag: 'idle',
+      mood: moods[1 + Math.floor(Math.random() * (moods.length - 1))],
+    })
+    ava.dataset.motion = Math.random() < 0.25 ? 'turn' : 'look'
+  }, 8000)
+  dispose = () => {
+    controller.abort()
+    window.clearInterval(idle)
+    window.clearTimeout(resetTimer)
+    resetGaze()
   }
-  setTimeout(idle, 3000)
+  document.addEventListener('astro:before-swap', dispose, {
+    ...options,
+    once: true,
+  })
 }
