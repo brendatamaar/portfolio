@@ -8,7 +8,7 @@ const { previews } = Astro.props as { previews: Record<string, string> }
   id="pv"
   aria-hidden="true"
 >
-  <img class="block size-full object-cover object-top" id="pvImg" alt="" width="280" height="158" decoding="async" />
+  <img class="block size-full object-contain" id="pvImg" alt="" width="280" height="158" decoding="async" />
 </div>
 <script is:inline type="application/json" id="pv-data" set:html={JSON.stringify(previews).replace(/</g, '\\u003c')} />
 <script>
