@@ -1,0 +1,41 @@
+---
+import type { Lang } from '../data/content'
+import { WIDTH, HEIGHT } from '../scripts/koi-physics'
+
+const { lang } = Astro.props as { lang: Lang }
+const label = lang === 'id' ? 'Kolam koi. Tekan untuk membuat riak.' : 'Koi pond. Press to make a ripple.'
+---
+
+<div class="mx-auto mt-18 w-full max-w-176 px-safe">
+  <button class="pond" type="button" aria-label={label} data-koi-pond disabled>
+    <canvas width={WIDTH} height={HEIGHT} aria-hidden="true"></canvas>
+  </button>
+</div>
+
+<style>
+  .pond {
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    cursor: crosshair;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pond:disabled {
+    cursor: default;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>
+
+<script>
+  import { initKoiPond } from '../scripts/koi-pond'
+  initKoiPond(document.querySelector('[data-koi-pond]'))
+</script>

@@ -83,8 +83,7 @@
     U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* Aksara Jawa for the meadow art on the home page, bold only, the Javanese subset only.
-   scripts/meadow.ts loads it on demand, so pages without the art never fetch it. */
+/* The koi pond loads the Javanese subset on demand. */
 @font-face {
   font-family: 'Noto Sans Javanese';
   font-style: normal;
@@ -137,16 +136,12 @@
   --color-pen: #8ea2ff;
   --color-hl: rgb(142 162 255 / 0.3); /* marker highlight, the pen blue */
   --color-go-tile: #ffffff; /* tile behind the Go wordmark: white on dark, near-black on light */
-  /* the garland palette: code, callouts and the meadow art on the home page */
+  /* the garland palette for code and callouts */
   --color-jasmine: #f3eedc;
   --color-heart: #e3e9b4;
   --color-thread: #6fa073;
   --color-cord: #d6ae58;
   --color-rose: #e8738c;
-  --color-spark: #f7d77a;
-  --color-edel: #e9ecdf; /* edelweiss */
-  --color-water: #7da0b4;
-  --color-lily-tip: #f4a9bd;
 
   --shadow-card:
     0 22px 44px -18px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(128 128 128 / 0.25);
@@ -182,10 +177,6 @@
       --color-thread: #3f8048;
       --color-cord: #a67c1e;
       --color-rose: #c9435f;
-      --color-spark: #c08a12;
-      --color-edel: #5b6459;
-      --color-water: #4c7488;
-      --color-lily-tip: #d9637f;
     }
   }
   * {

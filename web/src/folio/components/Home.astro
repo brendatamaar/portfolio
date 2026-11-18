@@ -4,7 +4,7 @@ import Header from './Header.astro'
 import Hero from './Hero.astro'
 import Rows from './Rows.astro'
 import Preview from './Preview.astro'
-import Meadow from './Meadow.astro'
+import KoiPond from './KoiPond.astro'
 import Footer from './Footer.astro'
 import { copy, homePath, postPath, type Lang } from '../data/content'
 import { loadPosts, monthYear } from '../data/posts'
@@ -57,7 +57,7 @@ const [posts, projects] = await Promise.all([loadPosts(lang), loadProjects(lang)
       </section>
     </main>
   </div>
-  <Meadow />
+  <KoiPond lang={lang} />
   <Footer lang={lang} />
   <Preview previews={previewMap(projects)} />
 </Folio>
