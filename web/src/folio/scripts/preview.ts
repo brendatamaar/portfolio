@@ -24,6 +24,7 @@ export function initPreview() {
     raf = 0,
     hideT = 0,
     below = false
+  let pointer: Pick<PointerEvent, 'clientX' | 'clientY'> | null = null
   const follow = () => {
     x += (tx - x) * 0.2
     y += (ty - y) * 0.2
@@ -32,17 +33,23 @@ export function initPreview() {
     raf = on ? requestAnimationFrame(follow) : 0
   }
   // Row hovers put the card to the right of the cursor; text hovers put it BELOW so it never covers the text.
-  const place = (e: PointerEvent) => {
+  const place = (e: Pick<PointerEvent, 'clientX' | 'clientY'>) => {
+    pointer = e
     const hw = pv.offsetWidth / 2,
       hh = pv.offsetHeight / 2
-    if (below) {
-      tx = Math.max(hw, Math.min(innerWidth - hw, e.clientX + 60))
-      ty = Math.min(innerHeight - hh, e.clientY + hh + 40)
-    } else {
-      tx = Math.min(innerWidth - hw, e.clientX + hw + 30)
-      ty = Math.max(hh, Math.min(innerHeight - hh, e.clientY))
-    }
+    tx = Math.max(
+      hw + 16,
+      Math.min(innerWidth - hw - 16, e.clientX + (below ? 60 : hw + 30)),
+    )
+    ty = Math.max(
+      hh + 16,
+      Math.min(innerHeight - hh - 16, e.clientY + (below ? hh + 40 : 0)),
+    )
   }
+  // Image dimensions can change after loading or when switching projects.
+  img.addEventListener('load', () => {
+    if (on && pointer) place(pointer)
+  })
   const trigger = (t: EventTarget | null) =>
     (t as Element | null)?.closest<HTMLElement>('[data-pv]') ?? null
 
@@ -61,8 +68,8 @@ export function initPreview() {
       clearTimeout(hideT)
       below = 'pvBelow' in el.dataset
       if (img.getAttribute('src') !== src) img.src = src
+      place(e)
       if (!on) {
-        place(e)
         x = tx
         y = ty
       }

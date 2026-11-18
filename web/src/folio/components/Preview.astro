@@ -4,11 +4,11 @@ const { previews } = Astro.props as { previews: Record<string, string> }
 ---
 
 <div
-  class="pointer-events-none fixed top-0 left-0 z-30 aspect-video w-70 -translate-1/2 scale-86 -rotate-2 overflow-hidden rounded-[12px] bg-ring opacity-0 shadow-card transition-pop data-on:scale-100 data-on:rotate-0 data-on:opacity-100 motion-reduce:transition-none coarse:hidden"
+  class="pointer-events-none fixed top-0 left-0 z-30 w-fit -translate-1/2 scale-86 -rotate-2 overflow-hidden rounded-[12px] bg-ring opacity-0 shadow-card transition-pop data-on:scale-100 data-on:rotate-0 data-on:opacity-100 motion-reduce:transition-none coarse:hidden"
   id="pv"
   aria-hidden="true"
 >
-  <img class="block size-full object-contain" id="pvImg" alt="" width="280" height="158" decoding="async" />
+  <img class="block h-auto w-auto max-h-[calc(100dvh-2rem)] max-w-[min(280px,calc(100vw-2rem))]" id="pvImg" alt="" width="280" height="158" decoding="async" />
 </div>
 <script is:inline type="application/json" id="pv-data" set:html={JSON.stringify(previews).replace(/</g, '\\u003c')} />
 <script>
