@@ -1,4 +1,4 @@
-import type { PostsResponse, PostDetail, ResumeData } from './types'
+import type { PostsResponse, PostDetail, ResumeData, LabItem } from './types'
 
 // SSR must not hang on a stalled API — pages fall back to empty/redirect states
 const TIMEOUT_MS = 5000
@@ -52,6 +52,7 @@ export const api = {
     apiFetch<PostDetail>(
       `/posts/${encodeURIComponent(slug)}${langQuery(lang)}`,
     ),
+  getLabs: () => apiFetch<LabItem[]>('/labs'),
   getResumeData: (locale: 'en' | 'id') =>
     apiFetch<ResumeData>(`/resume?locale=${locale}`),
 }

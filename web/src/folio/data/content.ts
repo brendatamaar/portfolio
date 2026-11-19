@@ -48,6 +48,11 @@ interface Copy {
   intro: IntroSeg[]
   reach: ReachSeg[]
   projects: string
+  /** heading of the Labs list on the homepage */
+  labsHeading: string
+  /** status notes after a lab's description */
+  labWip: string
+  labArchived: string
   blog: string
   noPosts: string
   noProjects: string
@@ -94,6 +99,9 @@ export const copy: Record<Lang, Copy> = {
       '.',
     ],
     projects: 'Projects',
+    labsHeading: 'Labs',
+    labWip: 'in progress',
+    labArchived: 'archived',
     blog: 'Blog',
     noPosts: 'No posts yet.',
     noProjects: 'No projects yet.',
@@ -135,6 +143,9 @@ export const copy: Record<Lang, Copy> = {
       '.',
     ],
     projects: 'Proyek',
+    labsHeading: 'Lab',
+    labWip: 'dalam pengerjaan',
+    labArchived: 'diarsipkan',
     blog: 'Blog',
     noPosts: 'Belum ada tulisan.',
     noProjects: 'Belum ada proyek.',
