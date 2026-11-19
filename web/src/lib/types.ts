@@ -5,6 +5,19 @@ export type {
   GlossaryEntry,
 } from '@portfolio/shared/markdown/types'
 
+export interface LabItem {
+  id: number
+  slug: string
+  title: string
+  summary: string
+  /** GitHub repo link */
+  url: string
+  resolvedDemoUrl: string
+  coverUrl: string | null
+  tags: string[]
+  status: 'live' | 'wip' | 'archived'
+}
+
 export interface PostTag {
   name: string
   slug: string

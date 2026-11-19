@@ -9,10 +9,11 @@ import Footer from './Footer.astro'
 import { copy, homePath, postPath, type Lang } from '../data/content'
 import { loadPosts, monthYear } from '../data/posts'
 import { loadProjects, previewMap, cardSrc } from '../data/projects'
+import { loadLabs } from '../data/labs'
 
 const { lang } = Astro.props as { lang: Lang }
 const t = copy[lang]
-const [posts, projects] = await Promise.all([loadPosts(lang), loadProjects(lang)])
+const [posts, projects, labs] = await Promise.all([loadPosts(lang), loadProjects(lang), loadLabs(lang)])
 ---
 
 <Folio lang={lang} alternates={homePath}>
@@ -41,6 +42,15 @@ const [posts, projects] = await Promise.all([loadPosts(lang), loadProjects(lang)
           )
         }
       </section>
+
+      {
+        labs.length > 0 && (
+          <section aria-labelledby="h-labs">
+            <h2 class="mb-1.5 text-[14px] text-quiet" id="h-labs">{t.labsHeading}</h2>
+            <Rows id="labs" rows={labs.map((l) => ({ k: l.name, v: l.description, href: l.href, external: true }))} />
+          </section>
+        )
+      }
 
       <section aria-labelledby="h-blog">
         <h2 class="mb-1.5 text-[14px] text-quiet" id="h-blog">{t.blog}</h2>
