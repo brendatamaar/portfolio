@@ -5,6 +5,9 @@ import type {
   PostPayload,
   PostTag,
   BookItem,
+  LabItem,
+  LabPayload,
+  LabGithubInfo,
   AlbumItem,
   BookSearchResult,
   AlbumSearchResult,
@@ -100,6 +103,24 @@ export const api = {
     apiFetch<{ ok: boolean }>(`/admin/books/${id}`, { method: 'DELETE' }),
   featureBook: (id: number) =>
     apiFetch<BookItem>(`/admin/books/${id}/feature`, { method: 'PATCH' }),
+
+  // Labs
+  labFromGithub: (url: string) =>
+    apiFetch<LabGithubInfo>(
+      `/admin/labs/github?url=${encodeURIComponent(url)}`,
+    ),
+  createLab: (d: LabPayload) =>
+    apiFetch<LabItem>('/admin/labs', {
+      method: 'POST',
+      body: JSON.stringify(d),
+    }),
+  updateLab: (id: number, d: LabPayload) =>
+    apiFetch<LabItem>(`/admin/labs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(d),
+    }),
+  deleteLab: (id: number) =>
+    apiFetch<{ ok: boolean }>(`/admin/labs/${id}`, { method: 'DELETE' }),
 
   // Albums
   searchAlbums: (q: string) =>

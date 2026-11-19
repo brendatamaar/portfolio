@@ -53,6 +53,8 @@ interface Copy {
   homeLabel: string
   /** header link to the blog */
   writing: string
+  /** header link to the labs index */
+  labs: string
   /** header link that downloads the resume */
   resume: string
   /** aria-label of the sidenotes column */
@@ -95,6 +97,7 @@ export const copy: Record<Lang, Copy> = {
     noProjects: 'No projects yet.',
     homeLabel: 'Brendatama Akbar Ramadan, home',
     writing: 'Writing',
+    labs: 'Labs',
     resume: 'Resume',
     notes: 'Sidenotes',
     skip: 'Skip to content',
@@ -135,6 +138,7 @@ export const copy: Record<Lang, Copy> = {
     noProjects: 'Belum ada proyek.',
     homeLabel: 'Brendatama Akbar Ramadan, beranda',
     writing: 'Tulisan',
+    labs: 'Lab',
     resume: 'Resume',
     notes: 'Catatan samping',
     skip: 'Lewati ke konten',
@@ -155,6 +159,39 @@ export const workPreviews: Preview[] = [
   { name: 'Airtax', img: '/images/airtax.webp' },
   { name: 'cheSKP', img: '/images/cheskp.webp' },
 ]
+
+// --- labs -----------------------------------------------------------------------
+export const labsPath = (lang: Lang) => (lang === 'id' ? '/id/labs' : '/labs')
+
+export const labsCopy: Record<
+  Lang,
+  {
+    title: string
+    description: string
+    lede: string
+    empty: string
+    wip: string
+    archived: string
+  }
+> = {
+  en: {
+    title: 'Labs',
+    description: 'Small experiments and side projects, each with a live demo.',
+    lede: 'Small experiments, each with a live demo.',
+    empty: 'No experiments yet.',
+    wip: 'in progress',
+    archived: 'archived',
+  },
+  id: {
+    title: 'Lab',
+    description:
+      'Eksperimen kecil dan proyek sampingan, masing-masing dengan demo langsung.',
+    lede: 'Eksperimen kecil, masing-masing dengan demo langsung.',
+    empty: 'Belum ada eksperimen.',
+    wip: 'dalam pengerjaan',
+    archived: 'diarsipkan',
+  },
+}
 
 // --- blog + 404 ---------------------------------------------------------------
 export const blogPath = (lang: Lang) => (lang === 'id' ? '/id/blog' : '/blog')

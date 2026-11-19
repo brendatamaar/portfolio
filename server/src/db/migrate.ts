@@ -286,6 +286,24 @@ export function runMigrations(): void {
     );
   `)
 
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS labs (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug       TEXT NOT NULL UNIQUE,
+      title      TEXT NOT NULL,
+      summary    TEXT NOT NULL DEFAULT '',
+      url        TEXT NOT NULL DEFAULT '',
+      demo_url   TEXT NOT NULL DEFAULT '',
+      cover_url  TEXT,
+      tags       TEXT NOT NULL DEFAULT '[]',
+      status     TEXT NOT NULL DEFAULT 'live' CHECK(status IN ('live', 'wip', 'archived')),
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      published  INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+  `)
+
   // Indexes
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_posts_status_published_at
