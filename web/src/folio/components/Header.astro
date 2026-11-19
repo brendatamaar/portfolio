@@ -1,5 +1,5 @@
 ---
-import { blogPath, copy, homePath, labsPath, site, type Lang } from '../data/content'
+import { blogPath, copy, homePath, site, type Lang } from '../data/content'
 
 const { lang } = Astro.props as { lang: Lang }
 const t = copy[lang]
@@ -11,7 +11,7 @@ const t = copy[lang]
   </a>
   <nav class="flex items-center gap-2 text-[14px] text-quiet" aria-label="Site">
     <a class="inline-flex min-h-11 items-center py-2.5 transition-colors hover:text-ink" href={blogPath(lang)}>{t.writing}</a>
-    <a class="ml-2 inline-flex min-h-11 items-center py-2.5 transition-colors hover:text-ink" href={labsPath(lang)}>{t.labs}</a>
+    <a class="ml-2 inline-flex min-h-11 items-center py-2.5 transition-colors hover:text-ink" href={site.labsUrl}>{t.labs}</a>
     <a class="ml-2 inline-flex min-h-11 items-center py-2.5 transition-colors hover:text-ink" href={encodeURI(site.resume)} download>{t.resume}</a>
     <button
       type="button"

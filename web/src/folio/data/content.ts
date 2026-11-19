@@ -8,6 +8,8 @@ export const site = {
   email: 'brendatamaa@gmail.com',
   location: 'Jakarta',
   url: 'https://www.brendatama.dev',
+  /** Side projects live on their own subdomain (the labs repo) */
+  labsUrl: 'https://labs.brendatama.dev',
   iconPlusUrl: 'https://plniconplus.co.id',
   /** The resume in web/public, downloaded from the header */
   resume: '/Brendatama Akbar (2026) - English.pdf',
@@ -159,39 +161,6 @@ export const workPreviews: Preview[] = [
   { name: 'Airtax', img: '/images/airtax.webp' },
   { name: 'cheSKP', img: '/images/cheskp.webp' },
 ]
-
-// --- labs -----------------------------------------------------------------------
-export const labsPath = (lang: Lang) => (lang === 'id' ? '/id/labs' : '/labs')
-
-export const labsCopy: Record<
-  Lang,
-  {
-    title: string
-    description: string
-    lede: string
-    empty: string
-    wip: string
-    archived: string
-  }
-> = {
-  en: {
-    title: 'Labs',
-    description: 'Small experiments and side projects, each with a live demo.',
-    lede: 'Small experiments, each with a live demo.',
-    empty: 'No experiments yet.',
-    wip: 'in progress',
-    archived: 'archived',
-  },
-  id: {
-    title: 'Lab',
-    description:
-      'Eksperimen kecil dan proyek sampingan, masing-masing dengan demo langsung.',
-    lede: 'Eksperimen kecil, masing-masing dengan demo langsung.',
-    empty: 'Belum ada eksperimen.',
-    wip: 'dalam pengerjaan',
-    archived: 'diarsipkan',
-  },
-}
 
 // --- blog + 404 ---------------------------------------------------------------
 export const blogPath = (lang: Lang) => (lang === 'id' ? '/id/blog' : '/blog')
