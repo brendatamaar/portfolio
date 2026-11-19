@@ -122,7 +122,7 @@
   <main class="mx-auto w-full max-w-176 px-4 pt-8 pb-16 sm:px-0">
     <h1 class="text-[16px] text-ink">Labs</h1>
     <p class="mt-1 mb-8 text-[14px] text-quiet">
-      Experiments shown on /labs. Demos live at labs.brendatama.dev/&lt;slug&gt;/ unless a demo URL is set.
+      Experiments listed on labs.brendatama.dev. Demos live at labs.brendatama.dev/&lt;slug&gt;/ unless a demo URL is set.
     </p>
 
     <form onsubmit={save} class="mb-10 flex flex-col gap-3">
