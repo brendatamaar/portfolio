@@ -226,3 +226,28 @@ export interface CollectionBaseSearchResult {
   coverUrl: string | null
   year: number | null
 }
+
+export type LabStatus = 'live' | 'wip' | 'archived'
+
+export interface LabItem {
+  id: number
+  slug: string
+  title: string
+  summary: string
+  /** GitHub repo link */
+  url: string
+  demoUrl: string
+  resolvedDemoUrl: string
+  coverUrl: string | null
+  tags: string[]
+  status: LabStatus
+  sortOrder: number
+  published: boolean
+}
+
+export type LabPayload = Omit<LabItem, 'id' | 'resolvedDemoUrl'>
+
+export type LabGithubInfo = Pick<
+  LabItem,
+  'slug' | 'title' | 'summary' | 'url' | 'tags'
+>

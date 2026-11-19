@@ -112,6 +112,31 @@ export const albums = sqliteTable('albums', {
     .default(sql`(unixepoch())`),
 })
 
+export const labs = sqliteTable('labs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  summary: text('summary').notNull().default(''),
+  /** GitHub repo link */
+  url: text('url').notNull().default(''),
+  /** Live demo; empty = LABS_BASE_URL/<slug>/ */
+  demoUrl: text('demo_url').notNull().default(''),
+  coverUrl: text('cover_url'),
+  /** JSON string[] */
+  tags: text('tags').notNull().default('[]'),
+  status: text('status', { enum: ['live', 'wip', 'archived'] })
+    .notNull()
+    .default('live'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  published: integer('published').notNull().default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+})
+
 // Resume tables
 
 export const profile = sqliteTable('profile', {

@@ -10,6 +10,7 @@ import adminRoutes from './routes/admin.js'
 import { booksPublic, booksAdmin } from './routes/books.js'
 import { albumsPublic, albumsAdmin } from './routes/albums.js'
 import { resumePublic, resumeAdmin } from './routes/resume.js'
+import { labsPublic, labsAdmin } from './routes/labs.js'
 import { authMiddleware } from './middleware/auth.js'
 import { requestLogger } from './middleware/requestLogger.js'
 import { createRateLimit } from './middleware/rateLimit.js'
@@ -67,6 +68,7 @@ app.route('/api/posts', postsRoutes)
 app.route('/api/books', booksPublic)
 app.route('/api/albums', albumsPublic)
 app.route('/api/resume', resumePublic)
+app.route('/api/labs', labsPublic)
 
 // Protected admin routes
 app.use('/api/admin/upload', uploadLimiter)
@@ -75,6 +77,7 @@ app.route('/api/admin', adminRoutes)
 app.route('/api/admin/books', booksAdmin)
 app.route('/api/admin/albums', albumsAdmin)
 app.route('/api/admin/resume', resumeAdmin)
+app.route('/api/admin/labs', labsAdmin)
 
 // Health check
 app.get('/api/health', (c) => {
