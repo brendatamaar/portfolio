@@ -159,5 +159,43 @@ jobs:
             # Record the deployed tag so manual `docker compose` runs use the same images
             sed -i '/^IMAGE_TAG=/d' .env && echo "IMAGE_TAG=$IMAGE_TAG" >> .env
 
-            docker image prune -af --filter "until=168h"
+            echo "Pruning old ghcr.io/brendatamaar/portfolio-* images (keep active + $IMAGE_TAG + 2 rollback)"
+            active_ids=$(docker ps -q | xargs -r docker inspect --format '{{.Image}}' 2>/dev/null || true)
+            for repo in $(docker images --format '{{.Repository}}' | grep '^ghcr\.io/brendatamaar/portfolio-' | sort -u); do
+              entries=$(docker images --no-trunc --format '{{.Tag}}\t{{.ID}}' "$repo" \
+                | while IFS=$'\t' read -r tag id; do
+                    [ -n "$id" ] || continue
+                    created=$(docker image inspect --format '{{.Created}}' "$id" 2>/dev/null || echo "1970-01-01T00:00:00Z")
+                    printf '%s\t%s\t%s\n' "$created" "$id" "$tag"
+                  done | sort -t$'\t' -k1,1r)
+
+              [ -n "$entries" ] || continue
+
+              keep_ids="$active_ids"
+              deployed_id=$(docker image inspect --format '{{.Id}}' "${repo}:${IMAGE_TAG}" 2>/dev/null || true)
+              [ -n "$deployed_id" ] && keep_ids="${keep_ids}"$'\n'"${deployed_id}"
+
+              rollback_kept=0
+              while IFS=$'\t' read -r _created id _tag; do
+                [ -n "$id" ] || continue
+                if printf '%s\n' "$keep_ids" | grep -Fxq "$id"; then
+                  continue
+                fi
+                if [ "$rollback_kept" -lt 2 ]; then
+                  keep_ids="${keep_ids}"$'\n'"${id}"
+                  rollback_kept=$((rollback_kept + 1))
+                fi
+              done <<< "$entries"
+
+              while IFS=$'\t' read -r _created id tag; do
+                [ -n "$id" ] || continue
+                if [ "$tag" = "$IMAGE_TAG" ] || printf '%s\n' "$keep_ids" | grep -Fxq "$id"; then
+                  continue
+                fi
+                ref="$id"
+                [ "$tag" != "<none>" ] && ref="${repo}:${tag}"
+                echo "Removing old image: $ref"
+                docker rmi "$ref" || echo "Skipped $ref (still referenced)"
+              done <<< "$entries"
+            done
             echo "Deploy complete"
