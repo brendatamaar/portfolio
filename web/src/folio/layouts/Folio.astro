@@ -17,9 +17,11 @@ interface Props {
   ogType?: 'website' | 'article'
   /** Extra JSON-LD for this page. */
   schema?: Record<string, unknown>
+  /** Optional above-the-fold LCP image to preload. */
+  preloadImage?: { href: string; media?: string }
 }
 
-const { lang, alternates, title, description, path, ogType = 'website', schema } = Astro.props
+const { lang, alternates, title, description, path, ogType = 'website', schema, preloadImage } = Astro.props
 const t = copy[lang]
 const fullTitle = title ? `${title} | ${site.name}` : t.title
 const desc = description ?? t.description
@@ -58,6 +60,7 @@ const person = {
     <meta name="author" content={site.name} />
     <link rel="preload" as="font" type="font/woff2" href={font400} crossorigin />
     <link rel="preload" as="font" type="font/woff2" href={font500} crossorigin />
+    {preloadImage && <link rel="preload" as="image" href={preloadImage.href} media={preloadImage.media} fetchpriority="high" />}
     <link rel="icon" type="image/svg+xml" href="/images/favicon/favicon.svg" />
     <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png" />
     <link rel="apple-touch-icon" href="/images/favicon/apple-touch-icon.png" />

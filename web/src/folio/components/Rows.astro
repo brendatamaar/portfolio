@@ -6,6 +6,10 @@ export interface Row {
   href?: string
   external?: boolean
   img?: string
+  /** Optional animated WebP URL upgraded on interaction for narrow viewports. */
+  animImg?: string
+  imgWidth?: number
+  imgHeight?: number
 }
 interface Props {
   rows: Row[]
@@ -16,11 +20,15 @@ interface Props {
 const { rows, id, preview } = Astro.props
 // Stacked on phones: name over description, no leader.
 const row = 'flex items-center gap-4 py-1 text-[14px] leading-[1.7] narrow:flex-col narrow:items-start narrow:gap-0 narrow:py-1.5'
+const EMPTY_IMG = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+let firstImgSeen = false
 ---
 
 <ul id={id}>
   {
     rows.map((r) => {
+      const isFirstImg = Boolean(r.img) && !firstImgSeen
+      if (isFirstImg) firstImgSeen = true
       // Only linked rows light up on hover or focus (the "group" is the link)
       const inner = (
         <Fragment>
@@ -39,13 +47,19 @@ const row = 'flex items-center gap-4 py-1 text-[14px] leading-[1.7] narrow:flex-
           </span>
           {r.img && (
             <div class="mt-2.5 mb-1 hidden w-full overflow-hidden rounded-[10px] bg-ring shadow-card narrow:block">
-              <img
-                src={r.img}
-                alt=""
-                class="block h-auto w-full"
-                loading="lazy"
-                decoding="async"
-              />
+              <picture>
+                <source media="(max-width: 640px)" srcset={r.img} data-anim-src={r.animImg} />
+                <img
+                  src={EMPTY_IMG}
+                  alt=""
+                  width={r.imgWidth}
+                  height={r.imgHeight}
+                  class="block h-auto w-full"
+                  loading={isFirstImg ? 'eager' : 'lazy'}
+                  fetchpriority={isFirstImg ? 'high' : undefined}
+                  decoding="async"
+                />
+              </picture>
             </div>
           )}
         </Fragment>
@@ -73,3 +87,47 @@ const row = 'flex items-center gap-4 py-1 text-[14px] leading-[1.7] narrow:flex-
     })
   }
 </ul>
+
+<script>
+  const sources = document.querySelectorAll<HTMLSourceElement>('source[data-anim-src]')
+  if (
+    sources.length > 0 &&
+    matchMedia('(max-width: 640px)').matches &&
+    !matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    const start = () => {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue
+            const source = entry.target.querySelector<HTMLSourceElement>('source[data-anim-src]')
+            const anim = source?.dataset.animSrc
+            if (!source || !anim) continue
+            delete source.dataset.animSrc
+            io.unobserve(entry.target)
+            const preload = new Image()
+            preload.src = anim
+            preload.decode?.().then(
+              () => {
+                source.srcset = anim
+              },
+              () => {
+                source.srcset = anim
+              },
+            )
+          }
+        },
+        { rootMargin: '120px 0px' },
+      )
+      for (const source of sources) {
+        if (source.parentElement) io.observe(source.parentElement)
+      }
+    }
+    const events = ['scroll', 'pointerdown', 'touchstart', 'keydown'] as const
+    const onInteract = () => {
+      for (const ev of events) window.removeEventListener(ev, onInteract)
+      start()
+    }
+    for (const ev of events) window.addEventListener(ev, onInteract, { once: true, passive: true })
+  }
+</script>

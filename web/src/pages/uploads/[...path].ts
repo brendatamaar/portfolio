@@ -10,38 +10,53 @@ const API_ORIGIN = (
 ).replace(/\/api\/?$/, '')
 
 // `?w=` serves a resized webp (screenshots are 16:9 and uploaded at full size).
-const WIDTHS = new Set([480, 640, 960, 1280])
-const CACHE_MAX = 60
+// `?poster=1` extracts frame 0 as a static webp (used for fast LCP on animated GIFs).
+const WIDTHS = new Set([480, 640, 760, 960, 1280])
+const CACHE_MAX = 80
+const IMMUTABLE_CACHE = 'public, max-age=31536000, immutable'
 const resized = new Map<string, Buffer>()
+const inFlight = new Map<string, Promise<Buffer>>()
 
-async function resize(key: string, source: Response, width: number) {
-  let out = resized.get(key)
-  if (!out) {
-    out = await sharp(Buffer.from(await source.arrayBuffer()))
-      .resize({ width, withoutEnlargement: true })
-      .webp({ quality: 78 })
-      .toBuffer()
-    if (resized.size >= CACHE_MAX) resized.delete(resized.keys().next().value!)
-    resized.set(key, out)
-  }
-  return out
+function cached(key: string, work: () => Promise<Buffer>): Promise<Buffer> {
+  const hit = resized.get(key)
+  if (hit) return Promise.resolve(hit)
+  const pending = inFlight.get(key)
+  if (pending) return pending
+  const promise = work()
+    .then((out) => {
+      if (resized.size >= CACHE_MAX) {
+        resized.delete(resized.keys().next().value!)
+      }
+      resized.set(key, out)
+      return out
+    })
+    .finally(() => {
+      inFlight.delete(key)
+    })
+  inFlight.set(key, promise)
+  return promise
 }
 
-async function loopingGif(key: string, source: Response) {
-  let out = resized.get(key)
-  if (!out) {
+function resizeStatic(key: string, source: Response, width: number) {
+  return cached(key, async () => {
+    const pipeline = sharp(Buffer.from(await source.arrayBuffer()), {
+      pages: 1,
+    })
+    if (width) pipeline.resize({ width, withoutEnlargement: true })
+    return pipeline.webp({ quality: 78 }).toBuffer()
+  })
+}
+
+function animatedWebp(key: string, source: Response, width: number) {
+  return cached(key, async () => {
     const original = Buffer.from(await source.arrayBuffer())
-    const image = sharp(original, { animated: true })
-    const metadata = await image.metadata()
-    // Already looping GIFs and still images need no re-encoding.
-    out =
-      (metadata.pages ?? 1) > 1 && metadata.loop !== 0
-        ? await image.gif({ loop: 0 }).toBuffer()
-        : original
-    if (resized.size >= CACHE_MAX) resized.delete(resized.keys().next().value!)
-    resized.set(key, out)
-  }
-  return out
+    const pipeline = sharp(original, {
+      animated: true,
+      limitInputPixels: false,
+    })
+    if (width) pipeline.resize({ width, withoutEnlargement: true })
+    return pipeline.webp({ quality: 72, effort: 3, loop: 0 }).toBuffer()
+  })
 }
 
 export const GET: APIRoute = async ({ params, url }) => {
@@ -51,45 +66,64 @@ export const GET: APIRoute = async ({ params, url }) => {
   }
   const w = Number(url.searchParams.get('w'))
   const width = WIDTHS.has(w) ? w : 0
+  const poster = url.searchParams.get('poster') === '1'
+  const loop = url.searchParams.get('loop') === '1'
 
   try {
     const res = await fetch(`${API_ORIGIN}/uploads/${path}`, {
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(10000),
     })
     if (!res.ok) return new Response(null, { status: res.status })
     const type = res.headers.get('content-type') ?? 'application/octet-stream'
-    if (
-      url.searchParams.get('loop') === '1' &&
-      /^image\/gif(?:;|$)/i.test(type)
-    ) {
-      const body = await loopingGif(`${path}@loop`, res)
-      return new Response(new Uint8Array(body), {
-        headers: {
-          'content-type': 'image/gif',
-          'cache-control':
-            'public, max-age=604800, stale-while-revalidate=86400',
-        },
-      })
-    }
-    if (width && /^image\/(png|jpe?g|webp)$/.test(type)) {
+    const isGif = /^image\/gif(?:;|$)/i.test(type)
+    const isRaster = /^image\/(png|jpe?g|webp)(?:;|$)/i.test(type)
+
+    if (poster && (isGif || isRaster)) {
       try {
-        const body = await resize(`${path}@${width}`, res, width)
+        const body = await resizeStatic(`${path}@poster@${width}`, res, width)
         return new Response(new Uint8Array(body), {
           headers: {
             'content-type': 'image/webp',
-            'cache-control':
-              'public, max-age=604800, stale-while-revalidate=86400',
+            'cache-control': IMMUTABLE_CACHE,
           },
         })
       } catch {
         return new Response(null, { status: 502 })
       }
     }
+
+    if (isGif && (loop || width)) {
+      try {
+        const body = await animatedWebp(`${path}@anim@${width}`, res, width)
+        return new Response(new Uint8Array(body), {
+          headers: {
+            'content-type': 'image/webp',
+            'cache-control': IMMUTABLE_CACHE,
+          },
+        })
+      } catch {
+        return new Response(null, { status: 502 })
+      }
+    }
+
+    if (width && isRaster) {
+      try {
+        const body = await resizeStatic(`${path}@${width}`, res, width)
+        return new Response(new Uint8Array(body), {
+          headers: {
+            'content-type': 'image/webp',
+            'cache-control': IMMUTABLE_CACHE,
+          },
+        })
+      } catch {
+        return new Response(null, { status: 502 })
+      }
+    }
+
     return new Response(res.body, {
       headers: {
         'content-type': type,
-        'cache-control':
-          res.headers.get('cache-control') ?? 'public, max-age=86400',
+        'cache-control': res.headers.get('cache-control') ?? IMMUTABLE_CACHE,
       },
     })
   } catch {

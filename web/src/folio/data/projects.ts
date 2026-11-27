@@ -4,6 +4,8 @@ import { api } from '../../lib/api'
 import type { ResumeProjectItem } from '../../lib/types'
 import { workPreviews, type Lang } from './content'
 
+const CARD_WIDTH = 640
+
 export interface ProjectRow {
   name: string
   description: string
@@ -11,6 +13,21 @@ export interface ProjectRow {
   href?: string
   /** Image or animated GIF URL; empty when the admin has none. */
   img: string
+  /** Natural dimensions scaled to the delivered card width, when known. */
+  imgWidth?: number
+  imgHeight?: number
+}
+
+function scaleToCard(
+  width?: number,
+  height?: number,
+): { imgWidth?: number; imgHeight?: number } {
+  if (!width || !height) return {}
+  if (width <= CARD_WIDTH) return { imgWidth: width, imgHeight: height }
+  return {
+    imgWidth: CARD_WIDTH,
+    imgHeight: Math.round((height * CARD_WIDTH) / width),
+  }
 }
 
 function toRow(p: ResumeProjectItem): ProjectRow {
@@ -19,6 +36,7 @@ function toRow(p: ResumeProjectItem): ProjectRow {
     description: p.description,
     href: p.link?.href && p.link.href !== '#' ? p.link.href : undefined,
     img: p.img,
+    ...scaleToCard(p.imgWidth, p.imgHeight),
   }
 }
 
@@ -44,16 +62,26 @@ export async function loadProjects(lang: Lang): Promise<ProjectRow[]> {
     .map(toRow)
 }
 
-// Request continuous GIF playback, even when the source only plays once.
-// Other uploads use a 640px webp instead of the full-size screenshot.
+export function isAnimatedGif(img: string): boolean {
+  return img.startsWith('/uploads/') && /\.gif(?:[?#]|$)/i.test(img)
+}
+
+// Serve uploads as 640px webp (including animated GIFs converted to looping animated webp).
 export function cardSrc(img: string): string {
   if (!img.startsWith('/uploads/')) return img
-  if (/\.gif(?:[?#]|$)/i.test(img)) {
-    const url = new URL(img, 'http://portfolio.local')
-    url.searchParams.set('loop', '1')
-    return url.pathname + url.search + url.hash
-  }
-  return img.includes('?') ? img : `${img}?w=640`
+  const url = new URL(img, 'http://portfolio.local')
+  if (!url.searchParams.has('w')) url.searchParams.set('w', String(CARD_WIDTH))
+  if (/\.gif(?:[?#]|$)/i.test(img)) url.searchParams.set('loop', '1')
+  return url.pathname + url.search + url.hash
+}
+
+// Static first-frame webp poster for animated GIFs (instant paint & LCP on mobile cards).
+export function cardPosterSrc(img: string): string {
+  if (!isAnimatedGif(img)) return cardSrc(img)
+  const url = new URL(img, 'http://portfolio.local')
+  url.searchParams.set('w', String(CARD_WIDTH))
+  url.searchParams.set('poster', '1')
+  return url.pathname + url.search + url.hash
 }
 
 /** Hover-card images by name: Airtax and cheSKP (intro text) plus every project that has a screenshot. */

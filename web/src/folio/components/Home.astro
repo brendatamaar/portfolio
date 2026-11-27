@@ -8,15 +8,19 @@ import KoiPond from './KoiPond.astro'
 import Footer from './Footer.astro'
 import { copy, homePath, postPath, type Lang } from '../data/content'
 import { loadPosts, monthYear } from '../data/posts'
-import { loadProjects, previewMap, cardSrc } from '../data/projects'
+import { loadProjects, previewMap, cardSrc, cardPosterSrc, isAnimatedGif } from '../data/projects'
 import { loadLabs } from '../data/labs'
 
 const { lang } = Astro.props as { lang: Lang }
 const t = copy[lang]
 const [posts, projects, labs] = await Promise.all([loadPosts(lang), loadProjects(lang), loadLabs(lang)])
+const firstProjectImg = projects.find((p) => p.img)?.img
+const preloadImage = firstProjectImg
+  ? { href: cardPosterSrc(firstProjectImg), media: '(max-width: 640px)' }
+  : undefined
 ---
 
-<Folio lang={lang} alternates={homePath}>
+<Folio lang={lang} alternates={homePath} preloadImage={preloadImage}>
   <div class="mx-auto max-w-176 px-safe pt-8">
     <Header lang={lang} />
     <main id="main" tabindex="-1" class="flex flex-col gap-16 pt-10">
@@ -34,7 +38,10 @@ const [posts, projects, labs] = await Promise.all([loadPosts(lang), loadProjects
                 v: p.description,
                 href: p.href,
                 external: true,
-                img: p.img ? cardSrc(p.img) : undefined,
+                img: p.img ? cardPosterSrc(p.img) : undefined,
+                animImg: p.img && isAnimatedGif(p.img) ? cardSrc(p.img) : undefined,
+                imgWidth: p.imgWidth,
+                imgHeight: p.imgHeight,
               }))}
             />
           ) : (
