@@ -1,14 +1,18 @@
 import { Hono, type Context } from 'hono'
 import { z } from 'zod'
+import { resolve, sep } from 'path'
+import sharp from 'sharp'
 import { db } from '../db/index.js'
 import {
+  images,
   profile,
   resumeWork,
   resumeEducation,
   resumeSkills,
   resumeProjects,
 } from '../db/schema.js'
-import { eq, asc } from 'drizzle-orm'
+import { eq, asc, inArray } from 'drizzle-orm'
+import { UPLOADS_DIR } from '../lib/uploads.js'
 import type { Lang } from '../../../shared/types/common.js'
 
 function parseLocale(raw: string | undefined): Lang {
@@ -27,7 +31,84 @@ function typeLabel(type: string): string {
   return type === 'work' ? 'work' : 'side project'
 }
 
-function buildResumeResponse(locale: Lang) {
+type Dimensions = { width: number; height: number }
+const dimensionCache = new Map<string, Dimensions | null>()
+
+async function resolveUploadDimensions(
+  imgUrls: string[],
+): Promise<Map<string, Dimensions>> {
+  const result = new Map<string, Dimensions>()
+  const uploadUrls = [
+    ...new Set(imgUrls.filter((u) => u.startsWith('/uploads/'))),
+  ]
+  if (!uploadUrls.length) return result
+
+  const uncached: string[] = []
+  for (const url of uploadUrls) {
+    if (dimensionCache.has(url)) {
+      const hit = dimensionCache.get(url)
+      if (hit) result.set(url, hit)
+    } else {
+      uncached.push(url)
+    }
+  }
+  if (!uncached.length) return result
+
+  const dbRows = db
+    .select({
+      url: images.url,
+      width: images.width,
+      height: images.height,
+    })
+    .from(images)
+    .where(inArray(images.url, uncached))
+    .all()
+  const dbMap = new Map(dbRows.map((r) => [r.url, r]))
+
+  await Promise.all(
+    uncached.map(async (url) => {
+      const row = dbMap.get(url)
+      if (row?.width && row?.height) {
+        const dims = { width: row.width, height: row.height }
+        dimensionCache.set(url, dims)
+        result.set(url, dims)
+        return
+      }
+      const rel = url.replace(/^\/uploads\//, '').split(/[?#]/)[0]
+      const filePath = resolve(UPLOADS_DIR, rel)
+      if (!filePath.startsWith(UPLOADS_DIR + sep)) {
+        dimensionCache.set(url, null)
+        return
+      }
+      try {
+        const meta = await sharp(filePath).metadata()
+        if (meta.width && meta.height) {
+          const swapped = (meta.orientation ?? 0) >= 5
+          const dims = {
+            width: swapped ? meta.height : meta.width,
+            height: swapped ? meta.width : meta.height,
+          }
+          dimensionCache.set(url, dims)
+          result.set(url, dims)
+          if (row) {
+            db.update(images)
+              .set({ width: dims.width, height: dims.height })
+              .where(eq(images.url, url))
+              .run()
+          }
+          return
+        }
+      } catch {
+        // File missing or unreadable; omit dimensions rather than failing the response.
+      }
+      dimensionCache.set(url, null)
+    }),
+  )
+
+  return result
+}
+
+async function buildResumeResponse(locale: Lang) {
   const prof = db.select().from(profile).where(eq(profile.locale, locale)).get()
   const work = db
     .select()
@@ -52,6 +133,7 @@ function buildResumeResponse(locale: Lang) {
     .where(eq(resumeProjects.locale, locale))
     .orderBy(asc(resumeProjects.sortOrder))
     .all()
+  const dimsByUrl = await resolveUploadDimensions(projects.map((p) => p.img))
 
   return {
     profile: prof
@@ -90,20 +172,24 @@ function buildResumeResponse(locale: Lang) {
       desc: e.desc,
     })),
     skills: skills.map((s) => s.name),
-    projects: projects.map((p) => ({
-      id: p.id,
-      title: p.title,
-      type: p.type,
-      company: p.company ?? undefined,
-      techStack: [typeLabel(p.type), ...parseJson<string[]>(p.techStack, [])],
-      description: p.description,
-      link:
-        p.linkLabel && p.linkHref
-          ? { label: p.linkLabel, href: p.linkHref }
-          : undefined,
-      img: p.img,
-      isFeatured: p.isFeatured === 1,
-    })),
+    projects: projects.map((p) => {
+      const dims = dimsByUrl.get(p.img)
+      return {
+        id: p.id,
+        title: p.title,
+        type: p.type,
+        company: p.company ?? undefined,
+        techStack: [typeLabel(p.type), ...parseJson<string[]>(p.techStack, [])],
+        description: p.description,
+        link:
+          p.linkLabel && p.linkHref
+            ? { label: p.linkLabel, href: p.linkHref }
+            : undefined,
+        img: p.img,
+        ...(dims ? { imgWidth: dims.width, imgHeight: dims.height } : {}),
+        isFeatured: p.isFeatured === 1,
+      }
+    }),
   }
 }
 
@@ -111,9 +197,9 @@ function buildResumeResponse(locale: Lang) {
 
 export const resumePublic = new Hono()
 
-resumePublic.get('/', (c) => {
+resumePublic.get('/', async (c) => {
   const locale = parseLocale(c.req.query('locale'))
-  return c.json(buildResumeResponse(locale))
+  return c.json(await buildResumeResponse(locale))
 })
 
 // Request bodies. Keys a schema does not name (id included) are dropped, so a

@@ -86,6 +86,8 @@ export interface ResumeProjectItem {
   description: string
   link?: { label: string; href: string }
   img: string
+  imgWidth?: number
+  imgHeight?: number
   isFeatured: boolean
 }
 

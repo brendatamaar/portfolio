@@ -399,13 +399,16 @@ app.post('/upload', async (c) => {
   let width: number | null = null
   let height: number | null = null
 
+  const img = sharp(buffer)
+  const meta = await img.metadata().catch(() => null)
+  if (meta?.width && meta?.height) {
+    const swapped = (meta.orientation ?? 0) >= 5
+    width = swapped ? meta.height : meta.width
+    height = swapped ? meta.width : meta.height
+  }
+
   // Generate webp variants for raster images (not gif/webp-animated)
   if (detectedMime === 'image/jpeg' || detectedMime === 'image/png') {
-    const img = sharp(buffer)
-    const meta = await img.metadata()
-    width = meta.width ?? null
-    height = meta.height ?? null
-
     const webpFilename = `${stem}.webp`
     const thumbFilename = `${stem}-thumb.webp`
     await img
