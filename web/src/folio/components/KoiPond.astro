@@ -32,10 +32,31 @@ const label = lang === 'id' ? 'Kolam koi. Tekan untuk membuat riak.' : 'Koi pond
     display: block;
     width: 100%;
     height: auto;
+    aspect-ratio: 704 / 320;
   }
 </style>
 
 <script>
-  import { initKoiPond } from '../scripts/koi-pond'
-  initKoiPond(document.querySelector('[data-koi-pond]'))
+  const button = document.querySelector<HTMLButtonElement>('[data-koi-pond]')
+  if (button) {
+    let loaded = false
+    const boot = () => {
+      if (loaded) return
+      loaded = true
+      void import('../scripts/koi-pond').then(({ initKoiPond }) => initKoiPond(button))
+    }
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return
+          io.disconnect()
+          boot()
+        },
+        { rootMargin: '200px 0px' },
+      )
+      io.observe(button)
+    } else {
+      boot()
+    }
+  }
 </script>

@@ -32,24 +32,40 @@ export function initKoiPond(button: HTMLButtonElement | null) {
   let frame = 0
   let previousTime: number | null = null
   let elapsed = 0
+  let scaleX = 1
+  let scaleY = 1
+  let drawn = false
 
-  const draw = () => paint(pond, hasGlyphs, light)
+  const readLight = () => {
+    const theme = document.documentElement.dataset.theme
+    return theme === 'light' || (theme !== 'dark' && scheme.matches)
+  }
+
+  const draw = () => {
+    drawn = true
+    paint(pond, hasGlyphs, light, scaleX, scaleY)
+  }
 
   function updateTheme() {
-    const theme = document.documentElement.dataset.theme
-    light = theme === 'light' || (theme !== 'dark' && scheme.matches)
+    const next = readLight()
+    if (next === light && drawn) return
+    light = next
     draw()
   }
 
-  const resize = () => {
+  const resize = (force = false) => {
     const dpr = Math.min(2, window.devicePixelRatio || 1)
     const width = Math.max(1, Math.round(canvas.clientWidth * dpr))
     const height = Math.max(1, Math.round((width * HEIGHT) / WIDTH))
-    if (canvas.width !== width || canvas.height !== height) {
+    const changed = canvas.width !== width || canvas.height !== height
+    if (changed) {
       canvas.width = width
       canvas.height = height
     }
-    ctx.setTransform(width / WIDTH, 0, 0, height / HEIGHT, 0, 0)
+    if (!changed && !force && drawn) return
+    scaleX = width / WIDTH
+    scaleY = height / HEIGHT
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0)
     draw()
   }
 
@@ -147,10 +163,10 @@ export function initKoiPond(button: HTMLButtonElement | null) {
     clicks.push({ ...point, fish: hit })
   })
 
-  resize()
-  updateTheme()
-  updateMotion()
-  new ResizeObserver(resize).observe(button)
+  light = readLight()
+  requestAnimationFrame(() => resize(true))
+  button.disabled = motion.matches
+  new ResizeObserver(() => resize()).observe(button)
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     updatePlayback()
@@ -158,7 +174,7 @@ export function initKoiPond(button: HTMLButtonElement | null) {
   document.addEventListener('visibilitychange', updatePlayback)
   motion.addEventListener('change', updateMotion)
   scheme.addEventListener('change', updateTheme)
-  window.addEventListener('resize', resize)
+  window.addEventListener('resize', () => resize())
   new MutationObserver(updateTheme).observe(document.documentElement, {
     attributeFilter: ['data-theme'],
   })
@@ -167,7 +183,7 @@ export function initKoiPond(button: HTMLButtonElement | null) {
     (fonts) => {
       if (fonts.length === 0) return
       hasGlyphs = true
-      draw()
+      if (drawn) draw()
     },
     () => {
       /* Keep drawing with the ASCII ramp when the Javanese font is unavailable. */

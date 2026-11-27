@@ -144,6 +144,13 @@ export function createPondPainter(ctx: CanvasRenderingContext2D) {
   const color = new Uint8Array(density.length)
   const fishAtCell = new Int8Array(density.length).fill(-1)
   const glyphCenters = new Map<string, number[]>()
+  const SPRITE_PAD = 1
+  const SPRITE_LOGICAL_W = CELL_WIDTH + SPRITE_PAD * 2
+  const SPRITE_LOGICAL_H = CELL_HEIGHT + SPRITE_PAD * 2
+  let spriteCanvas: HTMLCanvasElement | null = null
+  let spriteKey = ''
+  let spriteCellW = 0
+  let spriteCellH = 0
   let seed = 37
   const grain = Array.from(
     density,
@@ -392,7 +399,73 @@ export function createPondPainter(ctx: CanvasRenderingContext2D) {
     }
   }
 
-  function paint(pond: Pond, hasJavanese: boolean, light: boolean) {
+  function ensureSprite(
+    hasJavanese: boolean,
+    light: boolean,
+    scaleX: number,
+    scaleY: number,
+  ) {
+    const sx = Math.max(0.5, Math.round(scaleX * 4) / 4)
+    const sy = Math.max(0.5, Math.round(scaleY * 4) / 4)
+    const key = `${Number(hasJavanese)}:${Number(light)}:${sx}:${sy}`
+    if (spriteCanvas && spriteKey === key) return spriteCanvas
+
+    const ramp = hasJavanese ? JAVANESE_GLYPHS : ASCII_GLYPHS
+    const palette = light ? LIGHT : DARK
+    const font = hasJavanese ? JAVANESE_FONT : ASCII_FONT
+    spriteCellW = Math.max(1, Math.ceil(SPRITE_LOGICAL_W * sx))
+    spriteCellH = Math.max(1, Math.ceil(SPRITE_LOGICAL_H * sy))
+
+    const sheet = spriteCanvas ?? document.createElement('canvas')
+    sheet.width = spriteCellW * ramp.length
+    sheet.height = spriteCellH * palette.length
+    const sctx = sheet.getContext('2d')
+    if (!sctx) return null
+
+    sctx.setTransform(1, 0, 0, 1, 0, 0)
+    sctx.clearRect(0, 0, sheet.width, sheet.height)
+    sctx.scale(spriteCellW / SPRITE_LOGICAL_W, spriteCellH / SPRITE_LOGICAL_H)
+    sctx.font = font
+    sctx.textAlign = 'center'
+    sctx.textBaseline = 'alphabetic'
+
+    let centers = glyphCenters.get(ramp)
+    if (!centers) {
+      centers = Array.from(ramp, (glyph) => {
+        const metrics = sctx.measureText(glyph)
+        return (
+          (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) /
+          2
+        )
+      })
+      glyphCenters.set(ramp, centers)
+    }
+
+    for (let ink = 0; ink < palette.length; ink++) {
+      sctx.fillStyle = palette[ink]
+      const baseY = ink * SPRITE_LOGICAL_H + SPRITE_LOGICAL_H / 2
+      for (let letter = 0; letter < ramp.length; letter++) {
+        sctx.fillText(
+          ramp[letter],
+          letter * SPRITE_LOGICAL_W + SPRITE_LOGICAL_W / 2,
+          baseY + centers[letter],
+          CELL_WIDTH * 0.95,
+        )
+      }
+    }
+
+    spriteCanvas = sheet
+    spriteKey = key
+    return sheet
+  }
+
+  function paint(
+    pond: Pond,
+    hasJavanese: boolean,
+    light: boolean,
+    scaleX = 1,
+    scaleY = 1,
+  ) {
     water(pond)
     koiRipple(pond)
     clickRipples(pond)
@@ -400,8 +473,46 @@ export function createPondPainter(ctx: CanvasRenderingContext2D) {
     for (const pad of pond.pads) lily(pad, pond.time)
 
     const ramp = hasJavanese ? JAVANESE_GLYPHS : ASCII_GLYPHS
-    const palette = light ? LIGHT : DARK
+    const rampLen = ramp.length
+    const sheet = ensureSprite(hasJavanese, light, scaleX, scaleY)
     ctx.clearRect(0, 0, WIDTH, HEIGHT)
+
+    if (sheet) {
+      let previousAlpha = -1
+      for (let row = 0; row < LINES; row++) {
+        const destY = row * CELL_HEIGHT - SPRITE_PAD
+        const rowOffset = row * COLUMNS
+        for (let col = 0; col < COLUMNS; col++) {
+          const i = rowOffset + col
+          const ink = density[i] * (0.88 + grain[i] * 0.24)
+          if (ink < 0.1) {
+            fishAtCell[i] = -1
+            continue
+          }
+          const letter = Math.min(rampLen - 1, Math.floor(ink * rampLen))
+          const alphaStep = Math.min(16, Math.round((0.32 + ink * 0.8) * 16))
+          if (alphaStep !== previousAlpha) {
+            previousAlpha = alphaStep
+            ctx.globalAlpha = alphaStep / 16
+          }
+          ctx.drawImage(
+            sheet,
+            letter * spriteCellW,
+            color[i] * spriteCellH,
+            spriteCellW,
+            spriteCellH,
+            col * CELL_WIDTH - SPRITE_PAD,
+            destY,
+            SPRITE_LOGICAL_W,
+            SPRITE_LOGICAL_H,
+          )
+        }
+      }
+      ctx.globalAlpha = 1
+      return
+    }
+
+    const palette = light ? LIGHT : DARK
     ctx.font = hasJavanese ? JAVANESE_FONT : ASCII_FONT
     ctx.textAlign = 'center'
     ctx.textBaseline = 'alphabetic'
@@ -424,7 +535,7 @@ export function createPondPainter(ctx: CanvasRenderingContext2D) {
         fishAtCell[i] = -1
         continue
       }
-      const letter = Math.min(ramp.length - 1, Math.floor(ink * ramp.length))
+      const letter = Math.min(rampLen - 1, Math.floor(ink * rampLen))
       if (color[i] !== previousColor) {
         previousColor = color[i]
         ctx.fillStyle = palette[previousColor]
