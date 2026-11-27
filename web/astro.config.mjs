@@ -7,6 +7,9 @@ export default defineConfig({
   site: 'https://www.brendatama.dev',
   output: 'server',
   adapter: node({ mode: 'standalone' }),
+  build: {
+    inlineStylesheets: 'always',
+  },
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],

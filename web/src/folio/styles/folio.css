@@ -83,6 +83,16 @@
     U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* Metric-matched fallback for Plus Jakarta Sans so font swap causes zero layout shift. */
+@font-face {
+  font-family: 'Plus Jakarta Sans Fallback';
+  src: local('Arial'), local('Roboto');
+  size-adjust: 105.5%;
+  ascent-override: 92.89%;
+  descent-override: 26.54%;
+  line-gap-override: 0%;
+}
+
 /* The koi pond loads the Javanese subset on demand. */
 @font-face {
   font-family: 'Noto Sans Javanese';
@@ -118,7 +128,8 @@
   --default-transition-timing-function: ease;
 
   --font-sans:
-    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    'Plus Jakarta Sans', 'Plus Jakarta Sans Fallback', ui-sans-serif, system-ui,
+    -apple-system, sans-serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     monospace;
